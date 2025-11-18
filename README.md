@@ -71,9 +71,7 @@ macgyver_mud/
 ├── agent_runtime.py      # Agent decision-making
 ├── runner.py             # CLI entry point
 ├── docs/
-│   ├── spec.md           # Detailed specification
-│   ├── context_and_guidance.md  # Implementation guidance
-│   └── implementation_plan.md   # Development plan
+│   ├── ELI5.md
 ├── queries/
 │   └── demo_queries.cypher      # Showcase queries for Neo4j Browser
 ├── scripts/
