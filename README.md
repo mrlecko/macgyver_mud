@@ -291,8 +291,8 @@ sudo rm -rf .neo4j44/  # If needed
 
 ## License
 
-TBD
+MIT
 
 ## Author
 
-Active Inference & Procedural Memory Demo
+mrlecko@gmail.com
