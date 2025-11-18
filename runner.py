@@ -26,6 +26,8 @@ Examples:
   python runner.py --door-state unlocked
   python runner.py --door-state locked --max-steps 10
   python runner.py --door-state unlocked --verbose
+  python runner.py --door-state locked --use-memory
+  python runner.py --door-state unlocked --use-memory --adaptive --verbose-memory
         """
     )
 
@@ -62,11 +64,48 @@ Examples:
         help="Minimal output (just result)"
     )
 
+    parser.add_argument(
+        "--use-memory",
+        action="store_true",
+        help="Enable procedural memory (agent learns from past episodes)"
+    )
+
+    parser.add_argument(
+        "--adaptive",
+        action="store_true",
+        help="Enable adaptive meta-parameters (adjusts exploration/exploitation)"
+    )
+
+    parser.add_argument(
+        "--verbose-memory",
+        action="store_true",
+        help="Show memory reasoning in decision-making (requires --use-memory)"
+    )
+
+    parser.add_argument(
+        "--reward-mode",
+        choices=["naive", "strategic"],
+        default="strategic",
+        help="Reward mode: 'naive' (shows metric gaming) or 'strategic' (encourages smart play)"
+    )
+
     return parser.parse_args()
 
 
 def print_header(console: Console, args):
     """Print episode header"""
+    memory_status = ""
+    if args.use_memory or args.adaptive:
+        features = []
+        if args.use_memory:
+            features.append("Procedural Memory")
+        if args.adaptive:
+            features.append("Adaptive Params")
+        memory_status = f"\n  [bold]Memory:[/bold] [green]{', '.join(features)} enabled[/green]"
+
+    # Show reward mode (highlight if naive to indicate it's the "problematic" version)
+    reward_mode_display = f"[yellow]{args.reward_mode}[/yellow]" if args.reward_mode == "naive" else f"[green]{args.reward_mode}[/green]"
+
     header_text = f"""
 [bold cyan]MacGyver Active Inference Demo[/bold cyan]
 [dim]Locked Room Escape Scenario[/dim]
@@ -75,6 +114,7 @@ def print_header(console: Console, args):
   Ground Truth: Door is [bold {'green' if args.door_state == 'unlocked' else 'red'}]{args.door_state}[/]
   Initial Belief: p(unlocked) = {args.initial_belief:.2f}
   Max Steps: {args.max_steps}
+  Reward Mode: {reward_mode_display}{memory_status}
     """
     console.print(Panel(header_text.strip(), box=box.ROUNDED))
 
@@ -123,6 +163,33 @@ def print_trace(console: Console, runtime: AgentRuntime, verbose: bool = False):
         table.add_row(step_idx, skill, obs_display, belief_str, delta_str)
 
     console.print(table)
+
+
+def print_decision_log(console: Console, runtime: AgentRuntime):
+    """Print memory-influenced decision log"""
+    if not runtime.decision_log:
+        return
+
+    console.print("\n[bold cyan]Decision Log (Memory Reasoning):[/bold cyan]")
+
+    for decision in runtime.decision_log:
+        step = decision["step"]
+        belief = decision["belief"]
+        selected = decision["selected"]
+        score = decision["score"]
+        explanation = decision.get("explanation")
+
+        console.print(f"\n[bold]Step {step}:[/bold] belief={belief:.2f} → selected [cyan]{selected}[/cyan] (score={score:.2f})")
+
+        if explanation and "reasoning" in explanation:
+            console.print(f"  [dim]{explanation['reasoning']}[/dim]")
+
+        # Show all scores for comparison
+        if decision.get("all_scores"):
+            console.print("  [dim]All skill scores:[/dim]")
+            for skill_name, skill_score in decision["all_scores"]:
+                prefix = "  →" if skill_name == selected else "   "
+                console.print(f"    {prefix} {skill_name:15s}: {skill_score:6.2f}")
 
 
 def print_summary(console: Console, runtime: AgentRuntime, door_state: str):
@@ -176,6 +243,14 @@ def main():
     args = parse_args()
     console = Console()
 
+    # Set reward mode environment variable so config picks it up
+    import os
+    os.environ["REWARD_MODE"] = args.reward_mode
+
+    # Reload config to pick up the new reward mode
+    import importlib
+    importlib.reload(config)
+
     # Print header (unless quiet)
     if not args.quiet:
         print_header(console, args)
@@ -201,7 +276,10 @@ def main():
             runtime = AgentRuntime(
                 session,
                 door_state=args.door_state,
-                initial_belief=args.initial_belief
+                initial_belief=args.initial_belief,
+                use_procedural_memory=args.use_memory,
+                adaptive_params=args.adaptive,
+                verbose_memory=args.verbose_memory
             )
 
             # Run episode
@@ -215,6 +293,10 @@ def main():
             if not args.quiet:
                 print_trace(console, runtime, verbose=args.verbose)
                 console.print()
+
+            # Print memory decision log if enabled
+            if args.verbose_memory and not args.quiet:
+                print_decision_log(console, runtime)
 
             # Print summary
             if args.quiet:

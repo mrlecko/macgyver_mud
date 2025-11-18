@@ -175,6 +175,185 @@ def score_skill_detailed(skill: dict, p_unlocked: float,
     }
 
 
+# ============================================================================
+# Memory-Influenced Scoring (Procedural Memory Integration)
+# ============================================================================
+
+def score_skill_with_memory(skill: dict, p_unlocked: float,
+                           skill_stats: dict = None,
+                           context: dict = None,
+                           memory_weight: float = 0.5,
+                           epistemic_bonus: float = 0.0) -> tuple:
+    """
+    Score skill using both theoretical model and empirical memory.
+
+    Combines active inference (theory) with procedural memory (experience).
+
+    Args:
+        skill: Skill dict with 'name', 'cost'
+        p_unlocked: Current belief probability
+        skill_stats: Historical performance from get_skill_stats()
+        context: Context dict (e.g., belief_category)
+        memory_weight: How much to weight empirical data (0-1)
+        epistemic_bonus: Exploration bonus for underexplored skills
+
+    Returns:
+        Tuple of (final_score, explanation_dict)
+    """
+    # Base theoretical score from active inference
+    theoretical_score = score_skill(skill, p_unlocked)
+
+    # If no memory or insufficient data, return pure theory
+    if not skill_stats or skill_stats["overall"]["uses"] == 0:
+        return theoretical_score, {
+            "theoretical_score": theoretical_score,
+            "memory_bonus": 0.0,
+            "confidence": 0.0,
+            "final_score": theoretical_score + epistemic_bonus,
+            "epistemic_bonus": epistemic_bonus,
+            "reasoning": f"Theory: {theoretical_score:.2f} | No memory → Final: {theoretical_score + epistemic_bonus:.2f}"
+        }
+
+    # Select appropriate stats based on context
+    if context and "belief_context" in skill_stats:
+        # Use context-specific stats if available and confident
+        if skill_stats["belief_context"]["confidence"] > 0.3:
+            relevant_stats = skill_stats["belief_context"]
+            context_type = "context-specific"
+        else:
+            # Fall back to overall if context data is sparse
+            relevant_stats = skill_stats["overall"]
+            context_type = "overall (sparse context)"
+    else:
+        relevant_stats = skill_stats["overall"]
+        context_type = "overall"
+
+    success_rate = relevant_stats["success_rate"]
+    confidence = relevant_stats["confidence"]
+    uses = relevant_stats["uses"]
+
+    # Calculate memory bonus
+    # Map success_rate [0,1] to bonus range [-3, +3]
+    # Scale by confidence (more data = trust more)
+    raw_bonus = (success_rate - 0.5) * 6.0  # [-3, +3]
+    memory_bonus = raw_bonus * confidence * memory_weight
+
+    # Combine: theory + memory + exploration
+    final_score = theoretical_score + memory_bonus + epistemic_bonus
+
+    # Build human-readable explanation
+    reasoning = (
+        f"Theory: {theoretical_score:.2f} | "
+        f"Memory ({context_type}, n={uses}): "
+        f"{success_rate:.0%} success → {memory_bonus:+.2f}"
+    )
+
+    if epistemic_bonus != 0:
+        reasoning += f" | Explore: {epistemic_bonus:+.2f}"
+
+    reasoning += f" | Final: {final_score:.2f}"
+
+    explanation = {
+        "theoretical_score": theoretical_score,
+        "memory_bonus": memory_bonus,
+        "epistemic_bonus": epistemic_bonus,
+        "confidence": confidence,
+        "success_rate": success_rate,
+        "sample_size": uses,
+        "context_type": context_type,
+        "final_score": final_score,
+        "reasoning": reasoning
+    }
+
+    return final_score, explanation
+
+
+def compute_epistemic_value(p_unlocked: float, skill_stats: dict,
+                            episodes_completed: int,
+                            min_samples: int = 10) -> float:
+    """
+    Compute epistemic (information-seeking) value bonus.
+
+    Early in learning, favor actions that gather diverse information.
+    This implements exploration bonuses that decay as we gain experience.
+
+    Args:
+        p_unlocked: Current belief
+        skill_stats: Historical performance data
+        episodes_completed: Total episodes so far
+        min_samples: Minimum samples we want per skill
+
+    Returns:
+        Epistemic bonus (positive for underexplored skills)
+    """
+    # Early learning phase: higher epistemic value (decays over first 20 episodes)
+    learning_phase = max(0, 1.0 - episodes_completed / 20.0)
+
+    # Exploration need: encourage skills with fewer samples
+    uses = skill_stats["overall"]["uses"]
+    exploration_need = max(0, min_samples - uses) / min_samples
+
+    # Epistemic bonus (decays as we gain experience)
+    epistemic_bonus = learning_phase * exploration_need * 2.0
+
+    return epistemic_bonus
+
+
+def score_all_skills_with_memory(skills: list, p_unlocked: float,
+                                 skill_stats_dict: dict = None,
+                                 context: dict = None,
+                                 episodes_completed: int = 0,
+                                 memory_weight: float = 0.5,
+                                 verbose: bool = False) -> list:
+    """
+    Score all skills with memory and return sorted list.
+
+    Args:
+        skills: List of skill dicts
+        p_unlocked: Current belief
+        skill_stats_dict: Dict mapping skill_name -> stats
+        context: Context for filtering stats
+        episodes_completed: Number of episodes completed
+        memory_weight: Weight for empirical data
+        verbose: Include detailed explanations
+
+    Returns:
+        List of (score, skill, explanation) tuples, sorted by score descending
+    """
+    scored_skills = []
+
+    for skill in skills:
+        skill_name = skill["name"]
+
+        # Get stats for this skill
+        stats = skill_stats_dict.get(skill_name) if skill_stats_dict else None
+
+        # Compute epistemic bonus (exploration)
+        if stats and episodes_completed < 20:
+            epistemic = compute_epistemic_value(p_unlocked, stats, episodes_completed)
+        else:
+            epistemic = 0.0
+
+        # Score with memory
+        score, explanation = score_skill_with_memory(
+            skill, p_unlocked,
+            skill_stats=stats,
+            context=context,
+            memory_weight=memory_weight,
+            epistemic_bonus=epistemic
+        )
+
+        if verbose:
+            scored_skills.append((score, skill, explanation))
+        else:
+            scored_skills.append((score, skill, None))
+
+    # Sort by score descending
+    scored_skills.sort(key=lambda x: x[0], reverse=True)
+
+    return scored_skills
+
+
 if __name__ == "__main__":
     # Quick manual test
     print("=== Scoring Module Test ===\n")

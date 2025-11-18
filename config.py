@@ -34,12 +34,24 @@ GAMMA = 0.3   # Cost weight (increased to penalize expensive actions)
 # Reward/Penalty Constants
 # ============================================================================
 
+# Reward Mode: Controls how the agent is incentivized
+# - "naive": Simple "minimize steps" approach (demonstrates metric gaming)
+# - "strategic": Rewards information-gathering and smart strategies
+REWARD_MODE = os.getenv("REWARD_MODE", "strategic")  # Default to strategic
+
 # Rewards for successful outcomes
 REWARD_ESCAPE = 10.0  # Successfully escaping the room
 
-# Penalties
+# Penalties (vary by reward mode)
 PENALTY_FAIL = 3.0    # Trying a locked door (failure)
-SLOW_PENALTY = 4.0    # Using the window (works but slower/less ideal)
+
+# SLOW_PENALTY: Using the window (works but is less ideal than using door)
+# In NAIVE mode: Lower penalty, agent learns to spam window
+# In STRATEGIC mode: Balanced penalty, window is fallback but not forbidden
+if REWARD_MODE == "naive":
+    SLOW_PENALTY = 4.0   # Original: allows metric gaming
+else:  # strategic
+    SLOW_PENALTY = 6.0   # Balanced: window is viable fallback when needed
 
 # ============================================================================
 # Belief Update Parameters
@@ -96,6 +108,7 @@ if __name__ == "__main__":
     print("=== MacGyver Demo Configuration ===")
     print(f"Neo4j URI: {NEO4J_URI}")
     print(f"Neo4j User: {NEO4J_USER}")
+    print(f"\nReward Mode: {REWARD_MODE}")
     print(f"\nScoring Weights:")
     print(f"  α (goal): {ALPHA}")
     print(f"  β (info): {BETA}")
@@ -103,7 +116,7 @@ if __name__ == "__main__":
     print(f"\nRewards/Penalties:")
     print(f"  Escape reward: {REWARD_ESCAPE}")
     print(f"  Fail penalty: {PENALTY_FAIL}")
-    print(f"  Slow penalty: {SLOW_PENALTY}")
+    print(f"  Slow penalty: {SLOW_PENALTY} ({'naive: allows gaming' if REWARD_MODE == 'naive' else 'strategic: encourages info-gathering'})")
     print(f"\nBelief Updates:")
     print(f"  Initial: {INITIAL_BELIEF}")
     print(f"  Door locked: {BELIEF_DOOR_LOCKED}")

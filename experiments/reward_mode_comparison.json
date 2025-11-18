@@ -1,0 +1,1035 @@
+{
+  "naive": {
+    "reward_mode": "naive",
+    "slow_penalty": 4.0,
+    "episodes": [
+      {
+        "episode_num": 1,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 2,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 3,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 4,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 5,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 6,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 7,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 8,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 9,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 10,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 11,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 12,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 13,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 14,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 15,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 16,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 17,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 18,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 19,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 20,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 21,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 22,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 23,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 24,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 25,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 26,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 27,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 28,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 29,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 30,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 31,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 32,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 33,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 34,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 35,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 36,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 37,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 38,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 39,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 40,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 41,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 42,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 43,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 44,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 45,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 46,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 47,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 48,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 49,
+        "door_state": "unlocked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 50,
+        "door_state": "locked",
+        "steps": 1,
+        "escaped": true,
+        "skills_used": [
+          "go_window"
+        ]
+      }
+    ],
+    "statistics": {
+      "mean_steps": 1.2,
+      "std_steps": 0.4040610178208843,
+      "early_mean": 1.7,
+      "late_mean": 1,
+      "improvement_pct": 41.17647058823529
+    },
+    "skill_usage": {
+      "peek_door": 10,
+      "try_door": 7,
+      "go_window": 43
+    },
+    "skill_stats": {
+      "peek_door": {
+        "uses": 10,
+        "success_rate": 1.0
+      },
+      "try_door": {
+        "uses": 7,
+        "success_rate": 1.0
+      },
+      "go_window": {
+        "uses": 43,
+        "success_rate": 1.0
+      }
+    }
+  },
+  "strategic": {
+    "reward_mode": "strategic",
+    "slow_penalty": 6.0,
+    "episodes": [
+      {
+        "episode_num": 1,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 2,
+        "door_state": "locked",
+        "steps": 5,
+        "escaped": false,
+        "skills_used": [
+          "peek_door",
+          "peek_door",
+          "peek_door",
+          "peek_door",
+          "peek_door"
+        ]
+      },
+      {
+        "episode_num": 3,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 4,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 5,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 6,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 7,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 8,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 9,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 10,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 11,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 12,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 13,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 14,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 15,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 16,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 17,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 18,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 19,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 20,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 21,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 22,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 23,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 24,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 25,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 26,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 27,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 28,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 29,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 30,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 31,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 32,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 33,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 34,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 35,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 36,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 37,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 38,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 39,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 40,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 41,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 42,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 43,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 44,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 45,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 46,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 47,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 48,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      },
+      {
+        "episode_num": 49,
+        "door_state": "unlocked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "try_door"
+        ]
+      },
+      {
+        "episode_num": 50,
+        "door_state": "locked",
+        "steps": 2,
+        "escaped": true,
+        "skills_used": [
+          "peek_door",
+          "go_window"
+        ]
+      }
+    ],
+    "statistics": {
+      "mean_steps": 2.06,
+      "std_steps": 0.4242640687119285,
+      "early_mean": 2.3,
+      "late_mean": 2,
+      "improvement_pct": 13.04347826086956
+    },
+    "skill_usage": {
+      "peek_door": 54,
+      "try_door": 25,
+      "go_window": 24
+    },
+    "skill_stats": {
+      "peek_door": {
+        "uses": 54,
+        "success_rate": 0.9074074074074074
+      },
+      "try_door": {
+        "uses": 25,
+        "success_rate": 1.0
+      },
+      "go_window": {
+        "uses": 24,
+        "success_rate": 1.0
+      }
+    }
+  },
+  "comparison": {
+    "t_statistic": -10.379310344827589,
+    "p_value": 1.8210356830970426e-17,
+    "naive_window_pct": 71.66666666666667,
+    "strategic_window_pct": 23.300970873786408
+  }
+}

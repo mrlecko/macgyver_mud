@@ -274,6 +274,301 @@ def get_episode_trace(session: Session, episode_id: str) -> List[Dict[str, Any]]
     return trace
 
 
+# ============================================================================
+# Procedural Memory Functions (Skill Statistics & Meta-Learning)
+# ============================================================================
+
+def get_skill_stats(session: Session, skill_name: str,
+                   context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    Get skill statistics, optionally filtered by context.
+
+    Context can include:
+    - belief_category: "uncertain", "confident_locked", "confident_unlocked"
+
+    Returns context-specific success rates when available.
+
+    Args:
+        session: Neo4j session
+        skill_name: Name of the skill
+        context: Optional context filter
+
+    Returns:
+        Dict with overall and context-specific stats
+    """
+    result = session.run("""
+        MATCH (sk:Skill {name: $skill_name})-[:HAS_STATS]->(stats:SkillStats)
+        RETURN stats
+    """, skill_name=skill_name)
+
+    record = result.single()
+    if not record:
+        # Return empty stats if not found
+        return {
+            "overall": {
+                "uses": 0,
+                "success_rate": 0.5,  # Prior: 50/50
+                "confidence": 0.0,
+                "avg_steps": 0.0
+            }
+        }
+
+    stats = dict(record["stats"])
+
+    # Calculate overall statistics
+    total = stats["total_uses"]
+    overall_success_rate = (
+        stats["successful_episodes"] / total if total > 0 else 0.5
+    )
+    overall_confidence = min(1.0, total / 20.0)  # Full confidence at 20 uses
+
+    result_dict = {
+        "overall": {
+            "uses": total,
+            "success_rate": overall_success_rate,
+            "confidence": overall_confidence,
+            "avg_steps": stats["avg_steps_when_successful"]
+        }
+    }
+
+    # Add context-specific statistics if requested
+    if context and "belief_category" in context:
+        cat = context["belief_category"]
+
+        # Map category to field names
+        if cat == "uncertain":
+            uses = stats.get("uncertain_uses", 0)
+            successes = stats.get("uncertain_successes", 0)
+        elif cat == "confident_locked":
+            uses = stats.get("confident_locked_uses", 0)
+            successes = stats.get("confident_locked_successes", 0)
+        elif cat == "confident_unlocked":
+            uses = stats.get("confident_unlocked_uses", 0)
+            successes = stats.get("confident_unlocked_successes", 0)
+        else:
+            uses = 0
+            successes = 0
+
+        if uses > 0:
+            result_dict["belief_context"] = {
+                "uses": uses,
+                "success_rate": successes / uses,
+                "confidence": min(1.0, uses / 10.0),  # Context confidence at 10 uses
+                "category": cat
+            }
+
+    return result_dict
+
+
+def update_skill_stats(session: Session, episode_id: str,
+                      escaped: bool, total_steps: int,
+                      context: Dict[str, Any]) -> None:
+    """
+    Update skill statistics based on episode outcome.
+
+    Updates both overall and context-specific stats.
+
+    Args:
+        session: Neo4j session
+        episode_id: Episode element ID
+        escaped: Whether agent successfully escaped
+        total_steps: Total number of steps taken
+        context: Context dict with belief_category
+    """
+    belief_cat = context.get("belief_category", "uncertain")
+
+    session.run("""
+        // Get all skills used in this episode
+        MATCH (e:Episode)-[:HAS_STEP]->(s:Step)-[:USED_SKILL]->(sk:Skill)
+        WHERE id(e) = $episode_id
+        MATCH (sk)-[:HAS_STATS]->(stats:SkillStats)
+
+        WITH sk, stats, count(s) AS uses_in_episode
+
+        // Update overall statistics
+        SET stats.total_uses = stats.total_uses + uses_in_episode,
+            stats.successful_episodes = stats.successful_episodes +
+                CASE WHEN $escaped THEN 1 ELSE 0 END,
+            stats.failed_episodes = stats.failed_episodes +
+                CASE WHEN NOT $escaped THEN 1 ELSE 0 END,
+
+            // Update average steps when successful
+            stats.avg_steps_when_successful =
+                CASE WHEN $escaped AND stats.successful_episodes > 0 THEN
+                    (stats.avg_steps_when_successful * (stats.successful_episodes - 1) + $total_steps)
+                    / stats.successful_episodes
+                ELSE stats.avg_steps_when_successful END,
+
+            // Update average steps when failed
+            stats.avg_steps_when_failed =
+                CASE WHEN NOT $escaped AND stats.failed_episodes > 0 THEN
+                    (stats.avg_steps_when_failed * (stats.failed_episodes - 1) + $total_steps)
+                    / stats.failed_episodes
+                ELSE stats.avg_steps_when_failed END,
+
+            // Update context-specific stats (belief category)
+            stats.uncertain_uses = stats.uncertain_uses +
+                CASE WHEN $belief_cat = 'uncertain' THEN uses_in_episode ELSE 0 END,
+            stats.uncertain_successes = stats.uncertain_successes +
+                CASE WHEN $belief_cat = 'uncertain' AND $escaped THEN 1 ELSE 0 END,
+
+            stats.confident_locked_uses = stats.confident_locked_uses +
+                CASE WHEN $belief_cat = 'confident_locked' THEN uses_in_episode ELSE 0 END,
+            stats.confident_locked_successes = stats.confident_locked_successes +
+                CASE WHEN $belief_cat = 'confident_locked' AND $escaped THEN 1 ELSE 0 END,
+
+            stats.confident_unlocked_uses = stats.confident_unlocked_uses +
+                CASE WHEN $belief_cat = 'confident_unlocked' THEN uses_in_episode ELSE 0 END,
+            stats.confident_unlocked_successes = stats.confident_unlocked_successes +
+                CASE WHEN $belief_cat = 'confident_unlocked' AND $escaped THEN 1 ELSE 0 END,
+
+            stats.last_updated = datetime()
+    """, episode_id=episode_id, escaped=escaped, total_steps=total_steps,
+         belief_cat=belief_cat)
+
+
+def get_meta_params(session: Session, agent_id: str) -> Dict[str, Any]:
+    """
+    Get current meta-parameters for agent.
+
+    Args:
+        session: Neo4j session
+        agent_id: Agent element ID
+
+    Returns:
+        Dict with alpha, beta, gamma and learning metrics
+    """
+    result = session.run("""
+        MATCH (a:Agent)-[:HAS_META_PARAMS]->(meta:MetaParams)
+        WHERE id(a) = $agent_id
+        RETURN meta.alpha AS alpha,
+               meta.beta AS beta,
+               meta.gamma AS gamma,
+               meta.episodes_completed AS episodes,
+               meta.adaptation_enabled AS adaptive,
+               meta.avg_steps_last_10 AS avg_steps,
+               meta.success_rate_last_10 AS success_rate
+    """, agent_id=agent_id)
+
+    record = result.single()
+    if record:
+        return {
+            "alpha": record["alpha"],
+            "beta": record["beta"],
+            "gamma": record["gamma"],
+            "episodes": record["episodes"],
+            "adaptive": record["adaptive"],
+            "avg_steps": record["avg_steps"],
+            "success_rate": record["success_rate"]
+        }
+
+    # Fallback to config defaults if no MetaParams found
+    return {
+        "alpha": config.ALPHA,
+        "beta": config.BETA,
+        "gamma": config.GAMMA,
+        "episodes": 0,
+        "adaptive": False,
+        "avg_steps": 0.0,
+        "success_rate": 0.0
+    }
+
+
+def update_meta_params(session: Session, agent_id: str,
+                      new_params: Dict[str, Any]) -> None:
+    """
+    Update agent's meta-parameters and track history.
+
+    Args:
+        session: Neo4j session
+        agent_id: Agent element ID
+        new_params: Dict with alpha, beta, gamma, and/or learning metrics
+    """
+    # Build SET clause dynamically based on what's provided
+    set_clauses = []
+    params = {"agent_id": agent_id}
+
+    if "alpha" in new_params:
+        set_clauses.append("meta.alpha = $alpha")
+        set_clauses.append("meta.alpha_history = meta.alpha_history + $alpha")
+        params["alpha"] = new_params["alpha"]
+
+    if "beta" in new_params:
+        set_clauses.append("meta.beta = $beta")
+        set_clauses.append("meta.beta_history = meta.beta_history + $beta")
+        params["beta"] = new_params["beta"]
+
+    if "gamma" in new_params:
+        set_clauses.append("meta.gamma = $gamma")
+        set_clauses.append("meta.gamma_history = meta.gamma_history + $gamma")
+        params["gamma"] = new_params["gamma"]
+
+    if "episodes_completed" in new_params:
+        set_clauses.append("meta.episodes_completed = $episodes")
+        params["episodes"] = new_params["episodes_completed"]
+
+    if "avg_steps_last_10" in new_params:
+        set_clauses.append("meta.avg_steps_last_10 = $avg_steps")
+        params["avg_steps"] = new_params["avg_steps_last_10"]
+
+    if "success_rate_last_10" in new_params:
+        set_clauses.append("meta.success_rate_last_10 = $success_rate")
+        params["success_rate"] = new_params["success_rate_last_10"]
+
+    set_clauses.append("meta.last_adapted = datetime()")
+
+    if set_clauses:
+        query = f"""
+            MATCH (a:Agent)-[:HAS_META_PARAMS]->(meta:MetaParams)
+            WHERE id(a) = $agent_id
+            SET {', '.join(set_clauses)}
+        """
+        session.run(query, **params)
+
+
+def get_recent_episodes_stats(session: Session, agent_id: str,
+                              limit: int = 10) -> Dict[str, Any]:
+    """
+    Get statistics from recent episodes for meta-learning.
+
+    Args:
+        session: Neo4j session
+        agent_id: Agent element ID
+        limit: Number of recent episodes to analyze
+
+    Returns:
+        Dict with avg_steps, success_rate, variance, count
+    """
+    # Note: In the current implementation, we don't have PARTICIPATED_IN relationship
+    # So we'll just get recent episodes by creation time
+    result = session.run("""
+        MATCH (e:Episode)
+        WHERE e.completed = true
+        WITH e ORDER BY e.created_at DESC LIMIT $limit
+        WITH count(e) AS episode_count,
+             avg(e.total_steps) AS avg_steps,
+             stDev(e.total_steps) AS steps_variance,
+             collect(e) AS episodes
+        RETURN episode_count,
+               avg_steps,
+               steps_variance,
+               CASE WHEN episode_count > 0 THEN
+                   toFloat(size([ep IN episodes WHERE ep.escaped | 1])) / episode_count
+               ELSE 0.0 END AS success_rate
+    """, limit=limit)
+
+    record = result.single()
+    if record and record["episode_count"] and record["episode_count"] > 0:
+        return {
+            "avg_steps": float(record["avg_steps"]) if record["avg_steps"] else 0.0,
+            "success_rate": float(record["success_rate"]) if record["success_rate"] else 0.0,
+            "variance": float(record["steps_variance"]) if record["steps_variance"] else 0.0,
+            "count": int(record["episode_count"])
+        }
+
+    return {"avg_steps": 0.0, "success_rate": 0.0, "variance": 0.0, "count": 0}
+
+
 if __name__ == "__main__":
     # Quick manual test
     from neo4j import GraphDatabase

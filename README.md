@@ -15,6 +15,48 @@ The system demonstrates active inference principles where the agent balances:
 - **Goal achievement** (exploitation)
 - **Action costs**
 
+## Procedural Memory & Reward Design
+
+This project demonstrates two key concepts:
+
+### 1. Procedural Memory
+The agent can learn from past episodes using the `--use-memory` flag:
+- Episodes are logged to the graph (always)
+- With `--use-memory`: Agent learns from success patterns to bias future decisions
+- Without flag: Episodes are logged but not used for learning
+
+### 2. Reward Mode Impact
+The same learning mechanism produces **dramatically different behaviors** based on reward design:
+
+**NAIVE mode** (`--reward-mode=naive`):
+- Demonstrates **metric gaming**
+- Agent learns to spam `go_window` (lazy but efficient)
+- Shows how agents optimize what you measure, not what you intend
+- SLOW_PENALTY = 4.0 (window escape is viable)
+
+**STRATEGIC mode** (`--reward-mode=strategic`, default):
+- Encourages **information-gathering strategies**
+- Agent maintains peek → act pattern
+- Shows how better rewards → better learned behavior
+- SLOW_PENALTY = 6.0 (encourages checking door first)
+
+### Quick Comparison
+
+```bash
+# See metric gaming (agent learns lazy behavior)
+python runner.py --door-state locked --use-memory --reward-mode=naive
+
+# See strategic learning (agent learns smart behavior)
+python runner.py --door-state locked --use-memory --reward-mode=strategic
+
+# Full statistical comparison
+python experiments/reward_mode_comparison.py
+```
+
+**Key Lesson:** What you measure determines what you get. A 2-point penalty difference (4.0 vs 6.0) produces completely different learned behaviors.
+
+See [QUICKSTART_BOTH_MODES.md](QUICKSTART_BOTH_MODES.md) for detailed pedagogical guide.
+
 ## Project Structure
 
 ```
@@ -147,7 +189,26 @@ python runner.py --door-state unlocked --verbose
 
 # Quiet mode (just result)
 python runner.py --door-state locked --quiet
+
+# Enable procedural memory learning
+python runner.py --door-state locked --use-memory
+
+# Choose reward mode (naive shows metric gaming, strategic shows smart learning)
+python runner.py --door-state locked --use-memory --reward-mode=naive
+python runner.py --door-state locked --use-memory --reward-mode=strategic
+
+# Enable adaptive meta-learning (adjusts exploration over time)
+python runner.py --door-state locked --use-memory --adaptive
+
+# Show memory reasoning details
+python runner.py --door-state locked --use-memory --verbose-memory
 ```
+
+**Key Flags:**
+- `--use-memory`: Enable learning from past episodes
+- `--reward-mode`: Choose `naive` (metric gaming) or `strategic` (smart play)
+- `--adaptive`: Enable meta-learning (adjusts parameters every 5 episodes)
+- `--verbose-memory`: Show detailed memory-based reasoning
 
 ## Graph Model
 
@@ -206,8 +267,8 @@ See `queries/demo_queries.cypher` for more showcase queries.
 All tests use pytest with TDD approach:
 
 ```bash
-# Run all tests (52 tests)
-pytest test_scoring.py test_graph_model.py test_agent_runtime.py -v
+# Run all tests (80 tests)
+pytest test_*.py -v
 
 # Run specific test file
 pytest test_scoring.py -v
@@ -220,6 +281,7 @@ pytest --cov=. --cov-report=html
 - `test_scoring.py`: 24 tests (entropy, goal value, info gain, scoring)
 - `test_graph_model.py`: 14 tests (Neo4j I/O operations)
 - `test_agent_runtime.py`: 14 tests (agent behavior, episodes)
+- `test_procedural_memory.py`: 28 tests (memory integration, learning)
 
 ### Configuration
 
@@ -234,12 +296,15 @@ GAMMA = 0.3   # Cost weight
 # Rewards/Penalties
 REWARD_ESCAPE = 10.0
 PENALTY_FAIL = 3.0
-SLOW_PENALTY = 4.0
+SLOW_PENALTY = 4.0  # (naive mode) or 6.0 (strategic mode)
 
 # Belief updates
 BELIEF_DOOR_LOCKED = 0.15
 BELIEF_DOOR_UNLOCKED = 0.85
 BELIEF_DOOR_STUCK = 0.10
+
+# Reward Mode
+REWARD_MODE = "strategic"  # or "naive"
 ```
 
 ### Implementation Status
@@ -251,8 +316,10 @@ BELIEF_DOOR_STUCK = 0.10
 - [x] Scoring logic (active inference)
 - [x] Graph model operations
 - [x] Agent runtime (decision loop)
+- [x] Procedural memory & learning
+- [x] Reward modes (naive vs strategic)
 - [x] CLI runner with rich output
-- [x] Test suite (52 tests, 100% pass)
+- [x] Test suite (80 tests, 100% pass)
 - [x] Demo queries
 - [x] Documentation
 
@@ -282,6 +349,29 @@ make neo4j-start
 ```bash
 sudo rm -rf .neo4j44/  # If needed
 ```
+
+## Next Steps
+
+**Beginners:**
+- Read [ELI5.md](ELI5.md) for concept explanations
+- Run both door scenarios (unlocked/locked)
+- Explore the memory graph in Neo4j Browser
+
+**Compare Reward Modes:**
+- See [QUICKSTART_BOTH_MODES.md](QUICKSTART_BOTH_MODES.md) for pedagogical guide
+- Run `python experiments/reward_mode_comparison.py` for statistical comparison
+- Understand how metric gaming emerges from reward design
+
+**Deep Dive:**
+- Review [docs/spec.md](docs/spec.md) for technical specification
+- Explore the graph structure with custom Cypher queries
+- Experiment with different parameter values in `config.py`
+
+**Extend The Project:**
+- Add new skills or observations
+- Implement multi-room scenarios
+- Try different belief update strategies
+- Compare with other learning algorithms
 
 ## References
 

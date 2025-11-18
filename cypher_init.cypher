@@ -80,7 +80,108 @@ CREATE (goWindow:Skill {
 });
 
 // ----------------------------------------------------------------------------
-// 4. Create observation types
+// 4. Create procedural memory: SkillStats for learning
+// ----------------------------------------------------------------------------
+
+// Create SkillStats nodes for tracking empirical performance
+MATCH (peekDoor:Skill {name: "peek_door"})
+CREATE (peekStats:SkillStats {
+  skill_name: "peek_door",
+  total_uses: 0,
+  successful_episodes: 0,
+  failed_episodes: 0,
+  avg_steps_when_successful: 0.0,
+  avg_steps_when_failed: 0.0,
+
+  // Context-specific stats: belief state
+  uncertain_uses: 0,
+  uncertain_successes: 0,
+  confident_locked_uses: 0,
+  confident_locked_successes: 0,
+  confident_unlocked_uses: 0,
+  confident_unlocked_successes: 0,
+
+  created_at: datetime(),
+  last_updated: datetime()
+})
+CREATE (peekDoor)-[:HAS_STATS]->(peekStats);
+
+MATCH (tryDoor:Skill {name: "try_door"})
+CREATE (tryStats:SkillStats {
+  skill_name: "try_door",
+  total_uses: 0,
+  successful_episodes: 0,
+  failed_episodes: 0,
+  avg_steps_when_successful: 0.0,
+  avg_steps_when_failed: 0.0,
+
+  uncertain_uses: 0,
+  uncertain_successes: 0,
+  confident_locked_uses: 0,
+  confident_locked_successes: 0,
+  confident_unlocked_uses: 0,
+  confident_unlocked_successes: 0,
+
+  created_at: datetime(),
+  last_updated: datetime()
+})
+CREATE (tryDoor)-[:HAS_STATS]->(tryStats);
+
+MATCH (goWindow:Skill {name: "go_window"})
+CREATE (windowStats:SkillStats {
+  skill_name: "go_window",
+  total_uses: 0,
+  successful_episodes: 0,
+  failed_episodes: 0,
+  avg_steps_when_successful: 0.0,
+  avg_steps_when_failed: 0.0,
+
+  uncertain_uses: 0,
+  uncertain_successes: 0,
+  confident_locked_uses: 0,
+  confident_locked_successes: 0,
+  confident_unlocked_uses: 0,
+  confident_unlocked_successes: 0,
+
+  created_at: datetime(),
+  last_updated: datetime()
+})
+CREATE (goWindow)-[:HAS_STATS]->(windowStats);
+
+// ----------------------------------------------------------------------------
+// 5. Create meta-learning: MetaParams for adaptive agent
+// ----------------------------------------------------------------------------
+
+// Create MetaParams for tracking and adapting exploration/exploitation
+MATCH (agent:Agent {name: "MacGyverBot"})
+CREATE (meta:MetaParams {
+  // Current parameters
+  alpha: 1.0,
+  beta: 6.0,
+  gamma: 0.3,
+
+  // Parameter history (for tracking adaptation)
+  alpha_history: [1.0],
+  beta_history: [6.0],
+  gamma_history: [0.3],
+
+  // Learning metrics
+  episodes_completed: 0,
+  avg_steps_last_10: 0.0,
+  success_rate_last_10: 0.0,
+
+  // Adaptation settings
+  adaptation_enabled: true,
+  min_episodes_before_adapt: 5,
+  adapt_frequency: 5,
+
+  created_at: datetime(),
+  last_adapted: datetime()
+})
+CREATE (agent)-[:HAS_META_PARAMS]->(meta);
+
+// ----------------------------------------------------------------------------
+// 6. Create observation types
 // ----------------------------------------------------------------------------
 
 CREATE (obsLocked:Observation {
@@ -109,7 +210,7 @@ CREATE (obsWindowEscape:Observation {
 });
 
 // ----------------------------------------------------------------------------
-// 5. Create relationships - World structure
+// 7. Create relationships - World structure
 // ----------------------------------------------------------------------------
 
 MATCH (agent:Agent {name: "MacGyverBot"})
@@ -121,7 +222,7 @@ CREATE (agent)-[:LOCATED_IN]->(room),
        (window)-[:LOCATED_IN]->(room);
 
 // ----------------------------------------------------------------------------
-// 6. Create relationships - Belief structure
+// 8. Create relationships - Belief structure
 // ----------------------------------------------------------------------------
 
 MATCH (agent:Agent {name: "MacGyverBot"})
@@ -131,7 +232,7 @@ CREATE (agent)-[:HAS_BELIEF]->(belief),
        (belief)-[:ABOUT]->(doorLockState);
 
 // ----------------------------------------------------------------------------
-// 7. Create relationships - Skill semantics
+// 9. Create relationships - Skill semantics
 // ----------------------------------------------------------------------------
 
 MATCH (peekDoor:Skill {name: "peek_door"})
@@ -144,16 +245,17 @@ CREATE (peekDoor)-[:ACTS_ON]->(door),
        (goWindow)-[:ACTS_ON]->(window);
 
 // ----------------------------------------------------------------------------
-// 8. Create indexes for performance
+// 10. Create indexes for performance
 // ----------------------------------------------------------------------------
 
 CREATE INDEX agent_name IF NOT EXISTS FOR (a:Agent) ON (a.name);
 CREATE INDEX skill_name IF NOT EXISTS FOR (s:Skill) ON (s.name);
 CREATE INDEX observation_name IF NOT EXISTS FOR (o:Observation) ON (o.name);
 CREATE INDEX episode_id IF NOT EXISTS FOR (e:Episode) ON (e.id);
+CREATE INDEX skill_stats_name IF NOT EXISTS FOR (ss:SkillStats) ON (ss.skill_name);
 
 // ----------------------------------------------------------------------------
-// 9. Return summary
+// 11. Return summary
 // ----------------------------------------------------------------------------
 
 MATCH (n)

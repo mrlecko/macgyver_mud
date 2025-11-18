@@ -7,9 +7,11 @@ from neo4j import Session
 import config
 from graph_model import (
     get_agent, get_initial_belief, update_belief,
-    get_skills, create_episode, log_step, mark_episode_complete
+    get_skills, create_episode, log_step, mark_episode_complete,
+    get_skill_stats, update_skill_stats,
+    get_meta_params, update_meta_params, get_recent_episodes_stats
 )
-from scoring import score_skill
+from scoring import score_skill, score_skill_with_memory, compute_epistemic_value
 
 
 class AgentRuntime:
@@ -24,7 +26,10 @@ class AgentRuntime:
     5. Logs everything to Neo4j graph
     """
 
-    def __init__(self, session: Session, door_state: str, initial_belief: float = None):
+    def __init__(self, session: Session, door_state: str, initial_belief: float = None,
+                 use_procedural_memory: bool = False,
+                 adaptive_params: bool = False,
+                 verbose_memory: bool = False):
         """
         Initialize agent runtime.
 
@@ -32,9 +37,15 @@ class AgentRuntime:
             session: Neo4j session
             door_state: Ground truth ("locked" or "unlocked")
             initial_belief: Starting belief (default from config)
+            use_procedural_memory: Enable memory-influenced decisions
+            adaptive_params: Enable meta-parameter adaptation
+            verbose_memory: Show memory reasoning in decision logs
         """
         self.session = session
         self.door_state = door_state
+        self.use_procedural_memory = use_procedural_memory
+        self.adaptive_params = adaptive_params
+        self.verbose_memory = verbose_memory
 
         # Get agent from graph
         agent = get_agent(session, config.AGENT_NAME)
@@ -51,16 +62,53 @@ class AgentRuntime:
         else:
             self.p_unlocked = initial_belief
 
+        # Get meta-parameters (dynamic if adaptive)
+        if adaptive_params:
+            meta = get_meta_params(session, self.agent_id)
+            self.alpha = meta["alpha"]
+            self.beta = meta["beta"]
+            self.gamma = meta["gamma"]
+            self.episodes_completed = meta["episodes"]
+        else:
+            self.alpha = config.ALPHA
+            self.beta = config.BETA
+            self.gamma = config.GAMMA
+            self.episodes_completed = 0
+
         # Episode state
         self.escaped = False
         self.current_episode_id = None
         self.step_count = 0
 
+        # Decision log for verbose mode
+        self.decision_log = []
+
+    def _get_belief_category(self, p_unlocked: float) -> str:
+        """
+        Categorize belief state for context matching.
+
+        CRITICAL: Agent must NOT know ground truth (door_state).
+        Uses only belief to infer likely state.
+
+        Args:
+            p_unlocked: Current belief probability
+
+        Returns:
+            Category string: "uncertain", "confident_locked", or "confident_unlocked"
+        """
+        if p_unlocked < 0.3:
+            return "confident_locked"
+        elif p_unlocked > 0.7:
+            return "confident_unlocked"
+        else:
+            return "uncertain"
+
     def select_skill(self, skills: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Select best skill based on current belief.
+        Select best skill based on current belief (and optionally memory).
 
         Uses active inference scoring: goal value + info gain - cost
+        When memory enabled: adds empirical bonus and epistemic exploration
 
         Args:
             skills: List of available skill dicts
@@ -71,15 +119,61 @@ class AgentRuntime:
         if not skills:
             raise ValueError("No skills available")
 
-        # Score each skill
+        # Determine context (belief-based, NOT ground truth)
+        context = {"belief_category": self._get_belief_category(self.p_unlocked)}
+
         scored_skills = []
+
         for skill in skills:
-            score = score_skill(skill, self.p_unlocked)
-            scored_skills.append((score, skill))
+            if self.use_procedural_memory:
+                # Get skill statistics
+                stats = get_skill_stats(
+                    self.session, skill["name"],
+                    context=context  # Only pass belief context, not door_state!
+                )
+
+                # Compute epistemic bonus (exploration)
+                if self.episodes_completed < 20:
+                    epistemic = compute_epistemic_value(
+                        self.p_unlocked, stats, self.episodes_completed
+                    )
+                else:
+                    epistemic = 0.0
+
+                # Score with memory
+                score, explanation = score_skill_with_memory(
+                    skill, self.p_unlocked,
+                    skill_stats=stats,
+                    context=context,
+                    memory_weight=0.5,
+                    epistemic_bonus=epistemic
+                )
+
+                if self.verbose_memory:
+                    skill["explanation"] = explanation
+
+            else:
+                # Pure theoretical scoring
+                score = score_skill(skill, self.p_unlocked,
+                                  alpha=self.alpha, beta=self.beta, gamma=self.gamma)
+                explanation = None
+
+            scored_skills.append((score, skill, explanation))
 
         # Sort by score (descending) and pick best
         scored_skills.sort(key=lambda x: x[0], reverse=True)
-        best_score, best_skill = scored_skills[0]
+        best_score, best_skill, best_explanation = scored_skills[0]
+
+        # Log decision
+        self.decision_log.append({
+            "step": self.step_count,
+            "belief": self.p_unlocked,
+            "belief_category": context["belief_category"],
+            "selected": best_skill["name"],
+            "score": best_score,
+            "explanation": best_explanation,
+            "all_scores": [(s["name"], score) for score, s, _ in scored_skills]
+        })
 
         return best_skill
 
@@ -135,6 +229,55 @@ class AgentRuntime:
         else:
             # Unknown skill - no effect
             return "obs_unknown", self.p_unlocked, False
+
+    def _adapt_meta_parameters(self):
+        """
+        Adjust exploration/exploitation based on recent performance.
+
+        Meta-learning: If agent is doing well, can reduce exploration.
+        If struggling, increase exploration.
+
+        Only runs when adaptive_params=True and sufficient episodes completed.
+        """
+        if not self.adaptive_params or self.episodes_completed < 5:
+            return  # Need data first
+
+        recent = get_recent_episodes_stats(self.session, self.agent_id, limit=10)
+
+        if recent["count"] < 5:
+            return  # Not enough data
+
+        avg_steps = recent["avg_steps"]
+        success_rate = recent["success_rate"]
+
+        # Adaptation rules
+        new_params = {
+            "alpha": self.alpha,
+            "beta": self.beta,
+            "gamma": self.gamma
+        }
+
+        # If doing well (low steps, high success), reduce exploration
+        if avg_steps <= 2.5 and success_rate >= 0.8:
+            new_params["beta"] = max(3.0, self.beta * 0.95)  # Reduce info-seeking
+
+        # If struggling (high steps or low success), increase exploration
+        elif avg_steps > 3.5 or success_rate < 0.6:
+            new_params["beta"] = min(8.0, self.beta * 1.05)  # Increase info-seeking
+
+        # If very efficient, can be more cost-sensitive
+        if avg_steps <= 2.0:
+            new_params["gamma"] = min(0.5, self.gamma * 1.02)
+
+        # Update if changed
+        if (new_params["alpha"] != self.alpha or
+            new_params["beta"] != self.beta or
+            new_params["gamma"] != self.gamma):
+
+            update_meta_params(self.session, self.agent_id, new_params)
+            self.alpha = new_params["alpha"]
+            self.beta = new_params["beta"]
+            self.gamma = new_params["gamma"]
 
     def run_episode(self, max_steps: int = None) -> str:
         """
@@ -201,6 +344,21 @@ class AgentRuntime:
 
         # Mark episode as complete
         mark_episode_complete(self.session, episode_id, self.escaped, self.step_count)
+
+        # Update skill statistics if using procedural memory
+        if self.use_procedural_memory:
+            context = {"belief_category": self._get_belief_category(self.p_unlocked)}
+            update_skill_stats(self.session, episode_id, self.escaped, self.step_count, context)
+
+        # Adapt meta-parameters if enabled
+        if self.adaptive_params:
+            self.episodes_completed += 1
+            # Adapt every 5 episodes
+            if self.episodes_completed % 5 == 0:
+                self._adapt_meta_parameters()
+
+            # Update episode count in graph
+            update_meta_params(self.session, self.agent_id, {"episodes_completed": self.episodes_completed})
 
         return episode_id
 

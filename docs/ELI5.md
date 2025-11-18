@@ -15,7 +15,8 @@ This project is a **robot brain** that figures out the smartest way to escape.
 The special part? The robot:
 - **Thinks** about what it believes (is the door locked?)
 - **Learns** by looking around
-- **Remembers** everything it tried before
+- **Remembers** everything it tried (episodes are logged to the graph)
+- **Can learn from past episodes** (with `--use-memory` flag)
 - **Chooses** actions that either help it escape OR help it learn more
 
 ### The Two Big Ideas
@@ -32,7 +33,26 @@ The special part? The robot:
 - Everything the robot does is saved in a "memory graph"
 - You can look back and see what it tried
 - You can analyze why it made each choice
-- The memory helps it get smarter over time
+- **With `--use-memory` flag**: The memory helps it get smarter over time
+- **Without flag**: Memory is logged but not used for learning
+
+### Learning Modes (Reward Design Matters!)
+
+When the robot learns from memory (`--use-memory`), the reward design determines **what** it learns:
+
+**NAIVE Mode** (`--reward-mode=naive`):
+- Robot discovers: "go_window always works!"
+- Stops gathering information (no more peeking)
+- Efficient but lazy (1 step, but not intelligent)
+- **Lesson**: Shows "metric gaming" - optimizing the wrong thing
+
+**STRATEGIC Mode** (`--reward-mode=strategic`):
+- Robot learns: "Peek first, then choose wisely"
+- Uses door when unlocked, window when locked
+- Thoughtful and context-aware (2 steps, but smart)
+- **Lesson**: Better rewards = better learned behavior
+
+**Try both modes** to see how the same learning mechanism produces completely different behaviors! See [QUICKSTART_BOTH_MODES.md](QUICKSTART_BOTH_MODES.md) for detailed comparison.
 
 ---
 
@@ -214,14 +234,14 @@ Step  Skill      Observation     p(unlocked)      Δp
 ╰────────────────────────────────────────╯
 ```
 
-### Run All Tests (52 tests)
+### Run All Tests (80 tests)
 
 ```bash
 # All tests should pass
-pytest test_scoring.py test_graph_model.py test_agent_runtime.py -v
+pytest test_*.py -v
 
 # Just check they pass
-pytest test_scoring.py test_graph_model.py test_agent_runtime.py -q
+pytest test_*.py -q
 ```
 
 ### Advanced Usage
@@ -235,6 +255,16 @@ python runner.py --door-state locked --quiet
 
 # Verbose mode (see scoring details)
 python runner.py --door-state unlocked --verbose
+
+# Enable learning from past episodes
+python runner.py --door-state locked --use-memory
+
+# Compare reward modes (naive vs strategic)
+python runner.py --door-state locked --use-memory --reward-mode=naive
+python runner.py --door-state locked --use-memory --reward-mode=strategic
+
+# Show memory reasoning details
+python runner.py --door-state locked --use-memory --verbose-memory
 ```
 
 ---
@@ -434,8 +464,8 @@ python runner.py --door-state locked    # Should peek then go_window
 
 ### Check Tests
 ```bash
-pytest test_scoring.py test_graph_model.py test_agent_runtime.py -q
-# Should see: 52 passed
+pytest test_*.py -q
+# Should see: 80 passed
 ```
 
 ### Explore Memory

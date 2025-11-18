@@ -67,6 +67,10 @@ class TestGetInitialBelief:
     def test_get_initial_belief(self, neo4j_session):
         """Should return initial belief value"""
         agent = get_agent(neo4j_session, "MacGyverBot")
+
+        # Reset belief to initial state (may have been modified by other tests)
+        update_belief(neo4j_session, agent["id"], "DoorLockState", 0.5)
+
         belief = get_initial_belief(neo4j_session, agent["id"], "DoorLockState")
 
         assert belief is not None
