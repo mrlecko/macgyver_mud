@@ -1,0 +1,3821 @@
+{
+  "experiment_name": "exp1_crisp_vs_hybrid",
+  "timestamp": "2025-11-19T15:03:37.197712",
+  "conditions": {
+    "crisp": {
+      "n_trials": 100,
+      "skill_mode": "crisp"
+    },
+    "hybrid": {
+      "n_trials": 100,
+      "skill_mode": "hybrid"
+    }
+  },
+  "raw_data": {
+    "crisp": [
+      {
+        "episode_id": 699,
+        "trial_id": 0,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 701,
+        "trial_id": 1,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 703,
+        "trial_id": 2,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 705,
+        "trial_id": 3,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 707,
+        "trial_id": 4,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 709,
+        "trial_id": 5,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 711,
+        "trial_id": 6,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 713,
+        "trial_id": 7,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 715,
+        "trial_id": 8,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 717,
+        "trial_id": 9,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 719,
+        "trial_id": 10,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 721,
+        "trial_id": 11,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 723,
+        "trial_id": 12,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 725,
+        "trial_id": 13,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 727,
+        "trial_id": 14,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 729,
+        "trial_id": 15,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 731,
+        "trial_id": 16,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 733,
+        "trial_id": 17,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 735,
+        "trial_id": 18,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 737,
+        "trial_id": 19,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 739,
+        "trial_id": 20,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 741,
+        "trial_id": 21,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 743,
+        "trial_id": 22,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 745,
+        "trial_id": 23,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 747,
+        "trial_id": 24,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 749,
+        "trial_id": 25,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 751,
+        "trial_id": 26,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 753,
+        "trial_id": 27,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 755,
+        "trial_id": 28,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 757,
+        "trial_id": 29,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 759,
+        "trial_id": 30,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 761,
+        "trial_id": 31,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 763,
+        "trial_id": 32,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 765,
+        "trial_id": 33,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 767,
+        "trial_id": 34,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 769,
+        "trial_id": 35,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 771,
+        "trial_id": 36,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 773,
+        "trial_id": 37,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 775,
+        "trial_id": 38,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 777,
+        "trial_id": 39,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 779,
+        "trial_id": 40,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 781,
+        "trial_id": 41,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 783,
+        "trial_id": 42,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 785,
+        "trial_id": 43,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 787,
+        "trial_id": 44,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 789,
+        "trial_id": 45,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 791,
+        "trial_id": 46,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 793,
+        "trial_id": 47,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 795,
+        "trial_id": 48,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 797,
+        "trial_id": 49,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 799,
+        "trial_id": 50,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 801,
+        "trial_id": 51,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 803,
+        "trial_id": 52,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 805,
+        "trial_id": 53,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 807,
+        "trial_id": 54,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 809,
+        "trial_id": 55,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 811,
+        "trial_id": 56,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 813,
+        "trial_id": 57,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 815,
+        "trial_id": 58,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 817,
+        "trial_id": 59,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 819,
+        "trial_id": 60,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 821,
+        "trial_id": 61,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 823,
+        "trial_id": 62,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 825,
+        "trial_id": 63,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 827,
+        "trial_id": 64,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 829,
+        "trial_id": 65,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 831,
+        "trial_id": 66,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 833,
+        "trial_id": 67,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 835,
+        "trial_id": 68,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 837,
+        "trial_id": 69,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 839,
+        "trial_id": 70,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 841,
+        "trial_id": 71,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 843,
+        "trial_id": 72,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 845,
+        "trial_id": 73,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 847,
+        "trial_id": 74,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 849,
+        "trial_id": 75,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 851,
+        "trial_id": 76,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 853,
+        "trial_id": 77,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 855,
+        "trial_id": 78,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 857,
+        "trial_id": 79,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 859,
+        "trial_id": 80,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 861,
+        "trial_id": 81,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 863,
+        "trial_id": 82,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 865,
+        "trial_id": 83,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 867,
+        "trial_id": 84,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 869,
+        "trial_id": 85,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 871,
+        "trial_id": 86,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 873,
+        "trial_id": 87,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 875,
+        "trial_id": 88,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 877,
+        "trial_id": 89,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 879,
+        "trial_id": 90,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 881,
+        "trial_id": 91,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 883,
+        "trial_id": 92,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 885,
+        "trial_id": 93,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 887,
+        "trial_id": 94,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 889,
+        "trial_id": 95,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 891,
+        "trial_id": 96,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 893,
+        "trial_id": 97,
+        "skill_mode": "crisp",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 895,
+        "trial_id": 98,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 897,
+        "trial_id": 99,
+        "skill_mode": "crisp",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      }
+    ],
+    "hybrid": [
+      {
+        "episode_id": 899,
+        "trial_id": 0,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 901,
+        "trial_id": 1,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 903,
+        "trial_id": 2,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 905,
+        "trial_id": 3,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 907,
+        "trial_id": 4,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 909,
+        "trial_id": 5,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 911,
+        "trial_id": 6,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 913,
+        "trial_id": 7,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 915,
+        "trial_id": 8,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 917,
+        "trial_id": 9,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 919,
+        "trial_id": 10,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 921,
+        "trial_id": 11,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 923,
+        "trial_id": 12,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 925,
+        "trial_id": 13,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 927,
+        "trial_id": 14,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 929,
+        "trial_id": 15,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 931,
+        "trial_id": 16,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 933,
+        "trial_id": 17,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 935,
+        "trial_id": 18,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 937,
+        "trial_id": 19,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 939,
+        "trial_id": 20,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 941,
+        "trial_id": 21,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 943,
+        "trial_id": 22,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 945,
+        "trial_id": 23,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 947,
+        "trial_id": 24,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 949,
+        "trial_id": 25,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 951,
+        "trial_id": 26,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 953,
+        "trial_id": 27,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 955,
+        "trial_id": 28,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 957,
+        "trial_id": 29,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 959,
+        "trial_id": 30,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 961,
+        "trial_id": 31,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 963,
+        "trial_id": 32,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 965,
+        "trial_id": 33,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 967,
+        "trial_id": 34,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 969,
+        "trial_id": 35,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 971,
+        "trial_id": 36,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 973,
+        "trial_id": 37,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 975,
+        "trial_id": 38,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 977,
+        "trial_id": 39,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 979,
+        "trial_id": 40,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 981,
+        "trial_id": 41,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 983,
+        "trial_id": 42,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 985,
+        "trial_id": 43,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 987,
+        "trial_id": 44,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 989,
+        "trial_id": 45,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 991,
+        "trial_id": 46,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 993,
+        "trial_id": 47,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 995,
+        "trial_id": 48,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 997,
+        "trial_id": 49,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 999,
+        "trial_id": 50,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1001,
+        "trial_id": 51,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1003,
+        "trial_id": 52,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1005,
+        "trial_id": 53,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1007,
+        "trial_id": 54,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1009,
+        "trial_id": 55,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1011,
+        "trial_id": 56,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1013,
+        "trial_id": 57,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1015,
+        "trial_id": 58,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1017,
+        "trial_id": 59,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1019,
+        "trial_id": 60,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1021,
+        "trial_id": 61,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1023,
+        "trial_id": 62,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1025,
+        "trial_id": 63,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1027,
+        "trial_id": 64,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1029,
+        "trial_id": 65,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1031,
+        "trial_id": 66,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1033,
+        "trial_id": 67,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1035,
+        "trial_id": 68,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1037,
+        "trial_id": 69,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1039,
+        "trial_id": 70,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1041,
+        "trial_id": 71,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1043,
+        "trial_id": 72,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1045,
+        "trial_id": 73,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1047,
+        "trial_id": 74,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1049,
+        "trial_id": 75,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1051,
+        "trial_id": 76,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1053,
+        "trial_id": 77,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1055,
+        "trial_id": 78,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1057,
+        "trial_id": 79,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1059,
+        "trial_id": 80,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1061,
+        "trial_id": 81,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1063,
+        "trial_id": 82,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1065,
+        "trial_id": 83,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1067,
+        "trial_id": 84,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1069,
+        "trial_id": 85,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1071,
+        "trial_id": 86,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1073,
+        "trial_id": 87,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1075,
+        "trial_id": 88,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1077,
+        "trial_id": 89,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1079,
+        "trial_id": 90,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1081,
+        "trial_id": 91,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1083,
+        "trial_id": 92,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1085,
+        "trial_id": 93,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1087,
+        "trial_id": 94,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1089,
+        "trial_id": 95,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1091,
+        "trial_id": 96,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1093,
+        "trial_id": 97,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1095,
+        "trial_id": 98,
+        "skill_mode": "hybrid",
+        "door_state": "locked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      },
+      {
+        "episode_id": 1097,
+        "trial_id": 99,
+        "skill_mode": "hybrid",
+        "door_state": "unlocked",
+        "escaped": true,
+        "steps": 1,
+        "escaped_via_door": false,
+        "escaped_via_window": true,
+        "trace": [
+          {
+            "step_index": 0,
+            "skill": "go_window",
+            "observation": "obs_window_escape",
+            "p_before": 0.5,
+            "p_after": 0.5
+          }
+        ]
+      }
+    ]
+  },
+  "summary": {}
+}
