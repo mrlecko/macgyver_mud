@@ -5,8 +5,9 @@ Provides read/write functions for agents, beliefs, skills, episodes, and steps
 from typing import Dict, List, Optional, Any
 from neo4j import Session
 import uuid
-import json
 from datetime import datetime
+import json
+
 
 
 def get_agent(session: Session, name: str) -> Optional[Dict[str, Any]]:
@@ -109,41 +110,6 @@ def get_skills(session: Session, agent_id: str) -> List[Dict[str, Any]]:
     return skills
 
 
-def filter_skills_by_mode(skills: List[Dict[str, Any]], skill_mode: str) -> List[Dict[str, Any]]:
-    """
-    Filter skills based on skill mode selection.
-
-    Args:
-        skills: List of skill dictionaries
-        skill_mode: One of "crisp", "balanced", or "hybrid"
-            - "crisp": Only non-balanced skills (peek, try, window)
-            - "balanced": Only balanced skills (probe_and_try, etc.)
-            - "hybrid": All skills
-
-    Returns:
-        Filtered list of skills
-
-    Raises:
-        ValueError: If skill_mode is invalid
-    """
-    valid_modes = ["crisp", "balanced", "hybrid"]
-    if skill_mode not in valid_modes:
-        raise ValueError(f"Invalid skill_mode '{skill_mode}'. Must be one of {valid_modes}")
-
-    if skill_mode == "hybrid":
-        return skills
-
-    if skill_mode == "crisp":
-        # Return only non-balanced skills
-        return [s for s in skills if s.get("kind") != "balanced"]
-
-    if skill_mode == "balanced":
-        # Return only balanced skills
-        return [s for s in skills if s.get("kind") == "balanced"]
-
-    return skills
-
-
 def create_episode(session: Session, agent_id: str, door_state: str) -> str:
     """
     Create a new episode node representing one simulation run.
@@ -174,6 +140,7 @@ def create_episode(session: Session, agent_id: str, door_state: str) -> str:
 
     record = result.single()
     return record["episode_id"]
+
 
 
 def log_step(session: Session, episode_id: int, step_index: int,
@@ -298,7 +265,6 @@ def log_step(session: Session, episode_id: int, step_index: int,
         silver_json,
         silver_score,
     )
-
 
 def mark_episode_complete(session: Session, episode_id: str,
                           escaped: bool, total_steps: int) -> None:

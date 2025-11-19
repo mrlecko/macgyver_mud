@@ -205,7 +205,7 @@ class TestLogStep:
             episode_id,
             step_index=0,
             skill_name="peek_door",
-            obs_name="obs_door_locked",
+            observation="obs_door_locked",
             p_before=0.5,
             p_after=0.15
         )
@@ -232,7 +232,7 @@ class TestLogStep:
             episode_id,
             step_index=0,
             skill_name="peek_door",
-            obs_name="obs_door_locked",
+            observation="obs_door_locked",
             p_before=0.5,
             p_after=0.15
         )
@@ -270,6 +270,114 @@ class TestLogStep:
         """, ep_id=episode_id).single()["count"]
 
         assert count == 2
+
+    def test_log_step_with_silver_stamp(self, neo4j_session, clean_episodes):
+        """Should store silver stamp when provided"""
+        from scoring_silver import build_silver_stamp
+
+        agent = get_agent(neo4j_session, "MacGyverBot")
+        episode_id = create_episode(neo4j_session, agent["id"], "locked")
+
+        # Build a silver stamp
+        silver_stamp = build_silver_stamp("peek_door", 1.0, 0.5)
+
+        # Log step with silver stamp
+        log_step(
+            neo4j_session,
+            episode_id,
+            step_index=0,
+            skill_name="peek_door",
+            observation="obs_door_locked",
+            p_before=0.5,
+            p_after=0.15,
+            silver_stamp=silver_stamp
+        )
+
+        # Verify silver data stored
+        result = neo4j_session.run("""
+            MATCH (s:Step {step_index: 0})
+            RETURN s.silver_stamp AS stamp, s.silver_score AS score
+        """).single()
+
+        assert result is not None
+        assert result["stamp"] is not None
+        assert result["score"] is not None
+
+        # Verify JSON is valid
+        import json
+        stamp_data = json.loads(result["stamp"])
+        assert stamp_data["skill_name"] == "peek_door"
+        assert "k_explore" in stamp_data
+        assert "k_efficiency" in stamp_data
+
+    def test_log_step_auto_builds_silver(self, neo4j_session, clean_episodes):
+        """Should auto-build silver stamp if scoring_silver available"""
+        agent = get_agent(neo4j_session, "MacGyverBot")
+        episode_id = create_episode(neo4j_session, agent["id"], "locked")
+
+        # Log step WITHOUT providing silver_stamp
+        log_step(
+            neo4j_session,
+            episode_id,
+            step_index=0,
+            skill_name="peek_door",
+            observation="obs_door_locked",
+            p_before=0.5,
+            p_after=0.15
+        )
+
+        # Should have auto-built silver data
+        result = neo4j_session.run("""
+            MATCH (s:Step {step_index: 0})
+            RETURN s.silver_stamp AS stamp, s.silver_score AS score, s.skill_name AS skill
+        """).single()
+
+        assert result is not None
+        # Should have convenience field
+        assert result["skill"] == "peek_door"
+        # Should have silver data (auto-built)
+        assert result["stamp"] is not None
+        assert result["score"] is not None
+
+    def test_silver_stamp_json_structure(self, neo4j_session, clean_episodes):
+        """Silver stamp JSON should have all required fields"""
+        agent = get_agent(neo4j_session, "MacGyverBot")
+        episode_id = create_episode(neo4j_session, agent["id"], "locked")
+
+        log_step(
+            neo4j_session,
+            episode_id,
+            step_index=0,
+            skill_name="try_door",
+            observation="obs_door_stuck",
+            p_before=0.85,
+            p_after=0.10
+        )
+
+        result = neo4j_session.run("""
+            MATCH (s:Step {step_index: 0})
+            RETURN s.silver_stamp AS stamp
+        """).single()
+
+        import json
+        stamp = json.loads(result["stamp"])
+
+        required_keys = [
+            "stamp_version",
+            "skill_name",
+            "p_unlocked",
+            "goal_value",
+            "info_gain",
+            "cost",
+            "base_score",
+            "k_explore",
+            "k_efficiency",
+            "entropy",
+            "silver_score"
+        ]
+
+        for key in required_keys:
+            assert key in stamp, f"Missing required key: {key}"
 
 
 if __name__ == "__main__":

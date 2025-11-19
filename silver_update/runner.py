@@ -28,9 +28,6 @@ Examples:
   python runner.py --door-state unlocked --verbose
   python runner.py --door-state locked --use-memory
   python runner.py --door-state unlocked --use-memory --adaptive --verbose-memory
-  python runner.py --door-state locked --skill-mode crisp
-  python runner.py --door-state unlocked --skill-mode balanced
-  python runner.py --door-state locked --skill-mode hybrid --verbose
         """
     )
 
@@ -92,13 +89,6 @@ Examples:
         help="Reward mode: 'naive' (shows metric gaming) or 'strategic' (encourages smart play)"
     )
 
-    parser.add_argument(
-        "--skill-mode",
-        choices=["crisp", "balanced", "hybrid"],
-        default="hybrid",
-        help="Skill selection mode: 'crisp' (base skills only), 'balanced' (multi-objective skills), or 'hybrid' (all skills)"
-    )
-
     return parser.parse_args()
 
 
@@ -116,10 +106,6 @@ def print_header(console: Console, args):
     # Show reward mode (highlight if naive to indicate it's the "problematic" version)
     reward_mode_display = f"[yellow]{args.reward_mode}[/yellow]" if args.reward_mode == "naive" else f"[green]{args.reward_mode}[/green]"
 
-    # Show skill mode with appropriate color
-    skill_mode_colors = {"crisp": "cyan", "balanced": "magenta", "hybrid": "green"}
-    skill_mode_display = f"[{skill_mode_colors.get(args.skill_mode, 'white')}]{args.skill_mode}[/]"
-
     header_text = f"""
 [bold cyan]MacGyver Active Inference Demo[/bold cyan]
 [dim]Locked Room Escape Scenario[/dim]
@@ -128,8 +114,7 @@ def print_header(console: Console, args):
   Ground Truth: Door is [bold {'green' if args.door_state == 'unlocked' else 'red'}]{args.door_state}[/]
   Initial Belief: p(unlocked) = {args.initial_belief:.2f}
   Max Steps: {args.max_steps}
-  Reward Mode: {reward_mode_display}
-  Skill Mode: {skill_mode_display}{memory_status}
+  Reward Mode: {reward_mode_display}{memory_status}
     """
     console.print(Panel(header_text.strip(), box=box.ROUNDED))
 
@@ -294,8 +279,7 @@ def main():
                 initial_belief=args.initial_belief,
                 use_procedural_memory=args.use_memory,
                 adaptive_params=args.adaptive,
-                verbose_memory=args.verbose_memory,
-                skill_mode=args.skill_mode
+                verbose_memory=args.verbose_memory
             )
 
             # Run episode

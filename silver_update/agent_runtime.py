@@ -7,7 +7,7 @@ from neo4j import Session
 import config
 from graph_model import (
     get_agent, get_initial_belief, update_belief,
-    get_skills, filter_skills_by_mode, create_episode, log_step, mark_episode_complete,
+    get_skills, create_episode, log_step, mark_episode_complete,
     get_skill_stats, update_skill_stats,
     get_meta_params, update_meta_params, get_recent_episodes_stats
 )
@@ -29,8 +29,7 @@ class AgentRuntime:
     def __init__(self, session: Session, door_state: str, initial_belief: float = None,
                  use_procedural_memory: bool = False,
                  adaptive_params: bool = False,
-                 verbose_memory: bool = False,
-                 skill_mode: str = "hybrid"):
+                 verbose_memory: bool = False):
         """
         Initialize agent runtime.
 
@@ -41,14 +40,12 @@ class AgentRuntime:
             use_procedural_memory: Enable memory-influenced decisions
             adaptive_params: Enable meta-parameter adaptation
             verbose_memory: Show memory reasoning in decision logs
-            skill_mode: Skill filtering mode: "crisp", "balanced", or "hybrid" (default)
         """
         self.session = session
         self.door_state = door_state
         self.use_procedural_memory = use_procedural_memory
         self.adaptive_params = adaptive_params
         self.verbose_memory = verbose_memory
-        self.skill_mode = skill_mode
 
         # Get agent from graph
         agent = get_agent(session, config.AGENT_NAME)
@@ -313,9 +310,8 @@ class AgentRuntime:
 
         # Main control loop
         while not self.escaped and self.step_count < max_steps:
-            # Get available skills and filter by mode
-            all_skills = get_skills(self.session, self.agent_id)
-            skills = filter_skills_by_mode(all_skills, self.skill_mode)
+            # Get available skills
+            skills = get_skills(self.session, self.agent_id)
 
             # Select skill based on current belief
             selected_skill = self.select_skill(skills)
