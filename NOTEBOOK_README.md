@@ -1,12 +1,13 @@
-# MacGyver MUD Interactive Deep Dive Notebook
+# MacGyver MUD: Interactive Active Inference Notebook
 
-## 📓 Overview
+## Overview
 
-**File**: `MacGyverMUD_DeepDive.ipynb`
+**File**: `MacGyverMUD_Essentials.ipynb`
 
-An interactive Jupyter notebook that teaches active inference and geometric diagnostics through hands-on exploration of the MacGyver MUD locked room scenario.
+Learn Active Inference through an interactive locked-door escape scenario with widgets, visualizations, and hands-on exploration.
 
-**Estimated Time**: 2-3 hours (can be split across sessions)
+**Duration**: 45-60 minutes
+**Level**: Beginner to Intermediate
 
 ---
 
