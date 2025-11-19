@@ -384,3 +384,56 @@ visualize-balanced: ## Generate balanced vs crisp comparison visualizations
 	@echo "  - goal_info_space.png (2D objective space)"
 	@echo "  - k_explore_vs_belief.png (evolution over belief)"
 	@echo "  - phase_diagram_comparison.png (geometric phase space)"
+
+# --- Jupyter Notebook Targets ---
+
+.PHONY: notebook notebook-build notebook-info
+
+notebook: ## Launch Jupyter notebook for interactive deep dive
+	@echo "Launching Jupyter notebook..."
+	@echo "The notebook will open in your browser."
+	@echo ""
+	@echo "Notebook: MacGyverMUD_DeepDive.ipynb"
+	@echo "  - Part 0: Setup & Orientation"
+	@echo "  - Part 1: The MacGyver Problem"
+	@echo "  - Part 2: Active Inference Math"
+	@echo "  - Part 4: Silver Gauge Revelation (THE CLIMAX!)"
+	@echo "  - Part 5: Multi-Objective Evolution"
+	@echo ""
+	jupyter notebook MacGyverMUD_DeepDive.ipynb
+
+notebook-build: ## Rebuild notebook from source scripts
+	@echo "Rebuilding notebook..."
+	python build_notebook_parts.py
+	python build_notebook_part4.py
+	python build_notebook_part5_final.py
+	@echo "✓ Notebook rebuilt successfully"
+
+notebook-info: ## Show notebook information
+	@echo "MacGyver MUD Interactive Deep Dive Notebook"
+	@echo "==========================================="
+	@echo ""
+	@echo "File: MacGyverMUD_DeepDive.ipynb"
+	@echo "Estimated time: 2-3 hours"
+	@echo ""
+	@echo "Contents:"
+	@echo "  Part 0: Setup & Orientation (5 min)"
+	@echo "  Part 1: The MacGyver Problem (10 min)"
+	@echo "  Part 2: Active Inference Math (20 min)"
+	@echo "  Part 4: Silver Gauge Revelation (25 min) ⭐ THE CLIMAX"
+	@echo "  Part 5: Multi-Objective Evolution (20 min)"
+	@echo ""
+	@echo "Features:"
+	@echo "  ✓ Interactive sliders and calculators"
+	@echo "  ✓ Live Neo4j database queries"
+	@echo "  ✓ Progressive disclosure (concrete → abstract)"
+	@echo "  ✓ Checkpoints to test understanding"
+	@echo "  ✓ Professional visualizations"
+	@echo ""
+	@echo "Prerequisites:"
+	@echo "  - Neo4j running (make neo4j-start)"
+	@echo "  - Database initialized (make init)"
+	@echo "  - Jupyter installed (pip install jupyter)"
+	@echo ""
+	@echo "Launch: make notebook"
+
