@@ -2,6 +2,8 @@
 
 A demonstration of active inference and procedural memory using Neo4j as a knowledge graph backend.
 
+> **⚠️ IMPORTANT**: See [ERRATA.md](ERRATA.md) for critical corrections to original claims about k≈0 clustering and performance benefits. Empirical validation (Nov 2025) found that k≈0 clustering is a design property, not a natural phenomenon.
+
 ## Overview
 
 This project implements a "MacGyver in a Knowledge Graph" scenario where an agent:
@@ -90,7 +92,7 @@ python runner.py --door-state locked --skill-mode balanced
 python runner.py --door-state unlocked --skill-mode hybrid
 ```
 
-**Key Insight:** Same active inference scoring, different emergent behavior based on skill geometry!
+**Key Insight:** Same active inference scoring, different behavior based on skill design geometry!
 
 ### 4. Silver Gauge (Geometric Diagnostic Layer)
 
@@ -539,9 +541,14 @@ sudo rm -rf .neo4j44/  # If needed
 
 ## Key Documents
 
-- [FINAL_REPORT.md](FINAL_REPORT.md) - Comprehensive 25k-word analysis of Silver Gauge revelation
+**⚠️ READ FIRST:**
+- [ERRATA.md](ERRATA.md) - **Critical corrections** to original claims (empirical validation results)
+- [validation/EMPIRICAL_RED_TEAM_RESULTS.md](validation/EMPIRICAL_RED_TEAM_RESULTS.md) - Full experimental results
+
+**Framework Documentation:**
+- [FINAL_REPORT.md](FINAL_REPORT.md) - Comprehensive analysis of Silver Gauge framework *(see ERRATA for corrections)*
 - [PYTHAGOREAN_MEANS_EXPLAINED.md](PYTHAGOREAN_MEANS_EXPLAINED.md) - ELI5 deep dive on geometric means
-- [BALANCED_POLICY_GUIDE.md](BALANCED_POLICY_GUIDE.md) - Guide to multi-objective skills
+- [BALANCED_POLICY_GUIDE.md](BALANCED_POLICY_GUIDE.md) - Guide to multi-objective skills *(see ERRATA for corrections)*
 - [DEMO_GUIDE.md](DEMO_GUIDE.md) - Interactive demonstration walkthrough
 - [TEST_COMMANDS.md](TEST_COMMANDS.md) - Testing and validation guide
 

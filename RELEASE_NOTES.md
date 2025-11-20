@@ -1,8 +1,10 @@
 # Release Notes: MacGyver MUD v2.0 - Silver Gauge & Multi-Objective Evolution
 
 **Date:** 2025-11-19
-**Version:** 2.0.0
+**Version:** 2.0.1 (with empirical corrections)
 **Codename:** "Silver Rails"
+
+> **⚠️ CRITICAL UPDATE (v2.0.1)**: Empirical validation revealed that original k≈0 clustering claims were **incorrect**. The phenomenon is a design property, not a natural emergence. Framework remains valid as a diagnostic tool. See [ERRATA.md](ERRATA.md) for full corrections.
 
 ---
 
@@ -16,6 +18,35 @@ This release represents a major evolution of the MacGyver MUD active inference d
 5. **Enhanced Testing** - 110+ tests with 100% pass rate
 
 **Innovation Level:** 7/10 (Novel application of classical mathematics to modern AI)
+
+---
+
+## 🔬 v2.0.1 Empirical Validation Update
+
+**What Changed:**
+Following the v2.0.0 release, empirical validation experiments were conducted to test the framework's core claims. Results led to significant corrections:
+
+**Experiments Conducted:**
+1. **Performance Comparison (crisp vs hybrid modes)**
+   - Result: NULL (both 100% success, MacGyver MUD too easy)
+   - Conclusion: Performance claims untestable on this domain
+
+2. **k-Space Coverage (random skill sampling)**
+   - Result: HYPOTHESIS REJECTED
+   - Finding: Only 0.5% of random skills have k<0.05 (predicted >80%)
+   - Mean k=0.57 (not k≈0)
+   - Conclusion: k≈0 clustering does NOT emerge naturally
+
+**Major Corrections:**
+- ❌ **Retracted:** "k≈0 clustering emerges naturally from single-objective optimization"
+- ✅ **Corrected:** "k≈0 occurs in deliberately designed extreme single-objective skills"
+- ❌ **Retracted:** "Balanced skills outperform crisp skills" (untested, ceiling effect)
+- ✅ **Validated:** Silver Gauge framework functions correctly as a diagnostic tool
+
+**Impact:**
+The framework remains valuable as a **measurement and diagnostic tool**, but does not reveal universal geometric structure in skill spaces. The k≈0 pattern observed in peek_door and try_door is a consequence of deliberate design (setting goal≈0 or info≈0), not natural emergence.
+
+**Full Details:** See [ERRATA.md](ERRATA.md) and [validation/EMPIRICAL_RED_TEAM_RESULTS.md](validation/EMPIRICAL_RED_TEAM_RESULTS.md)
 
 ---
 
@@ -137,12 +168,13 @@ Code Quality:         Clean, tested, documented
 ### Major Documents (NEW)
 
 **1. FINAL_REPORT.md** (25,000 words, 75 pages)
-- Ultra-deep analysis of Silver Gauge revelation
-- k_explore ≈ 0 phenomenon explained
+- Ultra-deep analysis of Silver Gauge framework
+- k_explore ≈ 0 pattern in designed skills explained
 - Multi-objective evolution documented
 - 12-dimension comparative analysis
-- Meta-patterns unlocked
+- Meta-patterns explored
 - 14 research directions identified
+- **Note:** Includes v2.0.1 empirical validation addendum correcting original claims
 
 **2. PYTHAGOREAN_MEANS_EXPLAINED.md** (7,000 words)
 - ELI5 deep dive for technical audience
@@ -235,28 +267,32 @@ CREATE (s:Skill {
 
 ---
 
-## 🎯 Key Insights & Discoveries
+## 🎯 Key Insights & Observations
 
-### 1. The k_explore ≈ 0 Phenomenon
+### 1. The k_explore ≈ 0 Pattern in Designed Skills
 
-**Discovery:** ALL crisp skills have k_explore ≈ 0, whether they're exploration OR exploitation.
+**⚠️ v2.0.1 Correction:** This pattern is a **design property**, not a natural emergence.
 
-**Why:** Both are specialists (imbalanced), just in opposite directions:
-- peek_door: 100% info, 0% goal → k = 0.0001
-- try_door: 0% info, 100% goal → k = 0.0000
+**Observation:** Deliberately designed single-objective crisp skills have k_explore ≈ 0.
+
+**Why:** Extreme specialization (by design) creates imbalance:
+- peek_door: 100% info, 0% goal → k = 0.0001 (designed this way)
+- try_door: 0% info, 100% goal → k = 0.0000 (designed this way)
 
 **Implication:** k_explore measures specialist vs generalist, not explore vs exploit.
 
+**Empirical Note:** Random skills do NOT cluster at k≈0 (mean k=0.57). See [ERRATA.md](ERRATA.md).
+
 ### 2. Diagnostic-Driven Design Pattern
 
-**Meta-pattern discovered:**
+**Meta-pattern observed:**
 1. Build sophisticated diagnostic (Silver Gauge)
 2. Apply to system (crisp skills)
-3. Diagnostic reveals gap (k ≈ 0 everywhere)
-4. Gap inspires solution (balanced skills)
-5. Solution showcases diagnostic's value
+3. Diagnostic identifies gap in skill coverage (k ≈ 0 everywhere)
+4. Gap inspires complementary solution (balanced skills)
+5. Solution showcases diagnostic's analytical utility
 
-**This is a general pattern applicable beyond this project!**
+**This pattern may be applicable to other design contexts.**
 
 ### 3. Complementarity Over Replacement
 
@@ -269,52 +305,63 @@ CREATE (s:Skill {
 
 **Result:** Hybrid mode offers maximum flexibility.
 
-### 4. Scale-Invariant Transfer Learning
+### 4. Scale-Invariant Transfer Learning (Theoretical)
 
-**Insight:** Dimensionless k coefficients enable cross-domain transfer.
+**Hypothesis:** Dimensionless k coefficients may enable cross-domain transfer.
 
-**Example:**
+**Theoretical Example:**
 ```
 Domain A: k_explore > 0.6 early → success
 Domain B: Apply same pattern → success
-→ Pattern transfers without modification!
+→ Pattern might transfer without modification
 ```
+
+**Status:** UNTESTED - Requires validation on multiple domains.
 
 ---
 
 ## 🔬 Research Impact
 
-### Enabled Research Directions
+### Potential Research Directions (Theoretical)
+
+**⚠️ Note:** These are research hypotheses requiring empirical validation.
 
 1. **Geometric Curriculum Learning**
-   - Progress through k values: 0.9 → 0.7 → 0.5 → 0.3 → 0.0
+   - Hypothesis: Progress through k values: 0.9 → 0.7 → 0.5 → 0.3 → 0.0
    - Performance-based instead of time-based
+   - **Status:** Untested
 
 2. **Transfer Learning via Geometry**
-   - Dimensionless patterns transfer across domains
-   - Build reusable strategy libraries
+   - Hypothesis: Dimensionless patterns may transfer across domains
+   - Could build reusable strategy libraries
+   - **Status:** Untested
 
 3. **Meta-Learning with Shape Signals**
-   - Direct geometric feedback loops
-   - Interpretable adaptation rules
+   - Hypothesis: Direct geometric feedback loops
+   - Could enable interpretable adaptation rules
+   - **Status:** Untested
 
 4. **Multi-Agent Coordination**
-   - Role assignment via geometric profiles
+   - Hypothesis: Role assignment via geometric profiles
    - Team diversity optimization
+   - **Status:** Untested
 
 5. **Geometric Anomaly Detection**
-   - k_explore should decrease over episode
-   - k_efficiency should stay high
-   - Detectable, interpretable anomalies
+   - Hypothesis: k_explore patterns could indicate anomalies
+   - Assumption: k_explore decreases over episode (untested)
+   - Assumption: k_efficiency should stay high (untested)
+   - **Status:** Untested
 
-### Publications Ready
+### Potential Publications
 
-**Potential Papers:**
-1. "Geometric Active Inference: Pythagorean Means for Policy Analysis"
-2. "Diagnostic-Driven Design: When Tools Reveal Gaps"
-3. "Multi-Objective Skills in Active Inference: Crisp vs Smooth Policies"
+**Possible Papers (pending validation):**
+1. "Silver Gauge: A Geometric Diagnostic for Active Inference Skills" (methods)
+2. "Diagnostic-Driven Design: When Tools Identify Gaps" (methodology)
+3. "Multi-Objective Skills in Active Inference: Crisp vs Balanced Policies" (design patterns)
 
-**Target Venues:** NeurIPS, ICLR, JMLR
+**Note:** Performance claims require validation on harder domains before publication.
+
+**Suggested Venues:** NeurIPS (workshops), ICLR (workshops), JMLR (after validation)
 
 ---
 
@@ -418,15 +465,17 @@ make visualize-balanced
 
 ## 📝 Migration Checklist
 
-For teams upgrading from v1.x:
+For teams upgrading from v1.x or v2.0:
 
 - [ ] Pull latest code
+- [ ] **READ [ERRATA.md](ERRATA.md) first** - Critical corrections to v2.0 claims
 - [ ] Run `make install` (dependencies unchanged)
 - [ ] Start Neo4j: `make neo4j-start`
 - [ ] Initialize balanced skills: `make init-balanced`
 - [ ] Run tests: `make test-all` (should see 110+ pass)
 - [ ] Try new modes: `make demo-crisp`, `make demo-balanced`
-- [ ] Review new docs: FINAL_REPORT.md, PYTHAGOREAN_MEANS_EXPLAINED.md
+- [ ] Review updated docs: README.md, FINAL_REPORT.md (with empirical addendum)
+- [ ] Review validation results: validation/EMPIRICAL_RED_TEAM_RESULTS.md
 - [ ] Optional: Generate visualizations with `make visualize-balanced`
 
 ---
@@ -434,10 +483,12 @@ For teams upgrading from v1.x:
 ## 🔗 Links & Resources
 
 **Documentation:**
+- [ERRATA.md](ERRATA.md) - **START HERE** - Critical corrections (v2.0.1)
 - [README.md](README.md) - Updated project overview
-- [FINAL_REPORT.md](FINAL_REPORT.md) - Comprehensive analysis
+- [FINAL_REPORT.md](FINAL_REPORT.md) - Comprehensive analysis (with v2.0.1 addendum)
 - [PYTHAGOREAN_MEANS_EXPLAINED.md](PYTHAGOREAN_MEANS_EXPLAINED.md) - Mathematical deep dive
 - [BALANCED_POLICY_GUIDE.md](BALANCED_POLICY_GUIDE.md) - Multi-objective guide
+- [validation/EMPIRICAL_RED_TEAM_RESULTS.md](validation/EMPIRICAL_RED_TEAM_RESULTS.md) - Validation experiments
 
 **Testing:**
 - [TEST_COMMANDS.md](TEST_COMMANDS.md) - Testing guide
@@ -510,25 +561,31 @@ This release demonstrates:
 
 ## ✅ Final Validation
 
-**All Systems GO:**
+**v2.0.1 Status:**
 - ✅ 110+ tests pass (100% rate)
 - ✅ Zero behavioral deviation
-- ✅ All invariants hold
-- ✅ Documentation complete
+- ✅ All Pythagorean invariants hold (HM ≤ GM ≤ AM)
+- ✅ Documentation updated with empirical corrections
 - ✅ Backward compatible
-- ✅ Ready for release
+- ⚠️ Empirical validation: 2 of 6 experiments completed
 
-**Quality Gates Passed:**
-- ✅ Code review: Clean, well-structured
-- ✅ Test coverage: Comprehensive
-- ✅ Documentation: Extensive
+**Quality Gates:**
+- ✅ Code: Clean, well-structured, tested
+- ✅ Test coverage: Comprehensive (110+ tests)
+- ✅ Documentation: Corrected for accuracy (see ERRATA.md)
 - ✅ Performance: <1% overhead
-- ✅ Innovation: Validated (7/10)
+- ⚠️ Claims: Adjusted based on empirical evidence
+
+**Empirical Validation Results:**
+- Exp1 (Performance): NULL result (MacGyver MUD ceiling effect)
+- Exp2 (k-clustering): HYPOTHESIS REJECTED (k≈0 is design property, not natural)
+- Framework utility: CONFIRMED (diagnostic tool works as intended)
+- Overall grade: C+ (strong execution, core hypothesis rejected)
 
 ---
 
-**🎉 MacGyver MUD v2.0 "Silver Rails" - Ready for Release! 🎉**
+**🎉 MacGyver MUD v2.0.1 "Silver Rails" - Honest Science Edition 🎉**
 
 *"Measure what is measurable, and make measurable what is not so." — Galileo*
 
-*We've made decision strategies measurable through geometry.*
+*We've made decision strategies measurable through geometry — and tested our assumptions.*

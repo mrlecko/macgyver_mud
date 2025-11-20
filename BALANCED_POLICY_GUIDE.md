@@ -1,12 +1,16 @@
-# Balanced vs Crisp Policies: A Superior Multi-Objective Example
+# Balanced vs Crisp Policies: A Complementary Multi-Objective Example
+
+> **⚠️ IMPORTANT (v2.0.1)**: Empirical validation revealed that claims of "superiority" were untested. MacGyver MUD has a ceiling effect (100% success both modes) that prevents performance comparison. This guide now presents balanced skills as a **complementary approach** with different analytical properties, not a proven superior alternative. See [ERRATA.md](ERRATA.md).
 
 ## Executive Summary
 
-This document demonstrates **why and how balanced skills are superior** to crisp (specialist) skills for multi-objective decision analysis using the Silver Gauge.
+This document demonstrates **how balanced skills differ from** crisp (specialist) skills for multi-objective decision analysis using the Silver Gauge.
 
-**Key Finding:**
-- **Crisp skills** (original implementation): `k_explore ≈ 0` for ALL skills → reveals pure specialist design
-- **Balanced skills** (this enhancement): `k_explore ∈ [0.3, 0.9]` → genuine multi-objective trade-offs
+**Key Observation:**
+- **Crisp skills** (original): `k_explore ≈ 0` for ALL skills → pure specialist design (by construction)
+- **Balanced skills** (complementary): `k_explore ∈ [0.3, 0.9]` → genuine multi-objective trade-offs
+
+**Status:** Analytical difference confirmed, performance difference untested.
 
 ## The Problem with Crisp Skills
 
@@ -35,7 +39,7 @@ try_door:    k_explore ≈ 0.0000  (goal>0, info=0  → extreme imbalance)
 go_window:   k_explore ≈ 0.0000  (goal>0, info=0  → extreme imbalance)
 ```
 
-**All skills have k_explore ≈ 0!**
+**All designed crisp skills have k_explore ≈ 0 by construction!**
 
 ### Why This Happens
 
@@ -43,17 +47,19 @@ The `k_explore` metric measures **balance** between goal and info:
 - `k_explore → 1.0`: Goal and info are comparable (balanced)
 - `k_explore → 0.0`: One dimension dominates (imbalanced)
 
-Crisp skills are **pure specialists**:
+Crisp skills are **deliberately designed as pure specialists**:
 - Either 100% exploration (peek) OR 100% exploitation (try/window)
-- Never both simultaneously
+- Never both simultaneously (by design choice)
 
 This creates a **phase-separated** policy, not a **mixed-phase** policy.
 
-### The Insight
+### The Observation
 
-This isn't a bug—it's a profound architectural observation:
+**⚠️ v2.0.1 Correction:** This is a **design property**, not a natural universal pattern.
 
-> The Silver Gauge reveals that the original policy has crisp boundaries between exploration and exploitation, rather than smooth multi-objective trade-offs.
+> The Silver Gauge measures that the deliberately designed crisp skills have extreme boundaries between exploration and exploitation, rather than smooth multi-objective trade-offs.
+
+**Empirical Note:** Random skills do NOT show k≈0 clustering (mean k=0.57). Only deliberately extreme single-objective designs produce k≈0. See [ERRATA.md](ERRATA.md).
 
 ## The Solution: Balanced Skills
 
@@ -85,7 +91,9 @@ adaptive_peek        k_explore=0.9165  goal=  1.40  info=0.600
 
 **Balanced skills occupy the multi-objective region: k_explore ∈ [0.56, 0.92]**
 
-## Why Balanced Is Superior
+## Why Balanced Skills Are Analytically Different (Not Proven Superior)
+
+**⚠️ v2.0.1 Note:** Performance superiority is UNTESTED due to MacGyver MUD ceiling effect. The differences below are analytical properties, not validated performance benefits.
 
 ### 1. **Genuine Multi-Objective Trade-offs**
 
@@ -95,6 +103,8 @@ Crisp skills force a binary choice:
 Balanced skills allow blended strategies:
 - Explore AND Exploit simultaneously
 - Continuous spectrum of trade-offs
+
+**Status:** Design difference confirmed, performance impact untested.
 
 ### 2. **Interpretable Geometric Metrics**
 
@@ -127,9 +137,9 @@ Skills distributed across geometric space
 → Geometric signatures reveal strategic intent
 ```
 
-### 4. **Better Curriculum Learning**
+### 4. **Potential Curriculum Learning** (Theoretical)
 
-With balanced skills, you can design geometric curricula:
+Hypothesis: With balanced skills, you could design geometric curricula:
 
 ```python
 Stage 1: Use high k_explore skills (0.7-0.9)  → Heavy exploration
@@ -139,9 +149,11 @@ Stage 3: Use low k_explore skills (0.0-0.4)   → Refined exploitation
 
 This is impossible with crisp skills (all ≈ 0).
 
-### 5. **Adaptive Meta-Learning**
+**Status:** UNTESTED hypothesis - requires validation on suitable domains.
 
-Balanced skills enable geometric feedback:
+### 5. **Potential Adaptive Meta-Learning** (Theoretical)
+
+Hypothesis: Balanced skills could enable geometric feedback:
 
 ```python
 # Crisp: Can't use k_explore (always 0)
@@ -149,14 +161,16 @@ if success_rate < 0.7:
     # Must manually choose peek_door
     select_exploration_skill()
 
-# Balanced: Can use k_explore directly
+# Balanced: Could use k_explore directly
 target_k = 0.7 if success_rate < 0.7 else 0.3
 best_skill = min(skills, key=lambda s: abs(s.k_explore - target_k))
 ```
 
-### 6. **Domain Transfer**
+**Status:** UNTESTED - No evidence k-value correlates with performance.
 
-Geometric patterns transfer better than raw values:
+### 6. **Potential Domain Transfer** (Theoretical)
+
+Hypothesis: Geometric patterns may transfer better than raw values:
 
 ```
 Domain A (Room Escape):
@@ -164,8 +178,10 @@ Domain A (Room Escape):
 
 Domain B (Maze Navigation):
   "Apply same pattern: Use k_explore > 0.6 skills early"
-  → Pattern transfers because k is dimensionless
+  → Pattern might transfer because k is dimensionless
 ```
+
+**Status:** UNTESTED - Requires validation on multiple domains.
 
 ## Implementation
 
@@ -381,24 +397,27 @@ Good variety: k_explore ∈ {0.3, 0.5, 0.7, 0.9}
 
 ## Conclusion
 
-**The Silver Gauge revealed that the original MacGyver MUD policy is "crisp" (phase-separated) rather than "smooth" (multi-objective).**
+**The Silver Gauge measured that the deliberately designed MacGyver MUD crisp skills are "crisp" (phase-separated) rather than "smooth" (multi-objective).**
 
-This is a **feature, not a bug**—it demonstrates clean separation of concerns.
+This is a **design choice**—it demonstrates clean separation of concerns for pedagogical purposes.
 
-But for real-world applications, **balanced skills are superior** because they:
+**Balanced skills offer different analytical properties** (not proven superior):
 
-1. ✅ Create genuine multi-objective trade-offs
-2. ✅ Produce interpretable k_explore metrics
-3. ✅ Enable geometric curriculum learning
-4. ✅ Support adaptive meta-learning
-5. ✅ Transfer better across domains
-6. ✅ Reveal richer policy structure
+1. ✅ Create genuine multi-objective trade-offs (analytical)
+2. ✅ Produce varied k_explore metrics (confirmed)
+3. ⚠️ May enable geometric curriculum learning (untested)
+4. ⚠️ Could support adaptive meta-learning (untested)
+5. ⚠️ Might transfer better across domains (untested)
+6. ✅ Reveal different geometric structure (confirmed)
 
-**Recommendation:**
+**Recommendation (v2.0.1):**
 
 - **For pedagogy:** Use crisp skills to teach active inference fundamentals
-- **For research:** Use balanced skills to explore geometric policy analysis
-- **For production:** Use balanced skills for interpretable, adaptive agents
+- **For geometric analysis:** Use balanced skills to explore k-space coverage
+- **For production:** Performance comparison NEEDED before claiming superiority
+- **For research:** Test hypotheses about curriculum learning and transfer on harder domains
+
+**Empirical Status:** Analytical properties confirmed, performance claims unvalidated.
 
 ---
 
@@ -433,8 +452,14 @@ open phase_diagram_comparison.png
 
 ---
 
-**Status:** ✅ Complete Implementation
+**Status:** ✅ Implementation Complete, ⚠️ Performance Claims Untested
 
-**Impact:** Demonstrates the difference between specialist (crisp) and generalist (balanced) policies in active inference, proving that balanced skills create superior geometric signatures for multi-objective analysis.
+**Impact:** Demonstrates the difference between specialist (crisp) and generalist (balanced) policies in active inference. Balanced skills create different (not proven superior) geometric signatures for multi-objective analysis.
 
-**Next Steps:** Integrate balanced skills into full agent runtime and compare performance empirically.
+**Next Steps (v2.0.1):**
+1. Test on harder domains without ceiling effects
+2. Validate curriculum learning hypothesis
+3. Test domain transfer hypothesis
+4. Compare performance empirically before claiming superiority
+
+**See:** [ERRATA.md](ERRATA.md) and [validation/EMPIRICAL_RED_TEAM_RESULTS.md](validation/EMPIRICAL_RED_TEAM_RESULTS.md)

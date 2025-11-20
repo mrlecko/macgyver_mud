@@ -2427,3 +2427,190 @@ That's the real upgrade.
 **Total Pages:** ~75 (if printed)
 
 This report represents a comprehensive analysis of the Silver Gauge revelation, the multi-objective evolution, and the emergence of diagnostic-driven design as a meta-pattern for building superior AI systems.
+
+---
+
+# 🔴 EMPIRICAL VALIDATION ADDENDUM (Added 2025-11-19)
+
+**Status**: Critical corrections based on experimental validation  
+**Location**: Full results in [validation/EMPIRICAL_RED_TEAM_RESULTS.md](validation/EMPIRICAL_RED_TEAM_RESULTS.md)  
+**Summary**: Core k≈0 clustering hypothesis was empirically tested and **rejected**.
+
+## What Was Tested
+
+### Experiment 1: Performance Comparison
+**Question**: Do skill modes (crisp/balanced/hybrid) affect performance?
+
+**Design**:
+- 100 trials per condition
+- 50% locked, 50% unlocked doors
+- Initial belief: 0.5 (maximum uncertainty)
+
+**Result**: **NULL (Ceiling Effect)**
+- Crisp: 100% success, 1.0 avg steps
+- Hybrid: 100% success, 1.0 avg steps
+- No difference detectable
+
+**Conclusion**: MacGyver MUD is too easy to show performance differences. Claims of balanced skill superiority are **untestable** on this domain.
+
+### Experiment 2: k-Space Coverage
+**Question**: Do randomly generated skills cluster at k≈0?
+
+**Design**:
+- Generated 1000 random skills
+- goal ~ uniform(0, 10)
+- info_gain ~ uniform(0, 1)
+- Calculated k_explore for each
+
+**Hypothesis**: >80% would have k<0.05 (extreme specialist clustering)
+
+**Result**: **HYPOTHESIS REJECTED**
+- Only **0.5%** had k<0.05 (not 80%+)
+- Mean k=0.57, Median k=0.56
+- Distribution roughly normal, **NOT clustered**
+
+**Conclusion**: k≈0 clustering does NOT emerge naturally from random skills.
+
+## Critical Re-Evaluation
+
+### What We Thought (WRONG)
+> "Single-objective skills naturally cluster at k≈0, revealing an inherent geometric structure in active inference skill spaces."
+
+### What We Found (CORRECT)
+> "Deliberately designed extreme single-objective skills (peek_door with goal≈0, try_door with info≈0) have k≈0 **by construction**, not by natural emergence. Random skills average k≈0.56."
+
+### The Mistake
+We confused **"by design"** with **"by nature"**:
+- peek_door has k≈0 because we **SET goal=0** deliberately
+- NOT because k→0 is where optimization naturally leads
+- Random skills don't have k≈0 because random sampling produces balance, not extremes
+
+## Revised Claims
+
+### ✅ Still Valid
+- Silver Gauge framework is mathematically sound
+- k=GM/AM correctly measures balance
+- Dimensionless ratios are interpretable
+- Framework useful as diagnostic tool
+- Code implementation works reliably
+
+### ❌ Retracted
+- k≈0 clustering as natural phenomenon
+- "Discovery" of geometric gaps
+- Claims of universal patterns
+- Performance benefits of balanced skills (untested)
+- Generalization across domains (untested)
+
+### ⚠️ Uncertain (Needs More Data)
+- Whether optimized (vs random) skills show k≈0
+- Whether k-value predicts performance in harder domains
+- Whether Silver Gauge aids interpretability vs baselines
+
+## Impact on Report
+
+### Sections Requiring Correction
+
+**"The k≈0 Revelation"**:
+- Language implying discovery → measurement
+- "Natural clustering" → "designed extremes"
+- "Emergent property" → "construction artifact"
+
+**"Geometric Gaps"**:
+- Not inherent gaps in skill space
+- Artifacts of deliberate design choices
+- Gap-filling is design exercise, not discovery
+
+**Performance Claims**:
+- All performance benefits are **theoretical**
+- MacGyver MUD too easy for validation
+- No empirical support for superiority claims
+
+## Corrected Grade
+
+**Original Assessment**: A- (theory) + A (implementation) = **A-**
+
+**Post-Validation Assessment**:
+- Framework utility: A (works as diagnostic)
+- Mathematical correctness: A (formulas correct)
+- Empirical claims: **F** (hypothesis rejected)
+- Overall: **C+**
+
+Downgrade because core scientific claim (k≈0 clustering is natural) was falsified.
+
+## What We Learned
+
+### Positive Lessons
+1. **Empirical testing catches errors** - Prevented false publication
+2. **Negative results have value** - Knowing what's NOT true is informative
+3. **Honest correction matters** - Better to retract than defend false claims
+
+### Mistakes Made
+1. **Overgeneralized from examples** - Saw peek/try, assumed universal
+2. **Used grandiose language prematurely** - "revelation," "discovery"  
+3. **Didn't test early enough** - Should have run Exp2 on day 1
+
+## Recommendations Going Forward
+
+### For Publication
+**DO claim**:
+- Novel diagnostic framework
+- Geometric measurement tool
+- Potential design aid
+
+**DO NOT claim**:
+- Natural k≈0 clustering
+- Performance superiority
+- Universal patterns
+
+**Framing**: "A measurement tool" not "A discovery"
+
+### For Research
+**High priority**:
+- Test with optimized (not random) skills
+- Harder test domains (no ceiling effects)
+- User studies on interpretability
+
+**Questions remaining**:
+- Do RL-trained skills show k≈0?
+- Does k predict behavior in complex domains?
+- Is geometric framing more interpretable?
+
+### For Practitioners
+**Use Silver Gauge as**:
+- Measurement tool (descriptive)
+- Gap-finding diagnostic
+- Design guidance aid
+
+**Do NOT use as**:
+- Proof of optimality
+- Performance predictor
+- Universal principle
+
+## Final Honest Assessment
+
+This report presented a **well-designed framework** with **elegant mathematics** and **clean implementation**.
+
+But the **central empirical claim** (k≈0 clustering is natural) is **false**.
+
+The framework remains **useful as a tool**.
+
+But it is **not a discovery** of natural laws.
+
+**Revised Status**: Diagnostic framework (validated) with retracted discovery claims (empirically rejected).
+
+---
+
+**For full experimental details, statistical analysis, and honest red-team assessment**:  
+See [validation/EMPIRICAL_RED_TEAM_RESULTS.md](validation/EMPIRICAL_RED_TEAM_RESULTS.md)
+
+**For comprehensive corrections and action items**:  
+See [ERRATA.md](ERRATA.md)
+
+---
+
+**Document Status:** ✅ FINAL REPORT + EMPIRICAL ADDENDUM COMPLETE
+
+**Original Date:** 2025-11-19  
+**Validation Date:** 2025-11-19  
+**Final Version:** 1.1 (with empirical corrections)
+
