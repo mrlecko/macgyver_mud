@@ -1,5 +1,7 @@
 # MacGyver MUD Notebook v2.0 - Implementation Summary
 
+> **⚠️ v2.0.1 Note**: See [ERRATA.md](ERRATA.md) for corrections to k≈0 clustering claims. Framework remains pedagogically valuable as measurement tool.
+
 **Date**: 2025-11-19
 **Version**: 2.0 Essentials
 **Status**: ✅ Complete and tested
@@ -73,12 +75,13 @@ Single, clean documentation file:
 - Full episode runs
 - Checkpoint 4
 
-### Part 4: The Silver Gauge Revelation ⭐ (13 cells)
+### Part 4: The Silver Gauge Insight ⭐ (13 cells)
 - Pythagorean means
-- **k≈0 insight** (the climax)
-- Geometric balance
+- **k≈0 pattern** (the climax) - deliberately designed skills
+- Geometric balance measurement
 - Checkpoint 5
 - **This is the pedagogical centerpiece**
+- **Note**: k≈0 is design property, not natural (see ERRATA.md)
 
 ### Part 5: Explore & Next Steps (6 cells)
 - Neo4j playground

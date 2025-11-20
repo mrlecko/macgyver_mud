@@ -60,15 +60,17 @@ build_notebook_*.py           # Build scripts (not needed)
 
 ---
 
-## The Revelation (Part 4)
+## The Key Insight (Part 4)
+
+> **⚠️ Note**: See [ERRATA.md](ERRATA.md) - k≈0 is a design property, not natural emergence.
 
 The notebook builds to a climax around minute 42:
 
-**All simple skills have k≈0!**
+**All deliberately designed simple skills have k≈0 (by construction)!**
 
-This reveals that both exploration AND exploitation are specialists (just in opposite directions). The k-coefficient measures specialist vs generalist, not explore vs exploit.
+This shows that both exploration AND exploitation can be specialists (just in opposite directions). The k-coefficient measures specialist vs generalist, not explore vs exploit.
 
-This insight opens the door to multi-objective skill design.
+This observation motivates the complementary multi-objective skill design.
 
 ---
 
@@ -94,12 +96,12 @@ Make sure `macgyver_utils.py` is in the same folder as the notebook.
 | 0-1 | 15 min | Setup + scenario |
 | 2 | 15 min | Expected Free Energy |
 | 3 | 12 min | Bayesian updates |
-| 4 ⭐ | 20 min | **The revelation** |
+| 4 ⭐ | 20 min | **The key insight** |
 | 5 | 8 min | Explore & next steps |
 
 **Only have 30 minutes?**
 - Run cells 1-25 (basics)
-- Jump to cells 36-48 (revelation)
+- Jump to cells 36-48 (key insight)
 
 ---
 
