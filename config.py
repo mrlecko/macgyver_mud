@@ -86,7 +86,11 @@ STATE_VAR_NAME = "DoorLockState"
 # Enable the Geometric Controller (Adaptive k-target)
 # If False, uses standard Active Inference (Baseline)
 # If True, dynamically adjusts skill selection based on entropy/performance
+# If True, dynamically adjusts skill selection based on entropy/performance
 ENABLE_GEOMETRIC_CONTROLLER = False
+
+# Magnitude of the boost applied to skills matching the target k-value
+BOOST_MAGNITUDE = 5.0
 
 # ============================================================================
 # Critical State Protocols Configuration

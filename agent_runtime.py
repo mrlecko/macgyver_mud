@@ -11,9 +11,8 @@ from graph_model import (
     get_skill_stats, update_skill_stats,
     get_meta_params, update_meta_params, get_recent_episodes_stats
 )
-from scoring_silver import score_skill
 from critical_state import CriticalStateMonitor, CriticalState, AgentState
-from scoring import score_skill_with_memory, compute_epistemic_value
+from scoring import score_skill, score_skill_with_memory, compute_epistemic_value
 
 class AgentEscalationError(Exception):
     """Raised when the agent enters the ESCALATION state (Circuit Breaker)."""
@@ -250,19 +249,23 @@ class AgentRuntime:
             # Apply Boosts based on Target K
             if target_k is not None:
                 for i, (score, skill, expl) in enumerate(scored_skills):
-                    stamp = build_silver_stamp(skill)
-                    # Calculate distance to target k
-                    dist = abs(stamp['k'] - target_k)
+                    stamp = build_silver_stamp(skill["name"], skill["cost"], self.p_unlocked)
+                    # Calculate distance to target k (using k_explore as the geometric proxy)
+                    dist = abs(stamp['k_explore'] - target_k)
                     # Boost if close
                     if dist < 0.2:
                         new_score = score + boost_magnitude
-                        scored_skills[i] = (new_score, skill, expl + f" [BOOST: {critical_state.name}]")
+                        explanation_text = expl if expl else ""
+                        scored_skills[i] = (new_score, skill, explanation_text + f" [BOOST: {critical_state.name}]")
                 context = {"belief_category": self._get_belief_category(self.p_unlocked)}
                 # Just check the first skill to get context stats
                 sample_stats = get_skill_stats(self.session, skills[0]["name"], context)
                 
+                new_mode = self.geo_mode # Default to current mode
+                
                 # If we have data and it's bad (< 50% success)
-                if sample_stats["count"] > 2 and sample_stats["success_rate"] < 0.5:
+                overall = sample_stats.get("overall", {})
+                if overall.get("uses", 0) > 2 and overall.get("success_rate", 0.5) < 0.5:
                     new_mode = "PANIC (Robustness)"
                     mode_reason = "MEMORY VETO (Bad History)"
             
