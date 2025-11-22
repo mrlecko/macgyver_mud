@@ -229,6 +229,66 @@ class AgentRuntime:
             # No new info about door
             return obs, self.p_unlocked, True
 
+        # Handle balanced skills (multi-objective)
+        elif skill_name == "probe_and_try":
+            # Attempts to open with partial information gain
+            if self.door_state == "unlocked":
+                obs = "obs_door_opened"
+                self.escaped = True
+                self.p_unlocked = 0.99
+                return obs, self.p_unlocked, True
+            else:
+                # Failed but gained partial info
+                obs = "obs_partial_info"
+                # Partial info: moves belief toward locked but not certainty
+                self.p_unlocked = (self.p_unlocked + config.BELIEF_DOOR_STUCK) / 2
+                return obs, self.p_unlocked, False
+
+        elif skill_name == "informed_window":
+            # Quick peek then window escape
+            obs = "obs_strategic_escape"
+            self.escaped = True
+            # Brief peek gives some info about door state
+            if self.door_state == "locked":
+                self.p_unlocked = (self.p_unlocked + config.BELIEF_DOOR_LOCKED) / 2
+            else:
+                self.p_unlocked = (self.p_unlocked + config.BELIEF_DOOR_UNLOCKED) / 2
+            return obs, self.p_unlocked, True
+
+        elif skill_name == "exploratory_action":
+            # Multi-tool approach: try multiple things
+            if self.door_state == "unlocked":
+                obs = "obs_door_opened"
+                self.escaped = True
+                self.p_unlocked = 0.99
+                return obs, self.p_unlocked, True
+            else:
+                # Tried door (failed) but also checked window viability
+                # High info gain about door state
+                obs = "obs_attempted_open"
+                self.p_unlocked = config.BELIEF_DOOR_STUCK
+                return obs, self.p_unlocked, False
+
+        elif skill_name == "adaptive_peek":
+            # Between peek and try: some information, slight attempt
+            # Primarily informational with minor goal attempt
+            if self.door_state == "locked":
+                obs = "obs_partial_info"
+                # Good info about lock state but not perfect
+                self.p_unlocked = (self.p_unlocked + config.BELIEF_DOOR_LOCKED) / 2
+            else:
+                # Unlocked: might partially open it or just observe
+                import random
+                if random.random() < 0.3:  # 30% chance of accidental success
+                    obs = "obs_door_opened"
+                    self.escaped = True
+                    self.p_unlocked = 0.99
+                    return obs, self.p_unlocked, True
+                else:
+                    obs = "obs_partial_info"
+                    self.p_unlocked = (self.p_unlocked + config.BELIEF_DOOR_UNLOCKED) / 2
+            return obs, self.p_unlocked, False
+
         else:
             # Unknown skill - no effect
             return "obs_unknown", self.p_unlocked, False

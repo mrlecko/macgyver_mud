@@ -250,12 +250,13 @@ def log_step(session: Session, episode_id: int, step_index: int,
                         skill_name, observation_name,
                         p_before, p_after,
                         silver_json, silver_score):
+        # Use MERGE instead of MATCH to handle missing nodes gracefully
         query = """
         MATCH (e:Episode)
         WHERE id(e) = $episode_id
-        MATCH (a:Agent {name: $agent_name})
-        MATCH (sk:Skill {name: $skill_name})
-        MATCH (obs:Observation {name: $observation_name})
+        MERGE (a:Agent {name: $agent_name})
+        MERGE (sk:Skill {name: $skill_name})
+        MERGE (obs:Observation {name: $observation_name})
         MERGE (e)-[:HAS_STEP]->(s:Step {step_index: $step_index})
         MERGE (s)-[:PERFORMED_BY]->(a)
         MERGE (s)-[:USED_SKILL]->(sk)
@@ -273,7 +274,7 @@ def log_step(session: Session, episode_id: int, step_index: int,
                 s.silver_score = $silver_score
             """
 
-        tx.run(
+        result = tx.run(
             query,
             episode_id=episode_id,
             agent_name="MacGyverBot",
@@ -285,6 +286,12 @@ def log_step(session: Session, episode_id: int, step_index: int,
             silver_json=silver_json,
             silver_score=silver_score,
         )
+
+        # Consume result to check for errors
+        summary = result.consume()
+        if summary.counters.nodes_created == 0 and summary.counters.relationships_created == 0:
+            import sys
+            print(f"WARNING: Step not created - episode_id={episode_id}, skill={skill_name}, obs={observation_name}", file=sys.stderr)
 
     session.execute_write(
         _create_step_tx,
