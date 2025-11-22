@@ -1,93 +1,83 @@
-# MacGyver MUD: Geometric Meta-Cognition Demo
+# MacGyver MUD: The Hybrid Meta-Cognitive Agent
 
-A demonstration of **Active Inference**, **Procedural Memory**, and **Geometric Meta-Cognition** using Neo4j as a knowledge graph backend.
+> **Status:** **RELEASE CANDIDATE (v1.0)**
+> **Verification:** **PASS** (Full Spectrum Test)
+> **Architecture:** **Hybrid (Active Inference + Critical State Protocols)**
 
-> **🌟 NEW (Nov 2025):** This project now features a **Hybrid Geometric Controller** that dynamically balances Robustness and Efficiency at runtime. See [ASSESSMENT_AND_SCORE.md](ASSESSMENT_AND_SCORE.md) for a deep technical dive.
+A demonstration of a **Self-Aware AI Agent** that combines:
+1.  **Active Inference:** Probabilistic optimization for goal-seeking and exploration.
+2.  **Geometric Meta-Cognition:** Real-time analysis of the agent's own belief geometry (Entropy).
+3.  **Critical State Protocols:** A "Reptilian Brain" that overrides optimization during existential crises (Panic, Deadlock, Scarcity).
 
-## Overview
+---
 
-This project implements a "MacGyver in a Knowledge Graph" scenario where an agent:
-1.  **Navigates** a Neo4j knowledge graph representing a locked room.
-2.  **Maintains Beliefs** about hidden states (e.g., "is the door locked?").
-3.  **Optimizes Decisions** using Active Inference (Expected Free Energy).
-4.  **Adapts Strategy** using **Geometric Meta-Cognition** (The "Silver Gauge").
-
-## Key Features
-
-### 1. Active Inference & Procedural Memory
-The agent balances **Exploration** (Info Gain) and **Exploitation** (Goal Value). It learns from past episodes to bias future decisions.
-*   **Naive Mode:** Learns lazy behaviors (metric gaming).
-*   **Strategic Mode:** Learns information-gathering patterns.
-
-### 2. The Geometric Lens (Silver Gauge)
-We use **Pythagorean Means** to quantify the "shape" of a skill:
-*   **Specialists ($k \approx 0$):** High Goal OR High Info. Efficient but fragile.
-*   **Generalists ($k \approx 1$):** Balanced Goal AND Info. Robust but expensive.
-
-### 3. Geometric Meta-Cognition (The Controller)
-The agent monitors its own **Entropy (Confusion)** to dynamically set a target strategy:
-*   **Panic Mode (High Entropy):** Demands **Robustness** ($k \to 1$). "I'm confused, so I'll play it safe."
-*   **Flow Mode (Low Entropy):** Demands **Efficiency** ($k \to 0$). "I know what to do, so I'll optimize."
-
-### 4. Hybrid Architecture (Mitigations)
-To prevent instability and delusion, the system includes:
-*   **Hysteresis:** Prevents oscillation ("Jitterbug") when entropy is near the threshold.
-*   **Memory Veto:** Checks historical success rates. If the agent is **Confident but Wrong** (Delusion), memory overrides the controller to force caution.
-
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 *   Docker (for Neo4j)
 *   Python 3.11+
 
-### Setup
+### 1. Initialize Environment
 ```bash
-make dev-init  # Install deps + Start Neo4j
+make dev-init
 ```
 
-### Running the Agent
-
-**Standard Run (Active Inference):**
+### 2. Run the "Maximum Attack" Demo
+Watch the agent escape a local optimum where standard AI fails.
 ```bash
-python runner.py --door-state locked --use-memory
+make demo-critical
 ```
 
-**Enable Geometric Controller:**
-Edit `config.py` or use the flag (if supported by CLI, otherwise edit config):
-```python
-# config.py
-ENABLE_GEOMETRIC_CONTROLLER = True
-```
-
-**Compare Behaviors:**
+### 3. Run the Full Test Suite
+Verify the system integrity (Unit Tests + Red Team Scenarios).
 ```bash
-# 1. Run Baseline (Controller=False)
-python runner.py --door-state locked --use-memory
-
-# 2. Run Adaptive (Controller=True)
-# (The agent will switch strategies based on uncertainty)
+make test-full
 ```
 
-## Documentation Map
+---
 
-*   **[ASSESSMENT_AND_SCORE.md](ASSESSMENT_AND_SCORE.md):** **START HERE.** Comprehensive technical assessment, system diagram, and critical scoring.
-*   **[GEOMETRIC_META_COGNITION.md](GEOMETRIC_META_COGNITION.md):** Design document for the runtime controller.
-*   **[ANALYSIS_GEOMETRIC_MITIGATION.md](ANALYSIS_GEOMETRIC_MITIGATION.md):** Deep dive into the "Jitterbug" and "Mimic" failure modes and their solutions.
-*   **[FINAL_REPORT.md](FINAL_REPORT.md):** Original deep analysis of the Silver Gauge framework.
-*   **[PYTHAGOREAN_MEANS_EXPLAINED.md](PYTHAGOREAN_MEANS_EXPLAINED.md):** ELI5 guide to the math.
+## 🧠 Key Features
 
-## Project Structure
+### 1. The Bicameral Mind
+The agent is not just a solver; it is a system with two layers:
+*   **The Cortex (Active Inference):** Optimizes for Expected Free Energy ($G$). It is smart but fragile.
+*   **The Brainstem (Critical States):** Monitors the Cortex. If the agent is confused, looping, or dying, the Brainstem takes over.
+
+### 2. Critical State Protocols (The Instincts)
+The system detects 5 distinct critical states and applies specific protocols:
+*   **PANIC (High Entropy):** "I am confused." -> **Protocol: TANK** (Maximize Robustness).
+*   **SCARCITY (Low Steps):** "I am dying." -> **Protocol: SPARTAN** (Maximize Efficiency).
+*   **DEADLOCK (Loops):** "I am stuck." -> **Protocol: SISYPHUS** (Force Perturbation).
+*   **NOVELTY (Surprise):** "That was weird." -> **Protocol: EUREKA** (Learn).
+*   **HUBRIS (Complacency):** "I am too good." -> **Protocol: ICARUS** (Force Skepticism).
+
+### 3. The Circuit Breaker (Escalation)
+If the agent "thrashes" (oscillates between critical states), the **Escalation Protocol** triggers a hard stop to prevent resource waste.
+
+---
+
+## 📚 Documentation
+
+The project documentation is organized in the `docs/` folder:
+
+*   **Start Here:** `docs/reports/MACGYVER_PROJECT_FULL_ASSESSMENT.md` (The Magnum Opus)
+*   **Design:** `docs/design/CRITICAL_STATE_PROTOCOLS.md`
+*   **Philosophy:** `docs/philosophy/PROJECT_REFLECTION_AND_PATTERNS.md`
+*   **Reports:** `docs/reports/FINAL_PROJECT_ASSESSMENT.md`
+
+---
+
+## 🛠️ Project Structure
+
 ```
 macgyver_mud/
-├── agent_runtime.py          # Core Logic (Active Inference + Geometric Controller)
-├── scoring_silver.py         # Pythagorean Means & Entropy Logic
-├── config.py                 # Configuration (Enable/Disable Controller)
-├── validation/               # Experiments & Red Team Scripts
-│   ├── adaptive_red_team.py  # Stress tests for the Controller
-│   └── geometric_controller_test.py
-├── tests/                    # Unit Tests
-│   └── test_geometric_controller.py
-└── ...
+├── agent_runtime.py          # The Brain (Cortex + Brainstem)
+├── critical_state.py         # The Instincts (State Detection)
+├── scoring_silver.py         # The Gauge (Geometric Analysis)
+├── config.py                 # The DNA (Configuration)
+├── validation/               # The Gauntlet (Red Team Scripts)
+├── tests/                    # The Safety Net (Unit Tests)
+└── docs/                     # The Wisdom (Documentation)
 ```
 
 ## License

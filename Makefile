@@ -2,6 +2,8 @@
 .PHONY: validate-silver visualize-silver compare-silver silver-demo silver-analysis test-silver-full
 .PHONY: demo demo-original demo-silver demo-comparison
 .PHONY: init-balanced test-balanced demo-crisp demo-balanced demo-hybrid test-skill-modes
+.PHONY: demo-critical test-full
+.PHONY: demo-critical test-full
 
 # --- Configuration ---
 CONTAINER_NAME ?= neo4j44
@@ -44,16 +46,16 @@ neo4j-query: ## Run a quick test query (verify connection)
 test: ## Run all core tests (scoring, graph_model, agent_runtime, procedural_memory)
 	@echo "==> Running core test suite (80 tests)..."
 	@NEO4J_URI=bolt://localhost:$(BOLT_PORT) NEO4J_USER=$(NEO4J_USER) NEO4J_PASSWORD=$(NEO4J_PASS) \
-		python3 -m pytest test_scoring.py test_graph_model.py test_agent_runtime.py test_procedural_memory.py -v
+		python3 -m pytest tests/test_scoring.py tests/test_graph_model.py tests/test_agent_runtime.py tests/test_procedural_memory.py -v
 
 test-all: ## Run ALL tests (core + silver = 105 tests)
 	@echo "==> Running complete test suite (105 tests)..."
 	@NEO4J_URI=bolt://localhost:$(BOLT_PORT) NEO4J_USER=$(NEO4J_USER) NEO4J_PASSWORD=$(NEO4J_PASS) \
-		python3 -m pytest test_*.py -v
+		python3 -m pytest tests/test_*.py -v
 
 test-silver: ## Run silver gauge tests only
 	@NEO4J_URI=bolt://localhost:$(BOLT_PORT) NEO4J_USER=$(NEO4J_USER) NEO4J_PASSWORD=$(NEO4J_PASS) \
-		python3 -m pytest test_scoring_silver.py -v
+		python3 -m pytest tests/test_scoring_silver.py -v
 
 query-silver: ## Query recent silver gauge data from Neo4j
 	@echo "==> Recent Silver Gauge Data (Last 10 steps)"
@@ -287,6 +289,25 @@ demo-comparison: ## Side-by-side comparison: Original vs Silver
 
 # --- Balanced Skills & Multi-Objective Targets ---
 
+demo-critical: ## Run the "Maximum Attack" demo (Critical State Protocols)
+	@echo "==> Running Maximum Attack Demo (Critical State Protocols)..."
+	@echo "This demonstrates the agent escaping a local optimum where standard AI fails."
+	@python3 validation/comparative_stress_test.py
+
+test-full: ## Run the full test suite (Unit + Red Team)
+	@echo "==> Running Full Spectrum Test Suite..."
+	@export PYTHONPATH=$$PYTHONPATH:. && \
+	pytest tests/test_geometric_controller.py tests/test_critical_states.py && \
+	python3 validation/geometric_trap_experiment.py && \
+	python3 validation/red_team_experiment.py && \
+	python3 validation/adaptive_red_team.py && \
+	python3 validation/critical_state_red_team.py && \
+	python3 validation/comparative_stress_test.py && \
+	python3 validation/escalation_red_team.py
+	@echo "==> ALL SYSTEMS GREEN: Full Spectrum Test Passed."
+
+# --- Balanced Skills & Multi-Objective Targets ---
+
 init-balanced: ## Initialize balanced skills in Neo4j (multi-objective)
 	@echo "==> Adding balanced skills to Neo4j..."
 	@docker exec -i $(CONTAINER_NAME) cypher-shell -u $(NEO4J_USER) -p $(NEO4J_PASS) --encryption=false < balanced_skills_init.cypher
@@ -304,7 +325,7 @@ test-balanced: ## Test balanced skill scoring
 
 test-skill-modes: ## Test all skill mode filtering
 	@echo "==> Testing skill mode integration..."
-	@python3 test_skill_mode_integration.py
+	@python3 tests/test_skill_mode_integration.py
 
 demo-crisp: ## Demo with crisp skills only (pure specialists)
 	@echo ""
