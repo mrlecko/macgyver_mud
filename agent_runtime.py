@@ -11,7 +11,9 @@ from graph_model import (
     get_skill_stats, update_skill_stats,
     get_meta_params, update_meta_params, get_recent_episodes_stats
 )
-from scoring import score_skill, score_skill_with_memory, compute_epistemic_value
+from scoring_silver import score_skill
+from critical_state import CriticalStateMonitor, CriticalState, AgentState
+from scoring import score_skill_with_memory, compute_epistemic_value
 
 
 class AgentRuntime:
@@ -87,8 +89,13 @@ class AgentRuntime:
         self.decision_log = []
         
         # Geometric Controller State
-        self.geo_mode = "FLOW (Efficiency)" # Default start
-        self.switch_history = [] # List of step counts where switch occurred
+        self.geo_mode = "FLOW (Efficiency)" # Default
+        self.switch_history = [] # For oscillation detection
+        self.monitor = CriticalStateMonitor() # Critical State Monitor
+        
+        # Data Feeds for Critical States
+        self.reward_history = []
+        self.last_prediction_error = 0.0
 
     def _get_belief_category(self, p_unlocked: float) -> str:
         """
@@ -168,46 +175,79 @@ class AgentRuntime:
             scored_skills.append((score, skill, explanation))
 
         # ====================================================================
-        # GEOMETRIC CONTROLLER (Meta-Cognition)
+        # CRITICAL STATE CONTROLLER (Meta-Cognition)
         # ====================================================================
-        if config.ENABLE_GEOMETRIC_CONTROLLER:
+        if config.ENABLE_GEOMETRIC_CONTROLLER and config.ENABLE_CRITICAL_STATE_PROTOCOLS:
             from scoring_silver import build_silver_stamp, entropy
 
-            # 1. Monitor Context
+            # Gather Metrics
             current_entropy = entropy(self.p_unlocked)
             
-            # 2. Hysteresis Logic
-            # Enter Panic if > 0.45
-            # Exit Panic if < 0.35
-            # Otherwise stay
-            if current_entropy > 0.45:
-                new_mode = "PANIC (Robustness)"
-            elif current_entropy < 0.35:
-                new_mode = "FLOW (Efficiency)"
-            else:
-                new_mode = self.geo_mode # Stay in current mode
+            # Use real data feeds
+            agent_state = AgentState(
+                entropy=current_entropy,
+                history=self.history[-10:] if hasattr(self, 'history') else [], 
+                steps=self.steps_remaining if hasattr(self, 'steps_remaining') else 100, # Fallback if not tracked
+                dist=10, # Placeholder: In real app, this would be Dijkstra distance
+                rewards=self.reward_history,
+                error=self.last_prediction_error
+            )
+            
+            # Evaluate State
+            critical_state = self.monitor.evaluate(agent_state)
+            
+            # Apply Protocols
+            target_k = None
+            boost_magnitude = 0.0
+            mode_reason = f"State: {critical_state.name}"
+            
+            if critical_state == CriticalState.SCARCITY:
+                # SPARTAN PROTOCOL: Ruthless Efficiency
+                target_k = 0.0 # Specialist
+                boost_magnitude = 2.0 # Massive boost for efficiency
+                self.geo_mode = "SCARCITY (Efficiency)"
                 
-            # 3. Meta-Monitor (Oscillation Check)
-            # If we switched modes recently, force PANIC
-            if new_mode != self.geo_mode:
-                self.switch_history.append(self.step_count)
-                # Keep only recent history (last 5 steps)
-                self.switch_history = [s for s in self.switch_history if s > self.step_count - 5]
+            elif critical_state == CriticalState.PANIC:
+                # TANK PROTOCOL: Robustness
+                target_k = 1.0 # Generalist
+                boost_magnitude = config.BOOST_MAGNITUDE
+                self.geo_mode = "PANIC (Robustness)"
                 
-                if len(self.switch_history) > 2:
-                    new_mode = "PANIC (Robustness)" # Force stability
-                    mode_reason = "META-MONITOR (Oscillation)"
-                else:
-                    mode_reason = "HYSTERESIS"
-            else:
-                mode_reason = "STABLE"
+            elif critical_state == CriticalState.DEADLOCK:
+                # SISYPHUS PROTOCOL: Perturbation
+                # In this demo, we just force Exploration
+                target_k = 0.5 # Balanced
+                boost_magnitude = 0.0
+                self.geo_mode = "DEADLOCK (Perturbation)"
                 
-            # 4. Memory Veto (False Confidence Check)
-            # If Flow Mode proposed, check if we are actually failing
-            if "FLOW" in new_mode and self.use_procedural_memory:
-                # Check general success rate in this context
-                # We use the first skill's context stats as a proxy for the situation
-                # (A simplification, but effective)
+            elif critical_state == CriticalState.NOVELTY:
+                # EUREKA PROTOCOL: Learning
+                # Force Wait/Learn (Not fully implemented in demo skill set)
+                target_k = 1.0 # Safe default
+                self.geo_mode = "NOVELTY (Learning)"
+                
+            elif critical_state == CriticalState.HUBRIS:
+                # ICARUS PROTOCOL: Skepticism
+                # Force Exploration
+                target_k = 1.0 # Safe default
+                self.geo_mode = "HUBRIS (Skepticism)"
+                
+            else: # FLOW
+                # Standard Active Inference
+                target_k = 0.0 # Default to efficiency in Flow
+                boost_magnitude = config.BOOST_MAGNITUDE
+                self.geo_mode = "FLOW (Efficiency)"
+
+            # Apply Boosts based on Target K
+            if target_k is not None:
+                for i, (score, skill, expl) in enumerate(scored_skills):
+                    stamp = build_silver_stamp(skill)
+                    # Calculate distance to target k
+                    dist = abs(stamp['k'] - target_k)
+                    # Boost if close
+                    if dist < 0.2:
+                        new_score = score + boost_magnitude
+                        scored_skills[i] = (new_score, skill, expl + f" [BOOST: {critical_state.name}]")
                 context = {"belief_category": self._get_belief_category(self.p_unlocked)}
                 # Just check the first skill to get context stats
                 sample_stats = get_skill_stats(self.session, skills[0]["name"], context)

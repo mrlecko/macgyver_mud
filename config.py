@@ -89,6 +89,24 @@ STATE_VAR_NAME = "DoorLockState"
 ENABLE_GEOMETRIC_CONTROLLER = False
 
 # ============================================================================
+# Critical State Protocols Configuration
+# ============================================================================
+
+# Enable the 5-State Critical Protocol System (Hubris, Deadlock, Novelty, Scarcity, Panic)
+# Requires ENABLE_GEOMETRIC_CONTROLLER = True (as it builds on top of it)
+ENABLE_CRITICAL_STATE_PROTOCOLS = False
+
+# Thresholds for State Triggers
+CRITICAL_THRESHOLDS = {
+    "PANIC_ENTROPY": 0.45,      # Entropy > 0.45 triggers Panic
+    "SCARCITY_FACTOR": 1.2,     # Steps < Dist * 1.2 triggers Scarcity
+    "NOVELTY_ERROR": 0.8,       # Prediction Error > 0.8 triggers Novelty
+    "HUBRIS_STREAK": 6,         # Reward Streak >= 6 triggers Hubris
+    "HUBRIS_ENTROPY": 0.1,      # Entropy < 0.1 required for Hubris
+    "DEADLOCK_WINDOW": 4        # History window for cycle detection
+}
+
+# ============================================================================
 # Display Configuration
 # ============================================================================
 
