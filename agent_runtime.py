@@ -85,6 +85,10 @@ class AgentRuntime:
 
         # Decision log for verbose mode
         self.decision_log = []
+        
+        # Geometric Controller State
+        self.geo_mode = "FLOW (Efficiency)" # Default start
+        self.switch_history = [] # List of step counts where switch occurred
 
     def _get_belief_category(self, p_unlocked: float) -> str:
         """
@@ -162,6 +166,85 @@ class AgentRuntime:
                 explanation = None
 
             scored_skills.append((score, skill, explanation))
+
+        # ====================================================================
+        # GEOMETRIC CONTROLLER (Meta-Cognition)
+        # ====================================================================
+        if config.ENABLE_GEOMETRIC_CONTROLLER:
+            from scoring_silver import build_silver_stamp, entropy
+
+            # 1. Monitor Context
+            current_entropy = entropy(self.p_unlocked)
+            
+            # 2. Hysteresis Logic
+            # Enter Panic if > 0.45
+            # Exit Panic if < 0.35
+            # Otherwise stay
+            if current_entropy > 0.45:
+                new_mode = "PANIC (Robustness)"
+            elif current_entropy < 0.35:
+                new_mode = "FLOW (Efficiency)"
+            else:
+                new_mode = self.geo_mode # Stay in current mode
+                
+            # 3. Meta-Monitor (Oscillation Check)
+            # If we switched modes recently, force PANIC
+            if new_mode != self.geo_mode:
+                self.switch_history.append(self.step_count)
+                # Keep only recent history (last 5 steps)
+                self.switch_history = [s for s in self.switch_history if s > self.step_count - 5]
+                
+                if len(self.switch_history) > 2:
+                    new_mode = "PANIC (Robustness)" # Force stability
+                    mode_reason = "META-MONITOR (Oscillation)"
+                else:
+                    mode_reason = "HYSTERESIS"
+            else:
+                mode_reason = "STABLE"
+                
+            # 4. Memory Veto (False Confidence Check)
+            # If Flow Mode proposed, check if we are actually failing
+            if "FLOW" in new_mode and self.use_procedural_memory:
+                # Check general success rate in this context
+                # We use the first skill's context stats as a proxy for the situation
+                # (A simplification, but effective)
+                context = {"belief_category": self._get_belief_category(self.p_unlocked)}
+                # Just check the first skill to get context stats
+                sample_stats = get_skill_stats(self.session, skills[0]["name"], context)
+                
+                # If we have data and it's bad (< 50% success)
+                if sample_stats["count"] > 2 and sample_stats["success_rate"] < 0.5:
+                    new_mode = "PANIC (Robustness)"
+                    mode_reason = "MEMORY VETO (Bad History)"
+            
+            self.geo_mode = new_mode
+            
+            # Set Target k based on mode
+            if "PANIC" in self.geo_mode:
+                target_k = 0.8
+            else:
+                target_k = 0.0
+
+            # 5. Apply Geometric Boost
+            BOOST_MAGNITUDE = 5.0
+            
+            boosted_skills = []
+            for base_score, skill, explanation in scored_skills:
+                silver = build_silver_stamp(skill["name"], skill.get("cost", 1.0), self.p_unlocked)
+                k_skill = silver["k_explore"]
+                alignment = 1.0 - abs(k_skill - target_k)
+                boost = alignment * BOOST_MAGNITUDE
+                final_score = base_score + boost
+                
+                geo_expl = f" [Geo: {self.geo_mode} ({mode_reason}), k_target={target_k}, k_skill={k_skill:.2f}, Boost={boost:.2f}]"
+                if explanation:
+                    explanation += geo_expl
+                else:
+                    explanation = geo_expl
+                    
+                boosted_skills.append((final_score, skill, explanation))
+            
+            scored_skills = boosted_skills
 
         # Sort by score (descending) and pick best
         scored_skills.sort(key=lambda x: x[0], reverse=True)

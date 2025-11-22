@@ -80,6 +80,15 @@ AGENT_NAME = "MacGyverBot"
 STATE_VAR_NAME = "DoorLockState"
 
 # ============================================================================
+# Geometric Meta-Cognition Configuration
+# ============================================================================
+
+# Enable the Geometric Controller (Adaptive k-target)
+# If False, uses standard Active Inference (Baseline)
+# If True, dynamically adjusts skill selection based on entropy/performance
+ENABLE_GEOMETRIC_CONTROLLER = False
+
+# ============================================================================
 # Display Configuration
 # ============================================================================
 
