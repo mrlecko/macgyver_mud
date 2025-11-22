@@ -15,6 +15,7 @@ class AgentState:
         self.prediction_error = error
 
 class CriticalState(Enum):
+    ESCALATION = auto() # Highest Priority (Stop)
     FLOW = auto()
     PANIC = auto()
     DEADLOCK = auto()
@@ -24,7 +25,32 @@ class CriticalState(Enum):
 
 class CriticalStateMonitor:
     def __init__(self):
-        pass
+        self.state_history = [] # Track past critical states for meta-meta-cognition
+
+    def check_escalation(self, steps_remaining):
+        """
+        Trigger: Meta-Cognitive Failure (Thrashing) or Terminal Scarcity.
+        Risk: System Collapse.
+        Protocol: STOP_AND_ESCALATE.
+        """
+        # 1. Terminal Scarcity
+        scarcity_limit = config.CRITICAL_THRESHOLDS["ESCALATION_SCARCITY_LIMIT"]
+        if steps_remaining < scarcity_limit:
+            return True
+            
+        # 2. Panic Spiral (3 Panics in last 5 states)
+        panic_limit = config.CRITICAL_THRESHOLDS["ESCALATION_PANIC_LIMIT"]
+        recent_states = self.state_history[-5:]
+        if recent_states.count(CriticalState.PANIC) >= panic_limit:
+            return True
+            
+        # 3. Sisyphus Failure (2 Deadlocks in last 10 states)
+        deadlock_limit = config.CRITICAL_THRESHOLDS["ESCALATION_DEADLOCK_LIMIT"]
+        recent_states_long = self.state_history[-10:]
+        if recent_states_long.count(CriticalState.DEADLOCK) >= deadlock_limit:
+            return True
+            
+        return False
 
     def check_scarcity(self, steps_remaining, distance_to_goal):
         """
@@ -100,27 +126,28 @@ class CriticalStateMonitor:
     def evaluate(self, agent_state) -> CriticalState:
         """
         Evaluate the agent's state and return the highest priority CriticalState.
-        Priority: SCARCITY > PANIC > DEADLOCK > NOVELTY > HUBRIS > FLOW
+        Priority: ESCALATION > SCARCITY > PANIC > DEADLOCK > NOVELTY > HUBRIS > FLOW
         """
-        # 1. SCARCITY
+        # 1. Determine Raw State (The "Reptilian Reflex")
+        raw_state = CriticalState.FLOW
+        
         if self.check_scarcity(agent_state.steps_remaining, agent_state.distance_to_goal):
-            return CriticalState.SCARCITY
+            raw_state = CriticalState.SCARCITY
+        elif self.check_panic(agent_state.entropy):
+            raw_state = CriticalState.PANIC
+        elif self.check_deadlock(agent_state.location_history):
+            raw_state = CriticalState.DEADLOCK
+        elif self.check_novelty(agent_state.prediction_error):
+            raw_state = CriticalState.NOVELTY
+        elif self.check_hubris(agent_state.reward_history, agent_state.entropy):
+            raw_state = CriticalState.HUBRIS
             
-        # 2. PANIC
-        if self.check_panic(agent_state.entropy):
-            return CriticalState.PANIC
+        # 2. Update History (The "Memory")
+        self.state_history.append(raw_state)
+        
+        # 3. Check Escalation (The "Circuit Breaker")
+        # We check this AFTER updating history so the current state counts towards the limit
+        if self.check_escalation(agent_state.steps_remaining):
+            return CriticalState.ESCALATION
             
-        # 3. DEADLOCK
-        if self.check_deadlock(agent_state.location_history):
-            return CriticalState.DEADLOCK
-            
-        # 4. NOVELTY
-        if self.check_novelty(agent_state.prediction_error):
-            return CriticalState.NOVELTY
-            
-        # 5. HUBRIS
-        if self.check_hubris(agent_state.reward_history, agent_state.entropy):
-            return CriticalState.HUBRIS
-            
-        # 6. FLOW
-        return CriticalState.FLOW
+        return raw_state

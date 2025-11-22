@@ -15,6 +15,10 @@ from scoring_silver import score_skill
 from critical_state import CriticalStateMonitor, CriticalState, AgentState
 from scoring import score_skill_with_memory, compute_epistemic_value
 
+class AgentEscalationError(Exception):
+    """Raised when the agent enters the ESCALATION state (Circuit Breaker)."""
+    pass
+
 
 class AgentRuntime:
     """
@@ -201,7 +205,12 @@ class AgentRuntime:
             boost_magnitude = 0.0
             mode_reason = f"State: {critical_state.name}"
             
-            if critical_state == CriticalState.SCARCITY:
+            if critical_state == CriticalState.ESCALATION:
+                # STOP_AND_ESCALATE PROTOCOL
+                # The agent is thrashing or dying. Halt immediately.
+                raise AgentEscalationError(f"CRITICAL FAILURE: Agent entered ESCALATION state. Reason: Meta-Cognitive Failure or Terminal Scarcity.")
+
+            elif critical_state == CriticalState.SCARCITY:
                 # SPARTAN PROTOCOL: Ruthless Efficiency
                 target_k = 0.0 # Specialist
                 boost_magnitude = 2.0 # Massive boost for efficiency

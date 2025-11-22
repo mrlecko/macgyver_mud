@@ -103,7 +103,10 @@ CRITICAL_THRESHOLDS = {
     "NOVELTY_ERROR": 0.8,       # Prediction Error > 0.8 triggers Novelty
     "HUBRIS_STREAK": 6,         # Reward Streak >= 6 triggers Hubris
     "HUBRIS_ENTROPY": 0.1,      # Entropy < 0.1 required for Hubris
-    "DEADLOCK_WINDOW": 4        # History window for cycle detection
+    "DEADLOCK_WINDOW": 4,       # History window for cycle detection
+    "ESCALATION_PANIC_LIMIT": 3, # 3 Panics in window triggers Escalation
+    "ESCALATION_DEADLOCK_LIMIT": 2, # 2 Deadlocks in window triggers Escalation
+    "ESCALATION_SCARCITY_LIMIT": 2 # Steps < 2 triggers Escalation
 }
 
 # ============================================================================
