@@ -135,9 +135,19 @@ class AgentRuntime:
         """
         if not skills:
             raise ValueError("No skills available")
+            
+        # Initialize Salience Metric (lazy load or persistent)
+        if not hasattr(self, 'salience_metric'):
+            from scoring.schelling import SalienceMetric
+            self.salience_metric = SalienceMetric()
 
         # Determine context (belief-based, NOT ground truth)
         context = {"belief_category": self._get_belief_category(self.p_unlocked)}
+
+        # Calculate Salience Scores for all skills
+        # Treat skills as 'options' for coordination
+        skill_options = [{'name': s['name'], 'cost': s.get('cost', 1.0)} for s in skills]
+        salience_scores = self.salience_metric.calculate_salience(skill_options)
 
         scored_skills = []
 
@@ -165,6 +175,12 @@ class AgentRuntime:
                     memory_weight=0.5,
                     epistemic_bonus=epistemic
                 )
+                
+                # Add Salience Bonus (Coordination)
+                salience = salience_scores.get(skill['name'], 0.0)
+                if salience > 0:
+                    score += salience * 0.5 # Weight for coordination
+                    explanation += f" [Salience: {salience:.2f}]"
 
                 if self.verbose_memory:
                     skill["explanation"] = explanation
@@ -173,7 +189,13 @@ class AgentRuntime:
                 # Pure theoretical scoring
                 score = score_skill(skill, self.p_unlocked,
                                   alpha=self.alpha, beta=self.beta, gamma=self.gamma)
-                explanation = None
+                
+                # Add Salience Bonus
+                salience = salience_scores.get(skill['name'], 0.0)
+                if salience > 0:
+                    score += salience * 0.5
+                    
+                explanation = f"Salience: {salience:.2f}" if salience > 0 else None
 
             scored_skills.append((score, skill, explanation))
 
