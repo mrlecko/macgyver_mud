@@ -190,6 +190,13 @@ def validate_config():
     assert BETA >= 0, "BETA must be non-negative"
     assert GAMMA >= 0, "GAMMA must be non-negative"
     assert MAX_STEPS > 0, "MAX_STEPS must be positive"
+
+    # Feature flag dependency validation
+    if ENABLE_CRITICAL_STATE_PROTOCOLS and not ENABLE_GEOMETRIC_CONTROLLER:
+        print("⚠️  WARNING: ENABLE_CRITICAL_STATE_PROTOCOLS=True requires ENABLE_GEOMETRIC_CONTROLLER=True")
+        print("   Critical state protocols will NOT execute unless both flags are enabled.")
+        print("   Set ENABLE_GEOMETRIC_CONTROLLER=True to activate protocols.")
+
     print("✓ Configuration validated")
 
 if __name__ == "__main__":

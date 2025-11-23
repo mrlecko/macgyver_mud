@@ -142,6 +142,30 @@ class AgentRuntime:
         else:
             return "uncertain"
 
+    def _estimate_distance_to_goal(self) -> int:
+        """
+        Estimate remaining steps to escape based on belief state.
+
+        This is a heuristic for the MUD scenario:
+        - If uncertain: need 1 step to gather info + 1 step to escape = 2 steps
+        - If confident about door state: need 1 step to escape = 1 step
+        - If confident door is unlocked: could escape immediately = 1 step
+        - If confident door is locked: need to use window = 1 step
+
+        For more complex scenarios, this could use graph traversal (Dijkstra).
+
+        Returns:
+            Estimated steps to goal
+        """
+        category = self._get_belief_category(self.p_unlocked)
+
+        if category == "uncertain":
+            # Need to gather info first, then escape
+            return 2
+        else:
+            # Already confident, just need to execute escape
+            return 1
+
     def select_skill(self, skills: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Select best skill based on current belief (and optionally memory).
@@ -207,13 +231,13 @@ class AgentRuntime:
 
             # Gather Metrics
             current_entropy = entropy(self.p_unlocked)
-            
+
             # Use real data feeds
             agent_state = AgentState(
                 entropy=current_entropy,
-                history=self.history[-10:] if hasattr(self, 'history') else [], 
+                history=self.history[-10:] if hasattr(self, 'history') else [],
                 steps=self.steps_remaining if hasattr(self, 'steps_remaining') else 100, # Fallback if not tracked
-                dist=10, # Placeholder: In real app, this would be Dijkstra distance
+                dist=self._estimate_distance_to_goal(),  # Use belief-based distance estimation
                 rewards=self.reward_history,
                 error=self.last_prediction_error
             )
@@ -251,8 +275,8 @@ class AgentRuntime:
                     # The system is mathematically unstable. Kill it before it crashes.
                     raise AgentEscalationError(f"LYAPUNOV DIVERGENCE DETECTED: System is unstable (V={v_value:.2f}). Halting.")
 
-
-            elif critical_state == CriticalState.SCARCITY:
+            # Apply Critical State Protocols
+            if critical_state == CriticalState.SCARCITY:
                 # SPARTAN PROTOCOL: Ruthless Efficiency
                 target_k = 0.0 # Specialist
                 boost_magnitude = 2.0 # Massive boost for efficiency
@@ -289,26 +313,15 @@ class AgentRuntime:
                 boost_magnitude = config.BOOST_MAGNITUDE
                 self.geo_mode = "FLOW (Efficiency)"
 
-            # Apply Boosts based on Target K
-            if target_k is not None:
-                for i, (score, skill, expl) in enumerate(scored_skills):
-                    stamp = build_silver_stamp(skill["name"], skill["cost"], self.p_unlocked)
-                    # Calculate distance to target k (using k_explore as the geometric proxy)
-                    dist = abs(stamp['k_explore'] - target_k)
-                    # Boost if close
-                    if dist < 0.2:
-                        new_score = score + boost_magnitude
-                        # Add boost info to explanation (keep dict format if it was dict)
-                        if isinstance(expl, dict):
-                            expl['critical_state_boost'] = f"[BOOST: {critical_state.name}]"
-                        elif expl:
-                            expl = str(expl) + f" [BOOST: {critical_state.name}]"
-                        else:
-                            expl = f"[BOOST: {critical_state.name}]"
-                        scored_skills[i] = (new_score, skill, expl)
+            # NOTE: Boost application happens below in the unified geometric boost loop (lines 327-351)
+            # The old binary boost loop (if dist < 0.2) has been removed to prevent duplicate boosts
+            # The new alignment-based boost is more sophisticated and uses continuous weighting
 
             # Memory Veto: Check if procedural memory suggests panic mode
-            if self.use_procedural_memory:
+            # IMPORTANT: Memory veto must respect critical state priority order
+            # Priority: ESCALATION > SCARCITY > PANIC > DEADLOCK > NOVELTY > HUBRIS > FLOW
+            # Memory veto can only override states with LOWER priority than PANIC
+            if self.use_procedural_memory and critical_state not in [CriticalState.ESCALATION, CriticalState.SCARCITY]:
                 context = {"belief_category": self._get_belief_category(self.p_unlocked)}
                 # Just check the first skill to get context stats
                 sample_stats = get_skill_stats(self.session, skills[0]["name"], context)
@@ -318,22 +331,19 @@ class AgentRuntime:
                 if overall.get("uses", 0) > 2 and overall.get("success_rate", 0.5) < 0.5:
                     self.geo_mode = "PANIC (Robustness)"
                     mode_reason = "MEMORY VETO (Bad History)"
-            
-            # Set Target k based on mode
-            if "PANIC" in self.geo_mode:
-                target_k = 0.8
-            else:
-                target_k = 0.0
+                    # Override target_k for memory-induced panic
+                    target_k = 1.0  # Generalist (same as PANIC protocol)
 
             # 5. Apply Geometric Boost
-            BOOST_MAGNITUDE = 5.0
-            
+            # boost_magnitude is set by critical state protocols above (lines 254-313)
+            # All branches set it, so no fallback is needed
+
             boosted_skills = []
             for base_score, skill, explanation in scored_skills:
                 silver = build_silver_stamp(skill["name"], skill.get("cost", 1.0), self.p_unlocked)
                 k_skill = silver["k_explore"]
                 alignment = 1.0 - abs(k_skill - target_k)
-                boost = alignment * BOOST_MAGNITUDE
+                boost = alignment * boost_magnitude
                 final_score = base_score + boost
 
                 geo_expl = f" [Geo: {self.geo_mode} ({mode_reason}), k_target={target_k}, k_skill={k_skill:.2f}, Boost={boost:.2f}]"
@@ -566,6 +576,16 @@ class AgentRuntime:
             # Store initial belief for future resets
             self._initial_belief = self.p_unlocked
 
+        # Reset critical state tracking (Issue #7 fix)
+        self.steps_remaining = max_steps
+        self.reward_history = []
+        self.history = []
+        self.last_prediction_error = 0.0
+
+        # Reset critical state monitor history (Issue #10 fix)
+        if hasattr(self, 'monitor'):
+            self.monitor.state_history = []
+
         # Create episode in graph
         episode_id = create_episode(self.session, self.agent_id, self.door_state)
         self.current_episode_id = episode_id
@@ -621,7 +641,9 @@ class AgentRuntime:
             # Update belief in graph
             update_belief(self.session, self.agent_id, config.STATE_VAR_NAME, p_after)
 
+            # Update step counters (Issue #8 fix)
             self.step_count += 1
+            self.steps_remaining -= 1
 
             # Break if escaped
             if escaped:
