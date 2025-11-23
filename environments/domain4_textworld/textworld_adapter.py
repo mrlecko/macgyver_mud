@@ -14,8 +14,21 @@ Iteration 3: AgentState conversion for critical monitoring.
 """
 import textworld
 import os
+from typing import List, Optional, Tuple
+from dataclasses import dataclass
 from neo4j import Session
 from environments.domain4_textworld.graph_schema import TextWorldGraphSchema
+
+
+@dataclass
+class TextWorldState:
+    """State representation for TextWorld environment."""
+    step: int
+    feedback: str
+    score: float
+    max_score: Optional[float]
+    won: bool
+    lost: bool
 
 
 class TextWorldAdapter:
@@ -73,7 +86,7 @@ class TextWorldAdapter:
             Path to compiled game file
         """
         if seed is not None:
-            self.game_options.seed = seed
+            self.game_options.seeds = seed
         
         # Generate game
         self.game = textworld.generator.make_game(self.game_options)
@@ -89,30 +102,76 @@ class TextWorldAdapter:
         target_path = f"./scratch/textworld_games/game_{seed or 'default'}.ulx"
         if os.path.exists(compiled_path):
             shutil.move(compiled_path, target_path)
+            
+            # Also move the corresponding .json file if it exists
+            # This is CRITICAL for admissible_commands to work!
+            json_path = compiled_path.replace('.ulx', '.json')
+            target_json_path = target_path.replace('.ulx', '.json')
+            if os.path.exists(json_path):
+                shutil.move(json_path, target_json_path)
+                
             self.game_file = target_path
         else:
             self.game_file = compiled_path
         
-        return self.game_file
-    
-    def reset(self):
-        """
-        Reset environment and start a new episode.
-        
-        Returns:
-            Initial game state
-        """
-        # Close existing environment if any
+        # Start new environment after game generation
+        # Request admissible commands from TextWorld
         if self.env is not None:
             self.env.close()
         
-        # Generate game if not already done
-        if self.game_file is None or not os.path.exists(self.game_file):
-            self.generate_game()
+        # Configure what info we want from TextWorld
+        request_infos = textworld.EnvInfos(
+            admissible_commands=True,  # Get valid commands
+            description=True,           # Get room descriptions
+            inventory=True,             # Get inventory
+            max_score=True,             # Get quest score info
+            won=True,                   # Check if won
+            lost=True                   # Check if lost
+        )
         
-        # Start new environment
-        self.env = textworld.start(self.game_file)
-        self.current_state = self.env.reset()
+        self.env = textworld.start(self.game_file, request_infos=request_infos)
+        
+        return self.game_file
+    
+    def reset(self) -> TextWorldState:
+        """
+        Reset the environment to initial state.
+        
+        Returns:
+            Initial AgentState
+        """
+        if not self.env:
+            # If env is not initialized, try to generate a game first
+            if self.game_file is None or not os.path.exists(self.game_file):
+                self.generate_game()
+            else:
+                # If game_file exists but env is not started, start it
+                request_infos = textworld.EnvInfos(
+                    admissible_commands=True,
+                    description=True,
+                    inventory=True,
+                    max_score=True,
+                    won=True,
+                    lost=True
+                )
+                self.env = textworld.start(self.game_file, request_infos=request_infos)
+        
+        # Reset environment and get initial state  
+        # TextWorld returns a GameState object (dict-like)
+        game_state = self.env.reset()
+        
+        # Store the full game state for command access
+        self._current_infos = game_state
+        
+        # Create state
+        self.current_state = TextWorldState(
+            step=0,
+            feedback=game_state.get('feedback', '') or '',
+            score=game_state.get('score', 0),
+            max_score=game_state.get('max_score', None),
+            won=game_state.get('won', False),
+            lost=game_state.get('lost', False)
+        )
         
         # Initialize state tracking for Iteration 3+
         self.action_history = []
@@ -123,45 +182,58 @@ class TextWorldAdapter:
         
         return self.current_state
     
-    def step(self, action):
+    def step(self, action: str) -> Tuple[TextWorldState, float, bool]:
         """
-        Execute an action in the environment.
+        Execute action in environment.
         
         Args:
-            action: Text command to execute
-        
+            action: Command to execute
+            
         Returns:
-            Tuple of (state, reward, done)
+            Tuple of (new_state, reward, done)
         """
-        if self.env is None:
-            raise RuntimeError("Environment not initialized. Call reset() first.")
+        if not self.env:
+            raise ValueError("Must generate game and reset first")
         
-        # Execute action
-        prev_state = self.current_state
-        self.current_state, reward, done = self.env.step(action)
+        # Execute action - TextWorld returns (game_state, reward, done)
+        # where game_state is a GameState dict
+        game_state, reward, done = self.env.step(action)
         
-        # Track history
+        # Store the full game state for command access
+        self._current_infos = game_state
+        
+        # Track action
         self.action_history.append(action)
-        self.observation_history.append(self.current_state.feedback if self.current_state.feedback else "")
+        self.observation_history.append(game_state.get('feedback', '') or '')
         self.reward_history.append(reward)
-        self.current_step += 1
         
-        # Auto-terminate if too long
-        if self.current_step >= self.max_steps:
-            done = True
+        # Create new state
+        prev_score = self.current_state.score if self.current_state else 0
+        self.current_state = TextWorldState(
+            step=self.current_state.step + 1 if self.current_state else 0,
+            feedback=game_state.get('feedback', '') or '',
+            score=game_state.get('score', prev_score),
+            max_score=game_state.get('max_score', None),
+            won=game_state.get('won', False),
+            lost=game_state.get('lost', False)
+        )
         
         return self.current_state, reward, done
     
-    def get_admissible_commands(self):
+    def get_admissible_commands(self) -> Optional[List[str]]:
         """
         Get list of valid commands in current state.
         
         Returns:
-            List of command strings
+            List of admissible command strings, or None if not available
         """
-        if self.current_state and self.current_state.admissible_commands:
-            return self.current_state.admissible_commands
-        return []
+        if not hasattr(self, '_current_infos') or not self._current_infos:
+            return None
+        
+        # Get commands from GameState dict
+        commands = self._current_infos.get('admissible_commands', [])
+        
+        return list(commands) if commands else None
     
     def calculate_entropy(self):
         """
