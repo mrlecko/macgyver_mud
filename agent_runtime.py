@@ -209,6 +209,25 @@ class AgentRuntime:
                 # The agent is thrashing or dying. Halt immediately.
                 raise AgentEscalationError(f"CRITICAL FAILURE: Agent entered ESCALATION state. Reason: Meta-Cognitive Failure or Terminal Scarcity.")
 
+            # ====================================================================
+            # LYAPUNOV STABILITY CHECK (Dynamical Systems Safety)
+            # ====================================================================
+            # Update Lyapunov Monitor
+            # Stress proxy: (100 - steps_remaining) / 100
+            stress = (100 - agent_state.steps) / 100.0 if agent_state.steps else 0.0
+            
+            v_value = self.lyapunov_monitor.update(
+                entropy=current_entropy,
+                distance_estimate=agent_state.dist,
+                stress=stress
+            )
+            
+            # Check for Divergence (Instability)
+            if self.lyapunov_monitor.is_diverging():
+                # The system is mathematically unstable. Kill it before it crashes.
+                raise AgentEscalationError(f"LYAPUNOV DIVERGENCE DETECTED: System is unstable (V={v_value:.2f}). Halting.")
+
+
             elif critical_state == CriticalState.SCARCITY:
                 # SPARTAN PROTOCOL: Ruthless Efficiency
                 target_k = 0.0 # Specialist
