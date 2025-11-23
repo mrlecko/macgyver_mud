@@ -10,4 +10,4 @@ docker exec -i neo4j44 cypher-shell -u neo4j -p password --encryption=false < cy
 
 # Run tests
 echo "Running tests..."
-python3.11 -m pytest test_scoring.py test_graph_model.py test_agent_runtime.py "$@"
+python3.11 -m pytest tests/test_scoring.py tests/test_graph_model.py tests/test_agent_runtime.py "$@"
