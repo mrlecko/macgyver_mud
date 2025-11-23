@@ -95,7 +95,11 @@ class AgentRuntime:
         self.geo_mode = "FLOW (Efficiency)" # Default
         self.switch_history = [] # For oscillation detection
         self.monitor = CriticalStateMonitor() # Critical State Monitor
-        
+
+        # Lyapunov Stability Monitor
+        from control.lyapunov import StabilityMonitor
+        self.lyapunov_monitor = StabilityMonitor()
+
         # Data Feeds for Critical States
         self.reward_history = []
         self.last_prediction_error = 0.0
@@ -107,7 +111,8 @@ class AgentRuntime:
             from memory.episodic_replay import EpisodicMemory
             from memory.counterfactual_generator import CounterfactualGenerator
             self.episodic_memory = EpisodicMemory(session)
-            self.counterfactual_generator = None  # Initialized when labyrinth is available
+            # Initialize generator for non-spatial support (labyrinth added later if available)
+            self.counterfactual_generator = CounterfactualGenerator(session, None)
             self.current_episode_path = []  # Track rooms visited in current episode
         else:
             self.episodic_memory = None
@@ -228,11 +233,11 @@ class AgentRuntime:
             # ====================================================================
             # Update Lyapunov Monitor
             # Stress proxy: (100 - steps_remaining) / 100
-            stress = (100 - agent_state.steps) / 100.0 if agent_state.steps else 0.0
+            stress = (100 - agent_state.steps_remaining) / 100.0 if agent_state.steps_remaining else 0.0
             
             v_value = self.lyapunov_monitor.update(
                 entropy=current_entropy,
-                distance_estimate=agent_state.dist,
+                distance_estimate=agent_state.distance_to_goal,
                 stress=stress
             )
             
@@ -288,8 +293,14 @@ class AgentRuntime:
                     # Boost if close
                     if dist < 0.2:
                         new_score = score + boost_magnitude
-                        explanation_text = expl if expl else ""
-                        scored_skills[i] = (new_score, skill, explanation_text + f" [BOOST: {critical_state.name}]")
+                        # Add boost info to explanation (keep dict format if it was dict)
+                        if isinstance(expl, dict):
+                            expl['critical_state_boost'] = f"[BOOST: {critical_state.name}]"
+                        elif expl:
+                            expl = str(expl) + f" [BOOST: {critical_state.name}]"
+                        else:
+                            expl = f"[BOOST: {critical_state.name}]"
+                        scored_skills[i] = (new_score, skill, expl)
                 context = {"belief_category": self._get_belief_category(self.p_unlocked)}
                 # Just check the first skill to get context stats
                 sample_stats = get_skill_stats(self.session, skills[0]["name"], context)
@@ -320,13 +331,18 @@ class AgentRuntime:
                 alignment = 1.0 - abs(k_skill - target_k)
                 boost = alignment * BOOST_MAGNITUDE
                 final_score = base_score + boost
-                
+
                 geo_expl = f" [Geo: {self.geo_mode} ({mode_reason}), k_target={target_k}, k_skill={k_skill:.2f}, Boost={boost:.2f}]"
+                # Add geometric info to explanation (keep dict format if it was dict)
                 if explanation:
-                    explanation += geo_expl
+                    if isinstance(explanation, dict):
+                        # Add as new key to preserve dict structure
+                        explanation['geometric_boost'] = geo_expl
+                    else:
+                        explanation = str(explanation) + geo_expl
                 else:
                     explanation = geo_expl
-                    
+
                 boosted_skills.append((final_score, skill, explanation))
             
             scored_skills = boosted_skills
@@ -534,10 +550,21 @@ class AgentRuntime:
         if max_steps is None:
             max_steps = config.MAX_STEPS
 
+        # Reset episode state for independent episodes
+        self.escaped = False
+        self.step_count = 0
+
+        # Reset belief to initial value for independent episodes
+        # Each episode should start fresh to test learning strategies
+        if hasattr(self, '_initial_belief'):
+            self.p_unlocked = self._initial_belief
+        else:
+            # Store initial belief for future resets
+            self._initial_belief = self.p_unlocked
+
         # Create episode in graph
         episode_id = create_episode(self.session, self.agent_id, self.door_state)
         self.current_episode_id = episode_id
-        self.step_count = 0
         
         # FIX #1: Initialize path tracking for episodic memory
         if config.ENABLE_EPISODIC_MEMORY:
@@ -669,15 +696,30 @@ class AgentRuntime:
         if not self.episodic_memory or not self.current_episode_path:
             return
         
+        import json
+        
+        # Detect path type
+        is_spatial = False
+        if self.current_episode_path and isinstance(self.current_episode_path[0], str):
+            is_spatial = True
+
+        print(f"DEBUG: Storing episode {episode_id}, path length={len(self.current_episode_path)}, is_spatial={is_spatial}")
+
         # Build actual path data
         actual_path = {
             'path_id': f'actual_{episode_id}',
-            'rooms_visited': self.current_episode_path,
-            'actions_taken': ['step'] * len(self.current_episode_path),
             'outcome': 'success' if self.escaped else 'failure',
             'steps': self.step_count,
             'final_distance': 0 if self.escaped else 999
         }
+        
+        if is_spatial:
+            actual_path['rooms_visited'] = self.current_episode_path
+            actual_path['actions_taken'] = ['step'] * len(self.current_episode_path)
+        else:
+            # Generalized format for belief/state trajectories
+            actual_path['path_data'] = json.dumps(self.current_episode_path)
+            actual_path['state_type'] = 'belief_trajectory'
         
         try:
             # Store actual path
@@ -696,6 +738,8 @@ class AgentRuntime:
                     
         except Exception as e:
             print(f"Warning: Failed to store episodic memory: {e}")
+            import traceback
+            traceback.print_exc()
         
         # Apply forgetting mechanism to bound memory growth
         self._apply_forgetting_mechanism()
@@ -711,7 +755,10 @@ class AgentRuntime:
         without requiring new experience.
         """
         if not self.episodic_memory:
+            print("DEBUG: No episodic memory in offline learning")
             return
+        
+        print("DEBUG: Starting offline learning...")
         
         print("\n" + "="*70)
         print("OFFLINE LEARNING: Replaying recent episodes...")
@@ -719,44 +766,75 @@ class AgentRuntime:
         
         try:
             import config as cfg
-            # Get recent episode IDs from graph
+            # Get recent episode IDs from episodic memory (EpisodicMemory nodes, not Episode nodes)
             result = self.session.run("""
-                MATCH (ep:Episode)
-                WHERE ep.agent_id = $agent_id
-                RETURN ep.episode_id AS episode_id
-                ORDER BY ep.created_at DESC
+                MATCH (em:EpisodicMemory)
+                RETURN em.episode_id AS episode_id
+                ORDER BY em.episode_id DESC
                 LIMIT $num_episodes
-            """, agent_id=self.agent_id, num_episodes=cfg.NUM_EPISODES_TO_REPLAY)
+            """, num_episodes=cfg.NUM_EPISODES_TO_REPLAY)
             
             episode_ids = [record['episode_id'] for record in result]
+            print(f"DEBUG: Found {len(episode_ids)} EpisodicMemory nodes to analyze")
+            if not episode_ids:
+                raise RuntimeError(f"DEBUG: Found 0 episodes! Query returned empty. AgentID={self.agent_id}")
             
             total_regret = 0
             insights = []
             
             for ep_id in episode_ids:
                 episode = self.episodic_memory.get_episode(ep_id)
-                if not episode or not episode['counterfactuals']:
+                if not episode:
+                    print(f"DEBUG: Episode {ep_id} not found")
                     continue
+                if not episode['counterfactuals']:
+                    print(f"DEBUG: Episode {ep_id} has no counterfactuals")
+                    continue
+                print(f"DEBUG: Episode {ep_id} has {len(episode['counterfactuals'])} counterfactuals")
                 
                 actual_steps = episode['actual_path']['steps']
-                
-                # Find best counterfactual
+                actual_outcome = episode['actual_path']['outcome']
+
+                print(f"    DEBUG: Actual outcome={actual_outcome}, steps={actual_steps}")
+
+                # FIX: Consider ALL counterfactuals, not just successful ones
+                # Find best counterfactual (successful if possible, otherwise best failure)
                 successful_cfs = [cf for cf in episode['counterfactuals'] if cf['outcome'] == 'success']
+                failed_cfs = [cf for cf in episode['counterfactuals'] if cf['outcome'] == 'failure']
+
+                print(f"    DEBUG: {len(successful_cfs)} successful CFs, {len(failed_cfs)} failed CFs")
+
+                best_cf = None
                 if successful_cfs:
+                    # Prefer successful counterfactuals (shortest path)
                     best_cf = min(successful_cfs, key=lambda x: x['steps'])
+                    print(f"    DEBUG: Best CF is successful, steps={best_cf['steps']}")
+                elif failed_cfs and actual_outcome == 'failure':
+                    # If actual path also failed, compare failed counterfactuals
+                    # (Did we fail faster or slower?)
+                    best_cf = min(failed_cfs, key=lambda x: x['steps'])
+                    print(f"    DEBUG: Best CF is failed, steps={best_cf['steps']}")
+                else:
+                    print(f"    DEBUG: No suitable counterfactual (actual={actual_outcome})")
+
+                if best_cf:
                     regret = self.episodic_memory.calculate_regret(
-                        {'steps': actual_steps, 'outcome': episode['actual_path']['outcome']},
+                        {'steps': actual_steps, 'outcome': actual_outcome},
                         {'steps': best_cf['steps'], 'outcome': best_cf['outcome']}
                     )
-                    
-                    total_regret += regret
-                    insights.append({
-                        'episode': ep_id,
-                        'actual_steps': actual_steps,
-                        'best_cf_steps': best_cf['steps'],
-                        'regret': regret,
-                        'divergence_point': best_cf['divergence_point']
-                    })
+
+                    print(f"    DEBUG: Regret={regret}")
+
+                    # Only record insights where counterfactual would have been better
+                    if regret > 0:
+                        total_regret += regret
+                        insights.append({
+                            'episode': ep_id,
+                            'actual_steps': actual_steps,
+                            'best_cf_steps': best_cf['steps'],
+                            'regret': regret,
+                            'divergence_point': best_cf['divergence_point']
+                        })
             
             if insights:
                 print(f"\nAnalyzed {len(insights)} episodes:")
@@ -798,17 +876,20 @@ class AgentRuntime:
             regret = insight['regret']
             
             # Get the trace for this episode to see what skill was used
+            # Note: episode_id is the Neo4j internal ID returned by create_episode()
             result = self.session.run("""
-                MATCH (ep:Episode {episode_id: $episode_id})-[:HAS_STEP]->(step:Step)
-                WHERE step.step_index = $step_index
+                MATCH (ep:Episode)-[:HAS_STEP]->(step:Step)
+                WHERE id(ep) = $episode_id AND step.step_index = $step_index
                 RETURN step.skill_name AS skill
             """, episode_id=episode_id, step_index=divergence_step)
             
             record = result.single()
             if not record:
+                print(f"    DEBUG: No step found for episode {episode_id} at step {divergence_step}")
                 continue
-            
+
             skill_name = record['skill']
+            print(f"    DEBUG: Found skill '{skill_name}' at divergence point {divergence_step}")
             
             # Update skill stats based on regret
             # High regret = bad choice, lower that skill's preference
@@ -831,14 +912,31 @@ class AgentRuntime:
                 
                 # FIX #5: Update in Neo4j (this IS procedural memory integration)
                 # The SkillStats nodes ARE used by procedural memory
+                # Update the overall success_rate field (used by get_skill_stats)
                 self.session.run("""
-                    MATCH (sk:Skill {name: $skill_name})-[:HAS_STATS]->(stats:SkillStats)
-                    WHERE stats.context_belief = $context_belief
-                    SET stats.success_rate = $new_rate,
+                    MATCH (sk:Skill {name: $skill_name})
+                    MERGE (sk)-[:HAS_STATS]->(stats:SkillStats)
+                    ON CREATE SET
+                        stats.skill_name = $skill_name,
+                        stats.success_rate = $new_rate,
+                        stats.total_uses = 0,
+                        stats.successful_episodes = 0,
+                        stats.failed_episodes = 0,
+                        stats.avg_steps_when_successful = 0.0,
+                        stats.avg_steps_when_failed = 0.0,
+                        stats.uncertain_uses = 0,
+                        stats.uncertain_successes = 0,
+                        stats.confident_locked_uses = 0,
+                        stats.confident_locked_successes = 0,
+                        stats.confident_unlocked_uses = 0,
+                        stats.confident_unlocked_successes = 0,
                         stats.counterfactual_adjusted = true,
                         stats.last_updated = timestamp()
-                """, skill_name=skill_name, context_belief=context.get('belief_category'),
-                   new_rate=new_rate)
+                    ON MATCH SET
+                        stats.success_rate = $new_rate,
+                        stats.counterfactual_adjusted = true,
+                        stats.last_updated = timestamp()
+                """, skill_name=skill_name, new_rate=new_rate)
             else:
                 # FIX #5: Create stats if they don't exist
                 print(f"    Creating stats for {skill_name} (first counterfactual update)")
@@ -906,20 +1004,29 @@ class AgentRuntime:
         except Exception as e:
             print(f"Warning: Forgetting mechanism failed: {e}")
     
-    def _integrate_graph_labyrinth(self, labyrinth):
+    def _initialize_counterfactual_generator(self, labyrinth):
         """
-        Integrate graph labyrinth for spatial counterfactual generation.
+        Initialize counterfactual generator for episodic memory.
         
         Args:
-            labyrinth: GraphLabyrinth instance
+            labyrinth: GraphLabyrinth instance (optional)
         """
-        if not config.EPISODIC_USE_LABYRINTH or not self.episodic_memory:
+        if not config.ENABLE_EPISODIC_MEMORY or not self.episodic_memory:
             return
         
-        # Initialize counterfactual generator with labyrinth
+        # Initialize counterfactual generator
+        # Pass labyrinth only if enabled in config
         from memory.counterfactual_generator import CounterfactualGenerator
-        self.counterfactual_generator = CounterfactualGenerator(self.session, labyrinth)
-        print("✓ Graph labyrinth integrated for spatial counterfactuals")
+        
+        lab_to_use = labyrinth if config.EPISODIC_USE_LABYRINTH else None
+        
+        self.counterfactual_generator = CounterfactualGenerator(self.session, lab_to_use)
+        
+        if lab_to_use:
+            print("✓ Counterfactual generator initialized (with Graph Labyrinth)")
+        else:
+            print("✓ Counterfactual generator initialized (Belief-Space only)")
+
 
 if __name__ == "__main__":
     # Quick manual test

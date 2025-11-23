@@ -41,6 +41,11 @@ try:
         print(f"\nStored in memory:")
         print(f"  Episode found: Yes")
         print(f"  Actual path: {episode.get('actual_path', {})}")
+        print(f"  Counterfactuals: {len(episode.get('counterfactuals', []))}")
+        for i, cf in enumerate(episode.get('counterfactuals', [])):
+            print(f"    CF #{i+1}: {cf.get('path_id')} (Outcome: {cf.get('outcome')})")
+            if cf.get('path_data'):
+                print(f"      Data: {cf.get('path_data')}")
     else:
         print(f"\nStored in memory: Episode NOT found!")
         

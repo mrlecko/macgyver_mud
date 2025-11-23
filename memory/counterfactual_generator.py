@@ -34,15 +34,22 @@ class CounterfactualGenerator:
         Generate counterfactual paths by exploring alternate choices at each step.
         
         Args:
-            actual_path: Dict with 'rooms_visited' and 'actions_taken'
+            actual_path: Dict with 'rooms_visited' (spatial) or 'path_data' (generalized)
             max_alternates: Maximum number of alternatives to generate
             
         Returns:
             List of counterfactual path dicts
         """
+        # Detect path type
+        if 'path_data' in actual_path:
+            return self._generate_belief_alternatives(actual_path, max_alternates)
+        
+        # Legacy spatial logic
         # FIX #2: Validate labyrinth is available
         if self.labyrinth is None:
-            print("Warning: Counterfactual generation requires graph labyrinth (not available)")
+            # Only print warning if we are trying to do spatial generation
+            # (If we are here, it means we have spatial data but no labyrinth)
+            print("Warning: Spatial counterfactual generation requires graph labyrinth")
             return []
         
         # FIX #2: Validate path has proper structure
@@ -53,8 +60,8 @@ class CounterfactualGenerator:
         
         # FIX #2: If rooms_visited contains state dicts, extract room IDs
         if rooms_visited and isinstance(rooms_visited[0], dict):
-            # Path contains state dicts, not room IDs - can't generate spatial counterfactuals
-            print("Warning: Path contains state dicts, not room IDs. Spatial counterfactuals not applicable.")
+            # This should be handled by 'path_data' check above, but just in case
+            print("Warning: Path contains state dicts but passed as spatial. Spatial counterfactuals not applicable.")
             return []
         
         counterfactuals = []
@@ -90,6 +97,147 @@ class CounterfactualGenerator:
                 counterfactuals.append(cf_path)
         
         return counterfactuals
+
+    def _generate_belief_alternatives(self, actual_path: Dict[str, Any], max_alternates: int) -> List[Dict[str, Any]]:
+        """Generate counterfactuals for belief-space trajectories."""
+        import json
+        
+        # Parse path data
+        try:
+            if isinstance(actual_path['path_data'], str):
+                path = json.loads(actual_path['path_data'])
+            else:
+                path = actual_path['path_data']
+        except:
+            return []
+            
+        if not path:
+            return []
+            
+        counterfactuals = []
+        available_skills = ['peek_door', 'try_door', 'go_window'] # Hardcoded for MacGyver for now
+        
+        # Iterate through steps to diverge
+        for i in range(len(path) - 1):
+            if len(counterfactuals) >= max_alternates:
+                break
+                
+            step_data = path[i]
+            current_belief = step_data.get('belief', 0.5)
+            actual_skill = step_data.get('skill')
+            
+            print(f"DEBUG: Step {i}, skill={actual_skill}, belief={current_belief}")
+            
+            # Find alternative skills
+            alternatives = [s for s in available_skills if s != actual_skill]
+            print(f"DEBUG: Alternatives: {alternatives}")
+            
+            if not alternatives:
+                continue
+                
+            # Pick one alternative
+            chosen_alt = random.choice(alternatives)
+            
+            # Simulate outcome
+            cf_path = self._simulate_belief_trajectory(
+                start_belief=current_belief,
+                chosen_skill=chosen_alt,
+                divergence_point=i,
+                max_steps=5
+            )
+            
+            if cf_path:
+                print(f"DEBUG: Generated CF: {cf_path['path_id']}")
+                counterfactuals.append(cf_path)
+                
+        return counterfactuals
+    
+    def _simulate_belief_trajectory(self, start_belief, chosen_skill, divergence_point, max_steps):
+        """Simulate a belief trajectory from a divergence point."""
+        # Simplified simulation logic for MacGyver scenario
+        trajectory = []
+        belief = start_belief
+        
+        # Simulate the divergence step
+        obs, new_belief, escaped = self._simulate_step(chosen_skill, belief)
+        trajectory.append({
+            'step': divergence_point,
+            'belief': new_belief,
+            'skill': chosen_skill,
+            'observation': obs
+        })
+        
+        if escaped:
+            return {
+                'path_id': f'cf_{divergence_point}_{chosen_skill}',
+                'path_data': trajectory, # Will be serialized later
+                'state_type': 'belief_trajectory',
+                'outcome': 'success',
+                'steps': len(trajectory) + divergence_point,
+                'divergence_point': divergence_point
+            }
+            
+        # Continue simulating greedily
+        current_step = 1
+        while current_step < max_steps and not escaped:
+            # Greedy policy: try_door if belief > 0.8, else peek
+            next_skill = 'try_door' if belief > 0.8 else 'peek_door'
+            
+            obs, new_belief, escaped = self._simulate_step(next_skill, belief)
+            trajectory.append({
+                'step': divergence_point + current_step,
+                'belief': new_belief,
+                'skill': next_skill,
+                'observation': obs
+            })
+            
+            belief = new_belief
+            current_step += 1
+            
+        return {
+            'path_id': f'cf_{divergence_point}_{chosen_skill}',
+            'path_data': trajectory,
+            'state_type': 'belief_trajectory',
+            'outcome': 'success' if escaped else 'failure',
+            'steps': len(trajectory) + divergence_point,
+            'divergence_point': divergence_point
+        }
+
+    def _simulate_step(self, skill, belief):
+        """Simulate single step outcome."""
+        # Simplified transition model
+        escaped = False
+        obs = 'unknown'
+        new_belief = belief
+        
+        if skill == 'try_door':
+            # Probabilistic success based on belief (which tracks p_unlocked)
+            if random.random() < belief:
+                escaped = True
+                obs = 'success'
+                new_belief = 1.0
+            else:
+                obs = 'locked'
+                new_belief = 0.0
+        elif skill == 'peek_door':
+            # Simulate observation
+            is_unlocked = random.random() < belief
+            if is_unlocked:
+                obs = 'open'
+                # Bayesian update: P(U|Open) = 1.0 (assuming perfect sensor)
+                new_belief = 0.99 
+            else:
+                obs = 'closed'
+                # Bayesian update: P(U|Closed) -> lower
+                new_belief = belief * 0.2 # Rough approximation
+        elif skill == 'go_window':
+            if random.random() < 0.1: # Low success rate
+                escaped = True
+                obs = 'success'
+            else:
+                obs = 'stuck'
+                
+        return obs, new_belief, escaped
     
     def _simulate_path(self, start_room: str, max_steps: int, 
                       divergence_point: int) -> Dict[str, Any]:

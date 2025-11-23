@@ -146,14 +146,16 @@ class TestGetSkills:
             assert skill["cost"] > 0
 
     def test_get_skills_contains_expected_skills(self, neo4j_session):
-        """Should contain the three expected skills"""
+        """Should contain at least the three base skills"""
         agent = get_agent(neo4j_session, "MacGyverBot")
         skills = get_skills(neo4j_session, agent["id"])
 
         skill_names = {s["name"] for s in skills}
-        expected = {"peek_door", "try_door", "go_window"}
+        # Check that base skills are present (may have additional balanced skills)
+        base_skills = {"peek_door", "try_door", "go_window"}
 
-        assert skill_names == expected
+        assert base_skills.issubset(skill_names), \
+            f"Missing base skills: {base_skills - skill_names}"
 
 
 class TestCreateEpisode:

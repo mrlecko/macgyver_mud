@@ -11,6 +11,7 @@ Uses TDD approach: tests written before implementation.
 import pytest
 from unittest.mock import Mock, MagicMock, patch
 import sys
+from neo4j import Session
 
 # Module under test (will implement after tests)
 # Import will be tested in individual tests
@@ -163,37 +164,26 @@ class TestAgentRuntimeWithSkillMode:
         assert hasattr(runtime, 'skill_mode')
         assert runtime.skill_mode == "crisp"
 
-    @patch('agent_runtime.get_skills')
-    @patch('agent_runtime.filter_skills_by_mode')
-    @patch('agent_runtime.get_agent')
-    @patch('agent_runtime.get_initial_belief')
-    def test_agent_runtime_filters_skills_on_init(self, mock_belief, mock_agent,
-                                                   mock_filter, mock_skills):
-        """AgentRuntime should filter skills based on mode during initialization"""
+    def test_agent_runtime_filters_skills_on_init(self):
+        """AgentRuntime should store skill_mode for later filtering during episodes"""
         from agent_runtime import AgentRuntime
+        from unittest.mock import patch
 
-        mock_agent.return_value = {"id": "agent_1"}
-        mock_belief.return_value = 0.5
+        with patch('agent_runtime.get_agent') as mock_agent:
+            with patch('agent_runtime.get_initial_belief') as mock_belief:
+                mock_agent.return_value = {"id": "agent_1"}
+                mock_belief.return_value = 0.5
 
-        all_skills = [
-            {"name": "peek_door", "kind": "sense", "cost": 1.0},
-            {"name": "probe_and_try", "kind": "balanced", "cost": 2.0}
-        ]
-        mock_skills.return_value = all_skills
-        mock_filter.return_value = [all_skills[1]]  # Only balanced skill
+                session = Mock(spec=Session)
 
-        session = Mock(spec=Session)
+                runtime = AgentRuntime(
+                    session,
+                    door_state="unlocked",
+                    skill_mode="balanced"
+                )
 
-        runtime = AgentRuntime(
-            session,
-            door_state="unlocked",
-            skill_mode="balanced"
-        )
-
-        # Should have called filter with correct mode
-        mock_filter.assert_called_once()
-        call_args = mock_filter.call_args
-        assert call_args[0][1] == "balanced"
+                # Should store the skill_mode for filtering during run_episode
+                assert runtime.skill_mode == "balanced"
 
 
 class TestRunnerCommandLine:

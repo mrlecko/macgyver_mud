@@ -57,6 +57,10 @@ def test_geometric_panic_mode(runtime):
     """Test that when enabled + high entropy, agent picks Balanced skill."""
     config.ENABLE_GEOMETRIC_CONTROLLER = True
     config.ENABLE_CRITICAL_STATE_PROTOCOLS = True
+
+    # Reset runtime state to avoid SCARCITY false positives
+    runtime.steps_remaining = 100
+    runtime.reward_history = []
     
     # High entropy (p=0.5)
     runtime.p_unlocked = 0.5
@@ -118,10 +122,13 @@ def test_geometric_flow_mode(runtime):
 def test_hysteresis(runtime):
     """Test that agent respects hysteresis thresholds."""
     config.ENABLE_GEOMETRIC_CONTROLLER = True
-    
+    config.ENABLE_CRITICAL_STATE_PROTOCOLS = True
+
     # Reset state
     runtime.geo_mode = "FLOW (Efficiency)"
     runtime.switch_history = []
+    runtime.steps_remaining = 100
+    runtime.reward_history = []
     
     # 1. Start Low (Flow)
     # p=0.99 -> Entropy ~0.05 (nats) / 0.08 (bits)

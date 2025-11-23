@@ -7,6 +7,7 @@ from neo4j import Session
 import uuid
 import json
 from datetime import datetime
+import config
 
 
 def get_agent(session: Session, name: str) -> Optional[Dict[str, Any]]:
@@ -69,9 +70,15 @@ def update_belief(session: Session, agent_id: str, statevar_name: str, new_value
         statevar_name: Name of state variable
         new_value: New belief probability (0 to 1)
     """
+    # Use MERGE to create nodes if they don't exist
     session.run("""
-        MATCH (a:Agent)-[:HAS_BELIEF]->(b:Belief)-[:ABOUT]->(s:StateVar {name: $statevar_name})
+        MATCH (a:Agent)
         WHERE id(a) = $agent_id
+        MERGE (s:StateVar {name: $statevar_name})
+        ON CREATE SET s.created_at = datetime()
+        MERGE (a)-[:HAS_BELIEF]->(b:Belief)-[:ABOUT]->(s)
+        ON CREATE SET b.p_unlocked = $new_value,
+                      b.created_at = datetime()
         SET b.p_unlocked = $new_value,
             b.last_updated = datetime()
     """, agent_id=agent_id, statevar_name=statevar_name, new_value=new_value)
@@ -455,8 +462,13 @@ def get_skill_stats(session: Session, skill_name: str,
             "uses": total,
             "success_rate": overall_success_rate,
             "confidence": overall_confidence,
-            "avg_steps": stats["avg_steps_when_successful"]
-        }
+            "avg_steps": stats.get("avg_steps_when_successful", 0.0)
+        },
+        # Backward compatibility: expose top-level success_rate and uses
+        "success_rate": overall_success_rate,
+        "uses": total,
+        "confidence": overall_confidence,
+        "avg_steps": stats.get("avg_steps_when_successful", 0.0)
     }
 
     # Add context-specific statistics if requested
@@ -612,46 +624,47 @@ def update_meta_params(session: Session, agent_id: str,
         agent_id: Agent element ID
         new_params: Dict with alpha, beta, gamma, and/or learning metrics
     """
-    # Build SET clause dynamically based on what's provided
-    set_clauses = []
-    params = {"agent_id": agent_id}
+    # Get defaults from config
+    params = {
+        "agent_id": agent_id,
+        "default_alpha": config.ALPHA,
+        "default_beta": config.BETA,
+        "default_gamma": config.GAMMA
+    }
 
-    if "alpha" in new_params:
-        set_clauses.append("meta.alpha = $alpha")
-        set_clauses.append("meta.alpha_history = meta.alpha_history + $alpha")
-        params["alpha"] = new_params["alpha"]
+    # Add provided values
+    params["alpha"] = new_params.get("alpha", config.ALPHA)
+    params["beta"] = new_params.get("beta", config.BETA)
+    params["gamma"] = new_params.get("gamma", config.GAMMA)
+    params["episodes"] = new_params.get("episodes_completed", 0)
+    params["avg_steps"] = new_params.get("avg_steps_last_10", 0.0)
+    params["success_rate"] = new_params.get("success_rate_last_10", 0.0)
 
-    if "beta" in new_params:
-        set_clauses.append("meta.beta = $beta")
-        set_clauses.append("meta.beta_history = meta.beta_history + $beta")
-        params["beta"] = new_params["beta"]
-
-    if "gamma" in new_params:
-        set_clauses.append("meta.gamma = $gamma")
-        set_clauses.append("meta.gamma_history = meta.gamma_history + $gamma")
-        params["gamma"] = new_params["gamma"]
-
-    if "episodes_completed" in new_params:
-        set_clauses.append("meta.episodes_completed = $episodes")
-        params["episodes"] = new_params["episodes_completed"]
-
-    if "avg_steps_last_10" in new_params:
-        set_clauses.append("meta.avg_steps_last_10 = $avg_steps")
-        params["avg_steps"] = new_params["avg_steps_last_10"]
-
-    if "success_rate_last_10" in new_params:
-        set_clauses.append("meta.success_rate_last_10 = $success_rate")
-        params["success_rate"] = new_params["success_rate_last_10"]
-
-    set_clauses.append("meta.last_adapted = datetime()")
-
-    if set_clauses:
-        query = f"""
-            MATCH (a:Agent)-[:HAS_META_PARAMS]->(meta:MetaParams)
-            WHERE id(a) = $agent_id
-            SET {', '.join(set_clauses)}
-        """
-        session.run(query, **params)
+    # Use MERGE to create if doesn't exist
+    session.run("""
+        MATCH (a:Agent)
+        WHERE id(a) = $agent_id
+        MERGE (a)-[:HAS_META_PARAMS]->(meta:MetaParams)
+        ON CREATE SET
+            meta.alpha = $default_alpha,
+            meta.beta = $default_beta,
+            meta.gamma = $default_gamma,
+            meta.alpha_history = 0.0,
+            meta.beta_history = 0.0,
+            meta.gamma_history = 0.0,
+            meta.episodes_completed = 0,
+            meta.adaptation_enabled = false,
+            meta.avg_steps_last_10 = 0.0,
+            meta.success_rate_last_10 = 0.0,
+            meta.created_at = datetime()
+        SET meta.alpha = $alpha,
+            meta.beta = $beta,
+            meta.gamma = $gamma,
+            meta.episodes_completed = $episodes,
+            meta.avg_steps_last_10 = $avg_steps,
+            meta.success_rate_last_10 = $success_rate,
+            meta.last_adapted = datetime()
+    """, **params)
 
 
 def get_recent_episodes_stats(session: Session, agent_id: str,
