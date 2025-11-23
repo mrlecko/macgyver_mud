@@ -40,3 +40,5 @@ logs/
 .env.local
 
 /docs/secret_docs/
+
+/tw_games/*
