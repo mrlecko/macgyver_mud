@@ -48,6 +48,7 @@ make test-full
 | **Geometric Meta-Cognition** | ✅ Stable | `make demo-silver` | Entropy-based belief monitoring |
 | **Critical State Protocols** | ✅ Stable | `make demo-critical` | [Critical States](docs/design/CRITICAL_STATE_PROTOCOLS.md) |
 | **Escalation (Circuit Breaker)** | ✅ Stable | `make demo-critical` | Hard stop for thrashing states |
+| **Lyapunov Stability Monitor** | ✅ Stable | `pytest validation/test_lyapunov.py` | [Assessment](docs/brain/LYAPUNOV_ASSESSMENT_AND_RED_TEAM.md) |
 | **Procedural Memory** | ✅ Stable | `python3 runner.py --memory` | Learn from past episodes |
 | **Adaptive Meta-Parameters** | ✅ Stable | `python3 runner.py --adaptive` | α, β, γ self-tuning |
 

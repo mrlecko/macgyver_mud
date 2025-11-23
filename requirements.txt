@@ -9,4 +9,7 @@ pytest>=7.0.0
 pytest-cov>=4.0.0
 
 # Optional: for better JSON handling
-# python-json-logger>=2.0.0
+python-json-logger>=2.0.0
+
+# matplotlib for visualizations
+matplotlib
