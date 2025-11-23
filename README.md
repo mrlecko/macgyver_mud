@@ -174,6 +174,55 @@ The agent stores **counterfactual paths** and learns from them WITHOUT new envir
 | **Multi-Room Navigation** | ✅ Stable | N/A | Neo4j-backed spatial graphs |
 | **Shortest Path Algorithms** | ✅ Stable | N/A | Dijkstra via Neo4j |
 
+### Multi-Domain Validation
+
+**The architecture is validated across THREE distinct problem domains:**
+
+| Domain | Environment | Problem Type | Critical States Tested | Test Command |
+|:---|:---|:---|:---|:---|
+| **MacGyver MUD** | Core scenario | Discrete, small state | PANIC, DEADLOCK, HUBRIS | `python3 validation/comparative_stress_test.py` |
+| **Infinite Labyrinth** | `environments/labyrinth.py` | Continuous, divergent | PANIC, ESCALATION | `pytest validation/test_lyapunov.py` |
+| **Graph Labyrinth** | `environments/graph_labyrinth.py` | Discrete spatial, large | DEADLOCK, SCARCITY, NOVELTY | `pytest tests/test_graph_labyrinth.py` |
+
+**Multi-Domain Test Execution:**
+```bash
+# Test 1: MacGyver MUD (Discrete Decision-Making)
+python3 validation/comparative_stress_test.py
+
+# Test 2: Infinite Labyrinth (Continuous Stability)
+pytest validation/test_lyapunov.py -v
+
+# Test 3: Graph Labyrinth (Spatial Navigation)
+pytest tests/test_graph_labyrinth.py -v
+
+# Test 4: Episodic Memory with GraphLabyrinth
+python3 validation/episodic_replay_demo.py
+```
+
+**Why Multiple Domains Matter:**
+- **Generalization Proof:** Protocols work across continuous, discrete, and spatial domains
+- **Robustness Evidence:** Not hand-tuned for single scenario  
+- **Versatility:** Same meta-cognitive principles apply to different problem structures
+
+**Domain Characteristics:**
+
+**1. Labyrinth (Continuous)**
+- State: `(entropy ∈ [0,1], distance ∈ ℝ⁺, stress ∈ [0,∞))`
+- Challenge: Unbounded divergence (infinite mode) or goal convergence (goal mode)
+- Tests: Lyapunov stability monitoring, PANIC protocol, ESCALATION circuit breaker
+
+**2. Graph Labyrinth (Discrete Spatial)**
+- State: Neo4j graph with 10-30 rooms
+- Challenge: Multi-room navigation with potential loops
+- Tests: DEADLOCK detection, SCARCITY under time pressure, spatial reasoning
+
+**3. Silent Meeting (Coordination)**  
+- State: 5 discrete choices
+- Challenge: Multi-agent coordination without communication
+- Tests: Schelling point identification (experimental)
+
+**📘 Complete User Guide:** [Multi-Domain Environments User Guide](docs/MULTI_DOMAIN_USER_GUIDE.md)
+
 ### Quality Assurance & Integration
 
 | Feature | Status | Documentation |
