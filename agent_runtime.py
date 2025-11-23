@@ -96,9 +96,12 @@ class AgentRuntime:
         self.switch_history = [] # For oscillation detection
         self.monitor = CriticalStateMonitor() # Critical State Monitor
 
-        # Lyapunov Stability Monitor
-        from control.lyapunov import StabilityMonitor
-        self.lyapunov_monitor = StabilityMonitor()
+        # Lyapunov Stability Monitor (if enabled)
+        if config.ENABLE_LYAPUNOV_MONITORING:
+            from control.lyapunov import StabilityMonitor
+            self.lyapunov_monitor = StabilityMonitor()
+        else:
+            self.lyapunov_monitor = None
 
         # Data Feeds for Critical States
         self.reward_history = []
@@ -112,7 +115,7 @@ class AgentRuntime:
             from memory.counterfactual_generator import CounterfactualGenerator
             self.episodic_memory = EpisodicMemory(session)
             # Initialize generator for non-spatial support (labyrinth added later if available)
-            self.counterfactual_generator = CounterfactualGenerator(session, None)
+            self.counterfactual_generator = CounterfactualGenerator(session, None, self.agent_id)
             self.current_episode_path = []  # Track rooms visited in current episode
         else:
             self.episodic_memory = None
@@ -132,9 +135,9 @@ class AgentRuntime:
         Returns:
             Category string: "uncertain", "confident_locked", or "confident_unlocked"
         """
-        if p_unlocked < 0.3:
+        if p_unlocked < config.BELIEF_THRESHOLD_CONFIDENT_LOCKED:
             return "confident_locked"
-        elif p_unlocked > 0.7:
+        elif p_unlocked > config.BELIEF_THRESHOLD_CONFIDENT_UNLOCKED:
             return "confident_unlocked"
         else:
             return "uncertain"
@@ -231,20 +234,22 @@ class AgentRuntime:
             # ====================================================================
             # LYAPUNOV STABILITY CHECK (Dynamical Systems Safety)
             # ====================================================================
-            # Update Lyapunov Monitor
-            # Stress proxy: (100 - steps_remaining) / 100
-            stress = (100 - agent_state.steps_remaining) / 100.0 if agent_state.steps_remaining else 0.0
-            
-            v_value = self.lyapunov_monitor.update(
-                entropy=current_entropy,
-                distance_estimate=agent_state.distance_to_goal,
-                stress=stress
-            )
-            
-            # Check for Divergence (Instability)
-            if self.lyapunov_monitor.is_diverging():
-                # The system is mathematically unstable. Kill it before it crashes.
-                raise AgentEscalationError(f"LYAPUNOV DIVERGENCE DETECTED: System is unstable (V={v_value:.2f}). Halting.")
+            v_value = None
+            if self.lyapunov_monitor:
+                # Update Lyapunov Monitor
+                # Stress proxy: (100 - steps_remaining) / 100
+                stress = (100 - agent_state.steps_remaining) / 100.0 if agent_state.steps_remaining else 0.0
+
+                v_value = self.lyapunov_monitor.update(
+                    entropy=current_entropy,
+                    distance_estimate=agent_state.distance_to_goal,
+                    stress=stress
+                )
+
+                # Check for Divergence (Instability)
+                if self.lyapunov_monitor.is_diverging():
+                    # The system is mathematically unstable. Kill it before it crashes.
+                    raise AgentEscalationError(f"LYAPUNOV DIVERGENCE DETECTED: System is unstable (V={v_value:.2f}). Halting.")
 
 
             elif critical_state == CriticalState.SCARCITY:
@@ -301,19 +306,18 @@ class AgentRuntime:
                         else:
                             expl = f"[BOOST: {critical_state.name}]"
                         scored_skills[i] = (new_score, skill, expl)
+
+            # Memory Veto: Check if procedural memory suggests panic mode
+            if self.use_procedural_memory:
                 context = {"belief_category": self._get_belief_category(self.p_unlocked)}
                 # Just check the first skill to get context stats
                 sample_stats = get_skill_stats(self.session, skills[0]["name"], context)
-                
-                new_mode = self.geo_mode # Default to current mode
-                
+
                 # If we have data and it's bad (< 50% success)
                 overall = sample_stats.get("overall", {})
                 if overall.get("uses", 0) > 2 and overall.get("success_rate", 0.5) < 0.5:
-                    new_mode = "PANIC (Robustness)"
+                    self.geo_mode = "PANIC (Robustness)"
                     mode_reason = "MEMORY VETO (Bad History)"
-            
-            self.geo_mode = new_mode
             
             # Set Target k based on mode
             if "PANIC" in self.geo_mode:
@@ -703,8 +707,6 @@ class AgentRuntime:
         if self.current_episode_path and isinstance(self.current_episode_path[0], str):
             is_spatial = True
 
-        print(f"DEBUG: Storing episode {episode_id}, path length={len(self.current_episode_path)}, is_spatial={is_spatial}")
-
         # Build actual path data
         actual_path = {
             'path_id': f'actual_{episode_id}',
@@ -755,11 +757,8 @@ class AgentRuntime:
         without requiring new experience.
         """
         if not self.episodic_memory:
-            print("DEBUG: No episodic memory in offline learning")
             return
-        
-        print("DEBUG: Starting offline learning...")
-        
+
         print("\n" + "="*70)
         print("OFFLINE LEARNING: Replaying recent episodes...")
         print("="*70)
@@ -775,55 +774,40 @@ class AgentRuntime:
             """, num_episodes=cfg.NUM_EPISODES_TO_REPLAY)
             
             episode_ids = [record['episode_id'] for record in result]
-            print(f"DEBUG: Found {len(episode_ids)} EpisodicMemory nodes to analyze")
             if not episode_ids:
-                raise RuntimeError(f"DEBUG: Found 0 episodes! Query returned empty. AgentID={self.agent_id}")
+                print("Warning: No episodes found for offline learning")
+                return
             
             total_regret = 0
             insights = []
             
             for ep_id in episode_ids:
                 episode = self.episodic_memory.get_episode(ep_id)
-                if not episode:
-                    print(f"DEBUG: Episode {ep_id} not found")
+                if not episode or not episode['counterfactuals']:
                     continue
-                if not episode['counterfactuals']:
-                    print(f"DEBUG: Episode {ep_id} has no counterfactuals")
-                    continue
-                print(f"DEBUG: Episode {ep_id} has {len(episode['counterfactuals'])} counterfactuals")
-                
+
                 actual_steps = episode['actual_path']['steps']
                 actual_outcome = episode['actual_path']['outcome']
-
-                print(f"    DEBUG: Actual outcome={actual_outcome}, steps={actual_steps}")
 
                 # FIX: Consider ALL counterfactuals, not just successful ones
                 # Find best counterfactual (successful if possible, otherwise best failure)
                 successful_cfs = [cf for cf in episode['counterfactuals'] if cf['outcome'] == 'success']
                 failed_cfs = [cf for cf in episode['counterfactuals'] if cf['outcome'] == 'failure']
 
-                print(f"    DEBUG: {len(successful_cfs)} successful CFs, {len(failed_cfs)} failed CFs")
-
                 best_cf = None
                 if successful_cfs:
                     # Prefer successful counterfactuals (shortest path)
                     best_cf = min(successful_cfs, key=lambda x: x['steps'])
-                    print(f"    DEBUG: Best CF is successful, steps={best_cf['steps']}")
                 elif failed_cfs and actual_outcome == 'failure':
                     # If actual path also failed, compare failed counterfactuals
                     # (Did we fail faster or slower?)
                     best_cf = min(failed_cfs, key=lambda x: x['steps'])
-                    print(f"    DEBUG: Best CF is failed, steps={best_cf['steps']}")
-                else:
-                    print(f"    DEBUG: No suitable counterfactual (actual={actual_outcome})")
 
                 if best_cf:
                     regret = self.episodic_memory.calculate_regret(
                         {'steps': actual_steps, 'outcome': actual_outcome},
                         {'steps': best_cf['steps'], 'outcome': best_cf['outcome']}
                     )
-
-                    print(f"    DEBUG: Regret={regret}")
 
                     # Only record insights where counterfactual would have been better
                     if regret > 0:
@@ -885,11 +869,9 @@ class AgentRuntime:
             
             record = result.single()
             if not record:
-                print(f"    DEBUG: No step found for episode {episode_id} at step {divergence_step}")
                 continue
 
             skill_name = record['skill']
-            print(f"    DEBUG: Found skill '{skill_name}' at divergence point {divergence_step}")
             
             # Update skill stats based on regret
             # High regret = bad choice, lower that skill's preference
@@ -902,7 +884,7 @@ class AgentRuntime:
             if stats:
                 # FIX #3: Calculate adjustment (negative for high regret)
                 # Remove /100 divisor - regret directly affects success rate
-                adjustment = -regret * cfg.EPISODIC_LEARNING_RATE / 10  # Scale by 10 for reasonableness
+                adjustment = -regret * cfg.EPISODIC_LEARNING_RATE / cfg.EPISODIC_REGRET_SCALE_FACTOR
                 
                 # Update success rate (bounded between 0 and 1)
                 current_rate = stats.get('success_rate', 0.5)
@@ -1019,8 +1001,8 @@ class AgentRuntime:
         from memory.counterfactual_generator import CounterfactualGenerator
         
         lab_to_use = labyrinth if config.EPISODIC_USE_LABYRINTH else None
-        
-        self.counterfactual_generator = CounterfactualGenerator(self.session, lab_to_use)
+
+        self.counterfactual_generator = CounterfactualGenerator(self.session, lab_to_use, self.agent_id)
         
         if lab_to_use:
             print("✓ Counterfactual generator initialized (with Graph Labyrinth)")

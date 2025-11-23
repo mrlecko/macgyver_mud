@@ -72,6 +72,11 @@ BELIEF_DOOR_STUCK = 0.10
 # Initial belief (uncertainty)
 INITIAL_BELIEF = 0.5
 
+# Belief category thresholds (for procedural memory context matching)
+BELIEF_THRESHOLD_CONFIDENT_LOCKED = 0.3  # Below this is "confident_locked"
+BELIEF_THRESHOLD_CONFIDENT_UNLOCKED = 0.7  # Above this is "confident_unlocked"
+# Between these thresholds is "uncertain"
+
 # ============================================================================
 # Agent Configuration
 # ============================================================================
@@ -91,6 +96,11 @@ ENABLE_GEOMETRIC_CONTROLLER = False
 
 # Magnitude of the boost applied to skills matching the target k-value
 BOOST_MAGNITUDE = 5.0
+
+# Enable Lyapunov Stability Monitoring
+# Monitors system stability via Lyapunov function V(s)
+# Escalates if V(s) is diverging (system becoming unstable)
+ENABLE_LYAPUNOV_MONITORING = os.getenv("ENABLE_LYAPUNOV", "true").lower() == "true"
 
 # ============================================================================
 # Critical State Protocols Configuration
@@ -141,6 +151,9 @@ EPISODIC_UPDATE_SKILL_PRIORS = os.getenv("EPISODIC_UPDATE_PRIORS", "false").lowe
 # Weight for skill prior updates (0.0 = no learning, 1.0 = full trust in counterfactuals)
 # FIX #4: Increased from 0.1 to 0.5 for meaningful adaptation
 EPISODIC_LEARNING_RATE = float(os.getenv("EPISODIC_LEARNING_RATE", "0.5"))
+
+# Scaling factor for regret-based adjustments (larger = more conservative updates)
+EPISODIC_REGRET_SCALE_FACTOR = 10.0
 
 # Enable graph labyrinth integration for spatial counterfactuals
 EPISODIC_USE_LABYRINTH = os.getenv("EPISODIC_USE_LABYRINTH", "false").lower() == "true"

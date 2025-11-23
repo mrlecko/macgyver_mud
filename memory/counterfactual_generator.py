@@ -13,20 +13,22 @@ import random
 class CounterfactualGenerator:
     """
     Generates counterfactual paths for episodic replay.
-    
+
     Uses the labyrinth structure to simulate "what if" scenarios.
     """
-    
-    def __init__(self, session: Session, labyrinth: GraphLabyrinth):
+
+    def __init__(self, session: Session, labyrinth: GraphLabyrinth, agent_id: int = None):
         """
         Initialize counterfactual generator.
-        
+
         Args:
             session: Neo4j session
-            labyrinth: Graph labyrinth environment
+            labyrinth: Optional GraphLabyrinth for spatial reasoning
+            agent_id: Agent ID for skill queries
         """
         self.session = session
         self.labyrinth = labyrinth
+        self.agent_id = agent_id
     
     def generate_alternatives(self, actual_path: Dict[str, Any], 
                              max_alternates: int = 5) -> List[Dict[str, Any]]:
@@ -113,9 +115,24 @@ class CounterfactualGenerator:
             
         if not path:
             return []
-            
+
+        # Query available skills from graph instead of hardcoding
+        from graph_model import get_skills
+        # Use agent_id if available, otherwise default to first agent
+        if self.agent_id:
+            skills_list = get_skills(self.session, self.agent_id)
+        else:
+            # Fallback: query any agent for skills
+            result = self.session.run("MATCH (a:Agent) RETURN id(a) as id LIMIT 1")
+            record = result.single()
+            if record:
+                skills_list = get_skills(self.session, record["id"])
+            else:
+                # No agents, use hardcoded fallback
+                skills_list = [{"name": "peek_door"}, {"name": "try_door"}, {"name": "go_window"}]
+        available_skills = [skill['name'] for skill in skills_list]
+
         counterfactuals = []
-        available_skills = ['peek_door', 'try_door', 'go_window'] # Hardcoded for MacGyver for now
         
         # Iterate through steps to diverge
         for i in range(len(path) - 1):
@@ -125,12 +142,9 @@ class CounterfactualGenerator:
             step_data = path[i]
             current_belief = step_data.get('belief', 0.5)
             actual_skill = step_data.get('skill')
-            
-            print(f"DEBUG: Step {i}, skill={actual_skill}, belief={current_belief}")
-            
+
             # Find alternative skills
             alternatives = [s for s in available_skills if s != actual_skill]
-            print(f"DEBUG: Alternatives: {alternatives}")
             
             if not alternatives:
                 continue
@@ -145,9 +159,8 @@ class CounterfactualGenerator:
                 divergence_point=i,
                 max_steps=5
             )
-            
+
             if cf_path:
-                print(f"DEBUG: Generated CF: {cf_path['path_id']}")
                 counterfactuals.append(cf_path)
                 
         return counterfactuals
