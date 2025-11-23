@@ -99,7 +99,21 @@ class AgentRuntime:
         # Data Feeds for Critical States
         self.reward_history = []
         self.last_prediction_error = 0.0
-
+        self.steps_remaining = config.MAX_STEPS
+        self.history = []  # Step history for Lyapunov
+        
+        # Episodic Memory (Offline Learning)
+        if config.ENABLE_EPISODIC_MEMORY:
+            from memory.episodic_replay import EpisodicMemory
+            from memory.counterfactual_generator import CounterfactualGenerator
+            self.episodic_memory = EpisodicMemory(session)
+            self.counterfactual_generator = None  # Initialized when labyrinth is available
+            self.current_episode_path = []  # Track rooms visited in current episode
+        else:
+            self.episodic_memory = None
+            self.counterfactual_generator = None
+            self.current_episode_path = []
+        
     def _get_belief_category(self, p_unlocked: float) -> str:
         """
         Categorize belief state for context matching.
@@ -568,6 +582,14 @@ class AgentRuntime:
             context = {"belief_category": self._get_belief_category(self.p_unlocked)}
             update_skill_stats(self.session, episode_id, self.escaped, self.step_count, context)
 
+        # Store episode in episodic memory
+        if config.ENABLE_EPISODIC_MEMORY and self.episodic_memory:
+            self._store_episode_memory(episode_id)
+            
+            # Trigger offline learning every N episodes
+            if self.adaptive_params and self.episodes_completed % config.EPISODIC_REPLAY_FREQUENCY == 0:
+                self._perform_offline_learning()
+
         # Adapt meta-parameters if enabled
         if self.adaptive_params:
             self.episodes_completed += 1
@@ -656,3 +678,119 @@ if __name__ == "__main__":
 
     driver.close()
     print("\n✓ Agent runtime works!")
+
+    def _store_episode_memory(self, episode_id: str):
+        """
+        Store the current episode in episodic memory with counterfactuals.
+        
+        Args:
+            episode_id: ID of the completed episode
+        """
+        if not self.episodic_memory or not self.current_episode_path:
+            return
+        
+        # Build actual path data
+        actual_path = {
+            'path_id': f'actual_{episode_id}',
+            'rooms_visited': self.current_episode_path,
+            'actions_taken': ['step'] * len(self.current_episode_path),
+            'outcome': 'success' if self.escaped else 'failure',
+            'steps': self.step_count,
+            'final_distance': 0 if self.escaped else 999
+        }
+        
+        try:
+            # Store actual path
+            self.episodic_memory.store_actual_path(episode_id, actual_path)
+            
+            # Generate and store counterfactuals if generator is available
+            if self.counterfactual_generator:
+                import config as cfg  # Import here to avoid circular dependency issues
+                counterfactuals = self.counterfactual_generator.generate_alternatives(
+                    actual_path,
+                    max_alternates=cfg.MAX_COUNTERFACTUALS_PER_EPISODE
+                )
+                
+                if counterfactuals:
+                    self.episodic_memory.store_counterfactuals(episode_id, counterfactuals)
+                    
+        except Exception as e:
+            print(f"Warning: Failed to store episodic memory: {e}")
+        
+        # Reset path for next episode
+        self.current_episode_path = []
+    
+    def _perform_offline_learning(self):
+        """
+        Perform offline learning by replaying recent episodes.
+        
+        This analyzes counterfactuals to identify better strategies
+        without requiring new experience.
+        """
+        if not self.episodic_memory:
+            return
+        
+        print("\n" + "="*70)
+        print("OFFLINE LEARNING: Replaying recent episodes...")
+        print("="*70)
+        
+        try:
+            import config as cfg  # Import here to avoid circular dependency issues
+            # Get recent episode IDs from graph
+            result = self.session.run("""
+                MATCH (ep:Episode)
+                WHERE ep.agent_id = $agent_id
+                RETURN ep.episode_id AS episode_id
+                ORDER BY ep.created_at DESC
+                LIMIT $num_episodes
+            """, agent_id=self.agent_id, num_episodes=cfg.NUM_EPISODES_TO_REPLAY)
+            
+            episode_ids = [record['episode_id'] for record in result]
+            
+            total_regret = 0
+            insights = []
+            
+            for ep_id in episode_ids:
+                episode = self.episodic_memory.get_episode(ep_id)
+                if not episode or not episode['counterfactuals']:
+                    continue
+                
+                actual_steps = episode['actual_path']['steps']
+                
+                # Find best counterfactual
+                successful_cfs = [cf for cf in episode['counterfactuals'] if cf['outcome'] == 'success']
+                if successful_cfs:
+                    best_cf = min(successful_cfs, key=lambda x: x['steps'])
+                    regret = self.episodic_memory.calculate_regret(
+                        {'steps': actual_steps, 'outcome': episode['actual_path']['outcome']},
+                        {'steps': best_cf['steps'], 'outcome': best_cf['outcome']}
+                    )
+                    
+                    total_regret += regret
+                    insights.append({
+                        'episode': ep_id,
+                        'actual_steps': actual_steps,
+                        'best_cf_steps': best_cf['steps'],
+                        'regret': regret,
+                        'divergence_point': best_cf['divergence_point']
+                    })
+            
+            if insights:
+                print(f"\nAnalyzed {len(insights)} episodes:")
+                print(f"Total regret (improvement potential): {total_regret} steps")
+                print(f"Average regret per episode: {total_regret/len(insights):.1f} steps")
+                print("\nKey insights:")
+                for insight in insights[:3]:  # Show top 3
+                    print(f"  - Episode {insight['episode']}: Could save {insight['regret']} steps")
+                    print(f"    (Diverged at step {insight['divergence_point']})")
+                
+                # TODO: Use insights to update skill priors
+                # For now, just log the analysis
+                print("\nNote: Full integration would update skill preferences based on these insights")
+            else:
+                print("No counterfactual insights available yet")
+            
+            print("="*70 + "\n")
+            
+        except Exception as e:
+            print(f"Warning: Offline learning failed: {e}")

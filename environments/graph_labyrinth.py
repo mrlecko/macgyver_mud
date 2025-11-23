@@ -204,6 +204,11 @@ class GraphLabyrinth:
         Returns:
             Number of rooms to traverse to reach exit
         """
+        # Check if we're already at exit
+        room_info = self.get_room_info(room_id)
+        if room_info and room_info.get('room_type') == 'exit':
+            return 0
+            
         result = self.session.run("""
             MATCH path = shortestPath((start:LabyrinthRoom {id: $room_id})-[:CONNECTS_TO*]-(exit:LabyrinthRoom {room_type: 'exit'}))
             RETURN length(path) AS distance

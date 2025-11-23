@@ -132,6 +132,7 @@ class EpisodicMemory:
                    p.steps AS steps,
                    p.final_distance AS final_distance,
                    p.divergence_point AS divergence_point
+            ORDER BY p.divergence_point
         """, episode_id=episode_id)
         
         counterfactuals = [dict(record) for record in result]

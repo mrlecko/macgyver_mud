@@ -459,3 +459,28 @@ notebook-info: ## Show notebook information
 	@echo ""
 	@echo "Launch: make notebook"
 
+
+# --- Advanced Features ---
+
+demo-episodic: ## Demonstrate Episodic Memory Replay (Offline Learning)
+@echo ""
+@echo "╔══════════════════════════════════════════════════════════════════╗"
+@echo "║         DEMO: EPISODIC MEMORY REPLAY (OFFLINE LEARNING)         ║"
+@echo "║                                                                  ║"
+@echo "║  Demonstrates counterfactual reasoning:                          ║"
+@echo "║    Phase 1: Exploration (agent explores labyrinth)               ║"
+@echo "║    Phase 2: Reflection (generates 'what if' alternatives)        ║"
+@echo "║    Phase 3: Improvement (learns without new experience)          ║"
+@echo "║                                                                  ║"
+@echo "║  Key insight: Agent learns from MISTAKES in hindsight           ║"
+@echo "╚══════════════════════════════════════════════════════════════════╝"
+@echo ""
+@NEO4J_URI=bolt://localhost:$(BOLT_PORT) NEO4J_USER=$(NEO4J_USER) NEO4J_PASSWORD=$(NEO4J_PASS) \
+3 validation/episodic_replay_demo.py
+
+test-episodic: ## Test Episodic Memory suite (unit + stress tests)
+@echo "==> Running Episodic Memory test suite..."
+@NEO4J_URI=bolt://localhost:$(BOLT_PORT) NEO4J_USER=$(NEO4J_USER) NEO4J_PASSWORD=$(NEO4J_PASS) \
+ tests/test_episodic_stress.py -v
+@echo ""
+@echo "✓ All episodic memory tests passed"

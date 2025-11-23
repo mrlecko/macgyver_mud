@@ -24,13 +24,17 @@ def neo4j_session():
 @pytest.fixture
 def episodic_memory(neo4j_session):
     """Provide an EpisodicMemory instance."""
-    return EpisodicMemory(neo4j_session)
+    mem = EpisodicMemory(neo4j_session)
+    # Clean up before each test
+    mem.clear_all_episodes()
+    return mem
 
 @pytest.fixture
 def labyrinth(neo4j_session):
     """Provide a simple labyrinth for testing."""
     lab = GraphLabyrinth(neo4j_session)
     lab.initialize_schema()
+    lab.clear_labyrinth()
     lab.generate_linear_dungeon(num_rooms=5, seed=42)
     return lab
 

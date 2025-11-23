@@ -110,8 +110,27 @@ CRITICAL_THRESHOLDS = {
     "DEADLOCK_WINDOW": 4,       # History window for cycle detection
     "ESCALATION_PANIC_LIMIT": 3, # 3 Panics in window triggers Escalation
     "ESCALATION_DEADLOCK_LIMIT": 2, # 2 Deadlocks in window triggers Escalation
-    "ESCALATION_SCARCITY_LIMIT": 2 # Steps < 2 triggers Escalation
+    "ESCALATION_SCARCITY_LIMIT": 2, # Steps < 2 triggers Escalation
+    "ESCALATION_STATE_DURATION": 3,  # If in PANIC/DEADLOCK for 3 consecutive steps
+    "ESCALATION_COOLDOWN": 5,  # Minimum steps between escalations
 }
+
+# ============================================================================
+# Episodic Memory & Offline Learning
+# ============================================================================
+
+# Enable episodic memory replay (counterfactual reasoning)
+ENABLE_EPISODIC_MEMORY = os.getenv("ENABLE_EPISODIC_MEMORY", "false").lower() == "true"
+
+# Maximum counterfactuals to generate per episode
+MAX_COUNTERFACTUALS_PER_EPISODE = int(os.getenv("MAX_COUNTERFACTUALS", "3"))
+
+# Replay frequency (every N episodes, perform offline learning)
+EPISODIC_REPLAY_FREQUENCY = int(os.getenv("REPLAY_FREQUENCY", "10"))
+
+# Number of episodes to replay during offline learning
+NUM_EPISODES_TO_REPLAY = int(os.getenv("NUM_REPLAY_EPISODES", "5"))
+
 
 # ============================================================================
 # Display Configuration
