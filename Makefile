@@ -303,7 +303,8 @@ test-full: ## Run the full test suite (Unit + Red Team)
 	python3 validation/adaptive_red_team.py && \
 	python3 validation/critical_state_red_team.py && \
 	python3 validation/comparative_stress_test.py && \
-	python3 validation/escalation_red_team.py
+	python3 validation/escalation_red_team.py && \
+	python3 validation/hubris_validation_test.py
 	@echo "==> ALL SYSTEMS GREEN: Full Spectrum Test Passed."
 
 # --- Balanced Skills & Multi-Objective Targets ---

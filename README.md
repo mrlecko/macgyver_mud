@@ -1,13 +1,15 @@
-# MacGyver MUD: The Hybrid Meta-Cognitive Agent
+# MacGyver MUD: Hybrid Meta-Cognitive Agent Architecture
 
-> **Status:** **RELEASE CANDIDATE (v1.0)**
-> **Verification:** **PASS** (Full Spectrum Test)
-> **Architecture:** **Hybrid (Active Inference + Critical State Protocols)**
+> **Status:** Research Prototype (Seeking External Validation)
+> **Test Coverage:** Unit Tests + Red Team Scenarios (Discrete Environments)
+> **Architecture:** Hybrid (Active Inference + Critical State Protocols)
 
-A demonstration of a **Self-Aware AI Agent** that combines:
+A research demonstration exploring **meta-cognitive robustness** in discrete decision-making environments. This project combines:
 1.  **Active Inference:** Probabilistic optimization for goal-seeking and exploration.
-2.  **Geometric Meta-Cognition:** Real-time analysis of the agent's own belief geometry (Entropy).
-3.  **Critical State Protocols:** A "Reptilian Brain" that overrides optimization during existential crises (Panic, Deadlock, Scarcity).
+2.  **Geometric Meta-Cognition:** Real-time monitoring of the agent's belief state (entropy-based).
+3.  **Critical State Protocols:** Rule-based overrides triggered during specific failure modes (Panic, Deadlock, Scarcity).
+
+**Scope:** Tested in discrete, low-dimensional state spaces (5-step MUD scenarios). Generalization to continuous or high-dimensional environments remains unvalidated.
 
 ---
 
@@ -22,8 +24,8 @@ A demonstration of a **Self-Aware AI Agent** that combines:
 make dev-init
 ```
 
-### 2. Run the "Maximum Attack" Demo
-Watch the agent escape a local optimum where standard AI fails.
+### 2. Run the Adversarial Robustness Demo
+Watch the agent escape a local optimum (Honey Pot scenario) using critical state detection.
 ```bash
 make demo-critical
 ```
@@ -60,7 +62,7 @@ If the agent "thrashes" (oscillates between critical states), the **Escalation P
 
 The project documentation is organized in the `docs/` folder:
 
-*   **Start Here:** `docs/reports/MACGYVER_PROJECT_FULL_ASSESSMENT.md` (The Magnum Opus)
+*   **Start Here:** `docs/reports/MACGYVER_PROJECT_FULL_ASSESSMENT.md` (Comprehensive Assessment)
 *   **Design:** `docs/design/CRITICAL_STATE_PROTOCOLS.md`
 *   **Philosophy:** `docs/philosophy/PROJECT_REFLECTION_AND_PATTERNS.md`
 *   **Reports:** `docs/reports/FINAL_PROJECT_ASSESSMENT.md`

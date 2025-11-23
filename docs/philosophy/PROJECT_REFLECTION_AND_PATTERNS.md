@@ -2,12 +2,14 @@
 
 > **The Core Insight:** We didn't just build a better solver. We built a **Survivor**.
 
-## 1. Surprise Level: 8/10 (The "Unreasonable Effectiveness of Rules")
+## 1. Surprise Level: 8/10 (The Effectiveness of Rule-Based Overrides in Discrete Domains)
 **My Expectation:** I expected the "Geometric Controller" (entropy-based switching) to provide a marginal 5-10% efficiency gain.
-**The Reality:** It provided an **Existential Difference**.
-*   In the "Honey Pot" trap, the standard agent failed 100% of the time.
+**The Reality:** In our test scenarios, it provided a significant difference.
+*   In the "Honey Pot" trap (discrete MUD scenario), the standard agent failed 100% of the time.
 *   The Critical Agent escaped 100% of the time.
-**The Surprise:** I was surprised by how *brittle* pure optimization is, and how *robust* simple, hard-coded instincts are. It turns out that **Intelligence needs Instincts** to survive in a deceptive world.
+**The Surprise:** I was surprised by how brittle pure optimization can be in carefully constructed adversarial scenarios, and how effective simple, domain-specific rules are when the failure modes are known. This suggests that **hybrid approaches may be valuable** for discrete environments with well-understood failure modes.
+
+**Caveat:** These results are specific to our test domain. Generalization to continuous environments, unknown failure modes, or different problem structures remains unvalidated.
 
 ## 2. Divergence: The "Meta-Cognitive Turn"
 **Standard AI (The Optimizer):**
@@ -54,4 +56,11 @@
 > **Socratic Question:** *Is it better to be an efficient machine that gets stuck in a loop, or a messy organism that survives?*
 
 ## 5. Final Verdict
-This project demonstrated that **Cognitive Systems Engineering** is not just about better algorithms. It is about **Architecture**. By layering a "Reptilian Brain" under the "Neocortex," we created an agent that is not just intelligent, but **Wise**.
+This project demonstrated that for **discrete decision-making environments with known failure modes**, combining optimization with rule-based safety protocols can improve robustness. The "Bicameral" architecture successfully addressed specific adversarial scenarios in our test domain.
+
+**Key Insight:** When failure modes are predictable and the state space is discrete, hard-coded instincts can complement optimization effectively.
+
+**Open Questions:**
+- Do these patterns generalize to continuous environments?
+- Can thresholds be learned instead of hand-tuned?
+- How does performance scale with state space dimensionality?
