@@ -31,7 +31,7 @@ class CounterfactualGenerator:
     def generate_alternatives(self, actual_path: Dict[str, Any], 
                              max_alternates: int = 5) -> List[Dict[str, Any]]:
         """
-        Generate counter factual paths by exploring alternate choices at each step.
+        Generate counterfactual paths by exploring alternate choices at each step.
         
         Args:
             actual_path: Dict with 'rooms_visited' and 'actions_taken'
@@ -40,8 +40,24 @@ class CounterfactualGenerator:
         Returns:
             List of counterfactual path dicts
         """
+        # FIX #2: Validate labyrinth is available
+        if self.labyrinth is None:
+            print("Warning: Counterfactual generation requires graph labyrinth (not available)")
+            return []
+        
+        # FIX #2: Validate path has proper structure
+        rooms_visited = actual_path.get('rooms_visited', [])
+        if not rooms_visited or not isinstance(rooms_visited, list):
+            print("Warning: Invalid path structure for counterfactual generation")
+            return []
+        
+        # FIX #2: If rooms_visited contains state dicts, extract room IDs
+        if rooms_visited and isinstance(rooms_visited[0], dict):
+            # Path contains state dicts, not room IDs - can't generate spatial counterfactuals
+            print("Warning: Path contains state dicts, not room IDs. Spatial counterfactuals not applicable.")
+            return []
+        
         counterfactuals = []
-        rooms_visited = actual_path['rooms_visited']
         
         # Generate alternatives by diverging at different points
         for divergence_point in range(len(rooms_visited) - 1):

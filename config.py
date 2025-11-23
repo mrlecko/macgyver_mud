@@ -139,7 +139,8 @@ NUM_EPISODES_TO_REPLAY = int(os.getenv("NUM_REPLAY_EPISODES", "5"))
 EPISODIC_UPDATE_SKILL_PRIORS = os.getenv("EPISODIC_UPDATE_PRIORS", "false").lower() == "true"
 
 # Weight for skill prior updates (0.0 = no learning, 1.0 = full trust in counterfactuals)
-EPISODIC_LEARNING_RATE = float(os.getenv("EPISODIC_LEARNING_RATE", "0.1"))
+# FIX #4: Increased from 0.1 to 0.5 for meaningful adaptation
+EPISODIC_LEARNING_RATE = float(os.getenv("EPISODIC_LEARNING_RATE", "0.5"))
 
 # Enable graph labyrinth integration for spatial counterfactuals
 EPISODIC_USE_LABYRINTH = os.getenv("EPISODIC_USE_LABYRINTH", "false").lower() == "true"

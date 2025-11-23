@@ -538,6 +538,18 @@ class AgentRuntime:
         episode_id = create_episode(self.session, self.agent_id, self.door_state)
         self.current_episode_id = episode_id
         self.step_count = 0
+        
+        # FIX #1: Initialize path tracking for episodic memory
+        if config.ENABLE_EPISODIC_MEMORY:
+            self.current_episode_path = []
+            # Record initial state
+            initial_state = {
+                'step': 0,
+                'belief': self.p_unlocked,
+                'skill': 'start',
+                'observation': f'door_{self.door_state}'
+            }
+            self.current_episode_path.append(initial_state)
 
         # Main control loop
         while not self.escaped and self.step_count < max_steps:
@@ -553,6 +565,16 @@ class AgentRuntime:
 
             # Simulate skill execution
             observation, p_after, escaped = self.simulate_skill(selected_skill)
+            
+            # FIX #1: Track state after each action
+            if config.ENABLE_EPISODIC_MEMORY:
+                state = {
+                    'step': self.step_count + 1,
+                    'belief': p_after,
+                    'skill': selected_skill["name"],
+                    'observation': observation
+                }
+                self.current_episode_path.append(state)
 
             # Log this step to graph
             log_step(
@@ -637,48 +659,6 @@ class AgentRuntime:
 
         return trace
 
-
-if __name__ == "__main__":
-    # Quick manual test
-    from neo4j import GraphDatabase
-
-    print("=== Agent Runtime Test ===\n")
-
-    driver = GraphDatabase.driver(
-        config.NEO4J_URI,
-        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-    )
-
-    with driver.session(database="neo4j") as session:
-        print("Test 1: Unlocked door scenario")
-        runtime = AgentRuntime(session, "unlocked", 0.5)
-        episode_id = runtime.run_episode(max_steps=5)
-        print(f"  Episode: {episode_id}")
-        print(f"  Escaped: {runtime.escaped}")
-        print(f"  Steps: {runtime.step_count}")
-
-        trace = runtime.get_trace()
-        for step in trace:
-            print(f"    Step {step['step_index']}: {step['skill']} "
-                  f"-> {step['observation']} "
-                  f"(p: {step['p_before']:.2f} -> {step['p_after']:.2f})")
-
-        print("\nTest 2: Locked door scenario")
-        runtime2 = AgentRuntime(session, "locked", 0.5)
-        episode_id2 = runtime2.run_episode(max_steps=5)
-        print(f"  Episode: {episode_id2}")
-        print(f"  Escaped: {runtime2.escaped}")
-        print(f"  Steps: {runtime2.step_count}")
-
-        trace2 = runtime2.get_trace()
-        for step in trace2:
-            print(f"    Step {step['step_index']}: {step['skill']} "
-                  f"-> {step['observation']} "
-                  f"(p: {step['p_before']:.2f} -> {step['p_after']:.2f})")
-
-    driver.close()
-    print("\n✓ Agent runtime works!")
-
     def _store_episode_memory(self, episode_id: str):
         """
         Store the current episode in episodic memory with counterfactuals.
@@ -705,7 +685,7 @@ if __name__ == "__main__":
             
             # Generate and store counterfactuals if generator is available
             if self.counterfactual_generator:
-                import config as cfg  # Import here to avoid circular dependency issues
+                import config as cfg
                 counterfactuals = self.counterfactual_generator.generate_alternatives(
                     actual_path,
                     max_alternates=cfg.MAX_COUNTERFACTUALS_PER_EPISODE
@@ -738,7 +718,7 @@ if __name__ == "__main__":
         print("="*70)
         
         try:
-            import config as cfg  # Import here to avoid circular dependency issues
+            import config as cfg
             # Get recent episode IDs from graph
             result = self.session.run("""
                 MATCH (ep:Episode)
@@ -839,21 +819,44 @@ if __name__ == "__main__":
             stats = get_skill_stats(self.session, skill_name, context)
             
             if stats:
-                # Calculate adjustment (negative for high regret)
-                adjustment = -regret * cfg.EPISODIC_LEARNING_RATE
+                # FIX #3: Calculate adjustment (negative for high regret)
+                # Remove /100 divisor - regret directly affects success rate
+                adjustment = -regret * cfg.EPISODIC_LEARNING_RATE / 10  # Scale by 10 for reasonableness
                 
                 # Update success rate (bounded between 0 and 1)
                 current_rate = stats.get('success_rate', 0.5)
-                new_rate = max(0.0, min(1.0, current_rate + adjustment / 100))
+                new_rate = max(0.0, min(1.0, current_rate + adjustment))
                 
-                # Update in Neo4j
+                print(f"    Updating {skill_name}: {current_rate:.3f} -> {new_rate:.3f} (regret={regret})")
+                
+                # FIX #5: Update in Neo4j (this IS procedural memory integration)
+                # The SkillStats nodes ARE used by procedural memory
                 self.session.run("""
                     MATCH (sk:Skill {name: $skill_name})-[:HAS_STATS]->(stats:SkillStats)
                     WHERE stats.context_belief = $context_belief
                     SET stats.success_rate = $new_rate,
-                        stats.counterfactual_adjusted = true
+                        stats.counterfactual_adjusted = true,
+                        stats.last_updated = timestamp()
                 """, skill_name=skill_name, context_belief=context.get('belief_category'),
                    new_rate=new_rate)
+            else:
+                # FIX #5: Create stats if they don't exist
+                print(f"    Creating stats for {skill_name} (first counterfactual update)")
+                initial_rate = 0.5 - (regret * cfg.EPISODIC_LEARNING_RATE / 10)
+                initial_rate = max(0.0, min(1.0, initial_rate))
+                
+                self.session.run("""
+                    MATCH (sk:Skill {name: $skill_name})
+                    CREATE (sk)-[:HAS_STATS]->(stats:SkillStats {
+                        context_belief: $context_belief,
+                        success_rate: $success_rate,
+                        total_uses: 0,
+                        successful_uses: 0,
+                        counterfactual_adjusted: true,
+                        last_updated: timestamp()
+                    })
+                """, skill_name=skill_name, context_belief=context.get('belief_category'),
+                   success_rate=initial_rate)
     
     def _apply_forgetting_mechanism(self):
         """
@@ -917,3 +920,45 @@ if __name__ == "__main__":
         from memory.counterfactual_generator import CounterfactualGenerator
         self.counterfactual_generator = CounterfactualGenerator(self.session, labyrinth)
         print("✓ Graph labyrinth integrated for spatial counterfactuals")
+
+if __name__ == "__main__":
+    # Quick manual test
+    from neo4j import GraphDatabase
+
+    print("=== Agent Runtime Test ===\n")
+
+    driver = GraphDatabase.driver(
+        config.NEO4J_URI,
+        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
+    )
+
+    with driver.session(database="neo4j") as session:
+        print("Test 1: Unlocked door scenario")
+        runtime = AgentRuntime(session, "unlocked", 0.5)
+        episode_id = runtime.run_episode(max_steps=5)
+        print(f"  Episode: {episode_id}")
+        print(f"  Escaped: {runtime.escaped}")
+        print(f"  Steps: {runtime.step_count}")
+
+        trace = runtime.get_trace()
+        for step in trace:
+            print(f"    Step {step['step_index']}: {step['skill']} "
+                  f"-> {step['observation']} "
+                  f"(p: {step['p_before']:.2f} -> {step['p_after']:.2f})")
+
+        print("\nTest 2: Locked door scenario")
+        runtime2 = AgentRuntime(session, "locked", 0.5)
+        episode_id2 = runtime2.run_episode(max_steps=5)
+        print(f"  Episode: {episode_id2}")
+        print(f"  Escaped: {runtime2.escaped}")
+        print(f"  Steps: {runtime2.step_count}")
+
+        trace2 = runtime2.get_trace()
+        for step in trace2:
+            print(f"    Step {step['step_index']}: {step['skill']} "
+                  f"-> {step['observation']} "
+                  f"(p: {step['p_before']:.2f} -> {step['p_after']:.2f})")
+
+    driver.close()
+    print("\n✓ Agent runtime works!")
+
