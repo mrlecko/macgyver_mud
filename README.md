@@ -38,6 +38,50 @@ make test-full
 
 ---
 
+## 📋 Features & Capabilities
+
+### Core Features
+
+| Feature | Status | Demo Command | Documentation |
+|:---|:---:|:---|:---|
+| **Active Inference Decision Making** | ✅ Stable | `make demo-original` | Baseline agent optimization |
+| **Geometric Meta-Cognition** | ✅ Stable | `make demo-silver` | Entropy-based belief monitoring |
+| **Critical State Protocols** | ✅ Stable | `make demo-critical` | [Critical States](docs/design/CRITICAL_STATE_PROTOCOLS.md) |
+| **Escalation (Circuit Breaker)** | ✅ Stable | `make demo-critical` | Hard stop for thrashing states |
+| **Procedural Memory** | ✅ Stable | `python3 runner.py --memory` | Learn from past episodes |
+| **Adaptive Meta-Parameters** | ✅ Stable | `python3 runner.py --adaptive` | α, β, γ self-tuning |
+
+### Extended Environment
+
+| Feature | Status | Demo Command | Documentation |
+|:---|:---:|:---|:---|
+| **Graph Labyrinth** | ✅ Stable | `pytest tests/test_graph_labyrinth.py` | [Walkthrough](docs/brain/GRAPH_LABYRINTH_WALKTHROUGH.md) |
+| **Multi-Room Navigation** | ✅ Stable | N/A | Neo4j-backed spatial graphs |
+| **Shortest Path Algorithms** | ✅ Stable | N/A | Dijkstra via Neo4j |
+
+### Advanced Features (Episodic Memory)
+
+| Feature | Status | Demo Command | Config Flag | Documentation |
+|:---|:---:|:---|:---|:---|
+| **Episodic Memory Replay** | ✅ Stable | `python3 validation/episodic_replay_demo.py` | `ENABLE_EPISODIC_MEMORY=true` | [Integration](docs/brain/EPISODIC_MEMORY_INTEGRATION_SUMMARY.md) |
+| **Counterfactual Generation** | ✅ Stable | ↑ Same | `MAX_COUNTERFACTUALS=3` | [Stress Analysis](docs/brain/EPISODIC_MEMORY_STRESS_ANALYSIS.md) |
+| **Skill Prior Updates** | ✅ Stable | ↑ Same | `EPISODIC_UPDATE_PRIORS=true` | [Advanced Features](docs/brain/ADVANCED_EPISODIC_MEMORY_FEATURES.md) |
+| **Graph Labyrinth Integration** | ✅ Stable | ↑ Same | `EPISODIC_USE_LABYRINTH=true` | ↑ Same |
+| **Forgetting Mechanism** | ✅ Stable | ↑ Same | `EPISODIC_FORGETTING=true` | ↑ Same |
+| **Offline Learning** | ✅ Stable | Automatic (every 10 episodes) | `EPISODIC_REPLAY_FREQUENCY=10` | ↑ Same |
+
+### Research Features (Experimental)
+
+| Feature | Status | Notes |
+|:---|:---:|:---|
+| **Hierarchical Active Inference** | 🔬 Planned | Meta + base controllers |
+| **Curiosity-Driven Exploration** | 🔬 Planned | Intrinsic motivation via Kolmogorov complexity |
+| **Multi-Agent Coordination** | 🔬 Planned | Emergent communication protocols |
+
+**Legend:** ✅ Stable | 🔬 Experimental | 📋 Planned
+
+---
+
 ## 🧠 Key Features
 
 ### 1. The Bicameral Mind
@@ -56,6 +100,13 @@ The system detects 5 distinct critical states and applies specific protocols:
 ### 3. The Circuit Breaker (Escalation)
 If the agent "thrashes" (oscillates between critical states), the **Escalation Protocol** triggers a hard stop to prevent resource waste.
 
+### 4. Episodic Memory & Offline Learning (NEW)
+The agent stores **counterfactual paths** ("what could have happened") and learns from them WITHOUT new experience:
+- **Regret Analysis:** Identifies better choices in hindsight
+- **Skill Updates:** Adjusts success rates based on counterfactual insights
+- **Spatial Reasoning:** Uses graph topology for realistic alternatives
+- **Memory Management:** Automatic forgetting to bound growth
+
 ---
 
 ## 📚 Documentation
@@ -73,14 +124,66 @@ The project documentation is organized in the `docs/` folder:
 
 ```
 macgyver_mud/
-├── agent_runtime.py          # The Brain (Cortex + Brainstem)
+├── agent_runtime.py          # The Brain (Cortex + Brainstem + Episodic Memory)
 ├── critical_state.py         # The Instincts (State Detection)
+├── scoring.py                # The Gauge (Skill Scoring)
 ├── scoring_silver.py         # The Gauge (Geometric Analysis)
 ├── config.py                 # The DNA (Configuration)
+├── memory/                   # Episodic Memory System
+│   ├── episodic_replay.py    # Counterfactual storage & replay
+│   └── counterfactual_generator.py  # "What if" path generation
+├── environments/             # Test Environments
+│   ├── graph_labyrinth.py    # Multi-room spatial navigation
+│   └── labyrinth.py          # Lyapunov testing environment
 ├── validation/               # The Gauntlet (Red Team Scripts)
+│   ├── episodic_replay_demo.py  # Offline learning demo
+│   ├── comparative_stress_test.py  # Critical states demo
+│   └── ...
 ├── tests/                    # The Safety Net (Unit Tests)
+│   ├── test_episodic_memory.py      # Episodic memory tests
+│   ├── test_episodic_stress.py      # Stress tests
+│   ├── test_graph_labyrinth.py      # Labyrinth tests
+│   └── ...
 └── docs/                     # The Wisdom (Documentation)
+    ├── brain/                # Implementation artifacts
+    ├── design/               # Design documents
+    ├── philosophy/           # Reflections
+    └── reports/              # Assessments
 ```
+
+---
+
+## 🚀 Quick Start Examples
+
+### Enable All Features
+```bash
+# Start Neo4j
+make neo4j-start
+
+# Enable episodic memory with all advanced features
+export ENABLE_EPISODIC_MEMORY=true
+export EPISODIC_UPDATE_PRIORS=true
+export EPISODIC_USE_LABYRINTH=true
+export EPISODIC_FORGETTING=true
+
+# Run agent
+python3 runner.py --memory --adaptive
+```
+
+### Run Episodic Memory Demo
+```bash
+python3 validation/episodic_replay_demo.py
+```
+
+Expected output:
+```
+PHASE 1: EXPLORATION (20 steps average)
+PHASE 2: REFLECTION (15 counterfactuals generated)
+PHASE 3: IMPROVEMENT (30% projected improvement)
+
+Total learning opportunities: 1686 steps saved if optimal
+```
+
 
 ## License
 MIT

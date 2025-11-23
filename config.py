@@ -131,6 +131,28 @@ EPISODIC_REPLAY_FREQUENCY = int(os.getenv("REPLAY_FREQUENCY", "10"))
 # Number of episodes to replay during offline learning
 NUM_EPISODES_TO_REPLAY = int(os.getenv("NUM_REPLAY_EPISODES", "5"))
 
+# ============================================================================
+# Advanced Episodic Memory Features
+# ============================================================================
+
+# Update skill priors based on counterfactual insights
+EPISODIC_UPDATE_SKILL_PRIORS = os.getenv("EPISODIC_UPDATE_PRIORS", "false").lower() == "true"
+
+# Weight for skill prior updates (0.0 = no learning, 1.0 = full trust in counterfactuals)
+EPISODIC_LEARNING_RATE = float(os.getenv("EPISODIC_LEARNING_RATE", "0.1"))
+
+# Enable graph labyrinth integration for spatial counterfactuals
+EPISODIC_USE_LABYRINTH = os.getenv("EPISODIC_USE_LABYRINTH", "false").lower() == "true"
+
+# Forgetting mechanism: decay episodes older than N episodes
+EPISODIC_FORGETTING_ENABLED = os.getenv("EPISODIC_FORGETTING", "false").lower() == "true"
+
+# Maximum episodes to keep (oldest are deleted)
+EPISODIC_MAX_EPISODES = int(os.getenv("EPISODIC_MAX_EPISODES", "100"))
+
+# Decay factor for regret from old episodes (0.0-1.0, lower = faster decay)
+EPISODIC_DECAY_FACTOR = float(os.getenv("EPISODIC_DECAY_FACTOR", "0.95"))
+
 
 # ============================================================================
 # Display Configuration

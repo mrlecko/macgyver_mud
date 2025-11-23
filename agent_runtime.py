@@ -717,6 +717,9 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Warning: Failed to store episodic memory: {e}")
         
+        # Apply forgetting mechanism to bound memory growth
+        self._apply_forgetting_mechanism()
+        
         # Reset path for next episode
         self.current_episode_path = []
     
@@ -784,9 +787,12 @@ if __name__ == "__main__":
                     print(f"  - Episode {insight['episode']}: Could save {insight['regret']} steps")
                     print(f"    (Diverged at step {insight['divergence_point']})")
                 
-                # TODO: Use insights to update skill priors
-                # For now, just log the analysis
-                print("\nNote: Full integration would update skill preferences based on these insights")
+                # Update skill priors if enabled
+                if cfg.EPISODIC_UPDATE_SKILL_PRIORS and self.use_procedural_memory:
+                    self._update_skill_priors_from_insights(insights, cfg)
+                    print("\n✓ Skill priors updated based on counterfactual insights")
+                else:
+                    print("\nNote: Skill prior updates disabled (set EPISODIC_UPDATE_PRIORS=true to enable)")
             else:
                 print("No counterfactual insights available yet")
             
@@ -794,3 +800,120 @@ if __name__ == "__main__":
             
         except Exception as e:
             print(f"Warning: Offline learning failed: {e}")
+
+    def _update_skill_priors_from_insights(self, insights: List[Dict], cfg):
+        """
+        Update skill priors based on counterfactual insights.
+        
+        Args:
+            insights: List of dicts with episode analysis
+            cfg: Config module reference
+        """
+        # Analyze which skills were used at divergence points
+        # and penalize/reward them based on regret
+        
+        for insight in insights:
+            episode_id = insight['episode']
+            divergence_step = insight['divergence_point']
+            regret = insight['regret']
+            
+            # Get the trace for this episode to see what skill was used
+            result = self.session.run("""
+                MATCH (ep:Episode {episode_id: $episode_id})-[:HAS_STEP]->(step:Step)
+                WHERE step.step_index = $step_index
+                RETURN step.skill_name AS skill
+            """, episode_id=episode_id, step_index=divergence_step)
+            
+            record = result.single()
+            if not record:
+                continue
+            
+            skill_name = record['skill']
+            
+            # Update skill stats based on regret
+            # High regret = bad choice, lower that skill's preference
+            # Low regret = good choice, increase that skill's preference
+            
+            # Get current skill stats
+            context = {"belief_category": self._get_belief_category(self.p_unlocked)}
+            stats = get_skill_stats(self.session, skill_name, context)
+            
+            if stats:
+                # Calculate adjustment (negative for high regret)
+                adjustment = -regret * cfg.EPISODIC_LEARNING_RATE
+                
+                # Update success rate (bounded between 0 and 1)
+                current_rate = stats.get('success_rate', 0.5)
+                new_rate = max(0.0, min(1.0, current_rate + adjustment / 100))
+                
+                # Update in Neo4j
+                self.session.run("""
+                    MATCH (sk:Skill {name: $skill_name})-[:HAS_STATS]->(stats:SkillStats)
+                    WHERE stats.context_belief = $context_belief
+                    SET stats.success_rate = $new_rate,
+                        stats.counterfactual_adjusted = true
+                """, skill_name=skill_name, context_belief=context.get('belief_category'),
+                   new_rate=new_rate)
+    
+    def _apply_forgetting_mechanism(self):
+        """
+        Apply forgetting mechanism to bound episodic memory growth.
+        
+        Deletes oldest episodes when limit is exceeded.
+        """
+        if not config.EPISODIC_FORGETTING_ENABLED or not self.episodic_memory:
+            return
+        
+        try:
+            # Count total episodes
+            result = self.session.run("""
+                MATCH (e:EpisodicMemory)
+                RETURN count(e) AS total
+            """)
+            
+            total = result.single()['total']
+            
+            if total > config.EPISODIC_MAX_EPISODES:
+                # Delete oldest episodes
+                num_to_delete = total - config.EPISODIC_MAX_EPISODES
+                
+                # Get oldest episode IDs
+                result = self.session.run("""
+                    MATCH (e:EpisodicMemory)
+                    RETURN e.episode_id AS episode_id
+                    ORDER BY e.episode_id ASC
+                    LIMIT $num_to_delete
+                """, num_to_delete=num_to_delete)
+                
+                for record in result:
+                    # Delete episode and all its paths
+                    self.session.run("""
+                        MATCH (e:EpisodicMemory {episode_id: $episode_id})
+                        DETACH DELETE e
+                    """, episode_id=record['episode_id'])
+                    
+                    self.session.run("""
+                        MATCH (p:EpisodicPath)
+                        WHERE p.path_id STARTS WITH $prefix
+                        DELETE p
+                    """, prefix=record['episode_id'])
+                
+                print(f"✓ Forgetting applied: Deleted {num_to_delete} oldest episodes")
+        
+        except Exception as e:
+            print(f"Warning: Forgetting mechanism failed: {e}")
+    
+    def _integrate_graph_labyrinth(self, labyrinth):
+        """
+        Integrate graph labyrinth for spatial counterfactual generation.
+        
+        Args:
+            labyrinth: GraphLabyrinth instance
+        """
+        if not config.EPISODIC_USE_LABYRINTH or not self.episodic_memory:
+            return
+        
+        # Initialize counterfactual generator with labyrinth
+        from memory.counterfactual_generator import CounterfactualGenerator
+        self.counterfactual_generator = CounterfactualGenerator(self.session, labyrinth)
+        print("✓ Graph labyrinth integrated for spatial counterfactuals")
