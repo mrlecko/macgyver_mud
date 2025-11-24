@@ -44,12 +44,12 @@ class TextWorldCognitiveAgent:
         """
         self.session = session
         self.verbose = verbose
-        self.parser = TextWorldParser()
         
-        if self.verbose:
-            print("\n" + "="*70)
-            print("🧠 COGNITIVE AGENT INITIALIZATION")
-            print("="*70)
+        # Components
+        self.parser = TextWorldParser()
+        # Import here to avoid circular imports if any
+        from .memory_system import MemoryRetriever
+        self.memory = MemoryRetriever(session)
         
         # Belief state: Agent's internal model of the world
         self.beliefs = {
@@ -62,6 +62,10 @@ class TextWorldCognitiveAgent:
         }
         
         if self.verbose:
+            print("\n" + "="*70)
+            print("🧠 COGNITIVE AGENT INITIALIZATION")
+            print("="*70)
+        
             print("📊 Belief state initialized:")
             print(f"   - Rooms: {len(self.beliefs['rooms'])}")
             print(f"   - Objects: {len(self.beliefs['objects'])}")
@@ -286,22 +290,46 @@ class TextWorldCognitiveAgent:
             
         return value
 
+    def calculate_memory_bonus(self, action: str) -> float:
+        """
+        Calculate score adjustment based on past memories.
+        Positive outcome -> Bonus
+        Negative outcome -> Penalty
+        """
+        if not self.beliefs.get('current_room'):
+            return 0.0
+            
+        context = self.beliefs['rooms'][self.beliefs['current_room']].get('description', '')
+        memories = self.memory.retrieve_relevant_memories(context, action)
+        
+        bonus = 0.0
+        for mem in memories:
+            confidence = mem.get('confidence', 0.5)
+            if mem['outcome'] == 'positive':
+                bonus += 2.0 * confidence
+            elif mem['outcome'] == 'negative':
+                bonus -= 5.0 * confidence  # Stronger penalty for bad outcomes
+                
+        return bonus
+
     def score_action(self, action: str, beliefs: Dict, quest: Optional[Dict] = None) -> float:
         """
         Score an action using Active Inference EFE.
         
-        EFE = α * goal_value + β * entropy - γ * cost
+        EFE = α * goal_value + β * entropy - γ * cost + δ * memory
         """
         # Coefficients
         alpha = 2.0  # Goal value weight
         beta = 3.0   # Entropy/Info weight (Encourage exploration)
         gamma = 1.0  # Cost weight
+        delta = 1.0  # Memory weight
         
         goal_val = self.calculate_goal_value(action)
         entropy = self.calculate_entropy(action)
         cost = self.calculate_cost(action)
+        memory_bonus = self.calculate_memory_bonus(action)
         
-        efe = (alpha * goal_val) + (beta * entropy) - (gamma * cost)
+        efe = (alpha * goal_val) + (beta * entropy) - (gamma * cost) + (delta * memory_bonus)
         
         return efe
     
