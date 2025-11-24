@@ -19,6 +19,8 @@ This isn't just another reinforcement learning demo. It's a **production-grade c
 - **Critical State Protocols** — Meta-cognitive robustness reflexes (PANIC, SCARCITY, DEADLOCK, etc.)
 - **Lyapunov Stability Monitoring** — Formal dynamical systems safety guarantees
 - **Generalized Credit Assignment** — "Blame the Path" safety mechanism to avoid catastrophic failures [Docs](docs/CREDIT_ASSIGNMENT.md)
+- **Auto-Tuning** — Self-calibrating thresholds using online statistics (Welford's Algorithm) [Docs](docs/AUTOTUNING.md)
+- **Perceptual Layer** — LLM-based semantic extraction using structured JSON schemas [Docs](docs/PERCEPTION.md)
 - **Integration-Tested Multi-System Coordination** — Verified system boundaries across all subsystems
 
 **Built for:** Researchers studying cognitive architectures, AI safety engineers, and developers building robust autonomous systems.

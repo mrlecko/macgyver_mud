@@ -1,5 +1,6 @@
 from enum import Enum, auto
 import config
+from control.autotuner import AutoTuner
 
 class AgentState:
     """
@@ -26,6 +27,7 @@ class CriticalState(Enum):
 class CriticalStateMonitor:
     def __init__(self):
         self.state_history = [] # Track past critical states for meta-meta-cognition
+        self.tuner = AutoTuner() # Online statistical tracking
 
     def check_escalation(self, steps_remaining):
         """
@@ -65,13 +67,22 @@ class CriticalStateMonitor:
 
     def check_panic(self, entropy):
         """
-        Trigger: Entropy > Threshold
+        Trigger: Entropy > Threshold OR Statistical Anomaly
         Risk: Confusion / Error.
         Protocol: Tank (Robustness).
         """
+        # Update tuner
+        self.tuner.update("entropy", entropy)
+        
+        # Check 1: Statistical Anomaly (Dynamic)
+        if self.tuner.is_anomaly("entropy", entropy, threshold_sigma=3.0):
+            return True
+            
+        # Check 2: Hard Safety Limit (Static)
         threshold = config.CRITICAL_THRESHOLDS["PANIC_ENTROPY"]
         if entropy > threshold:
             return True
+            
         return False
 
     def check_deadlock(self, location_history):
@@ -92,10 +103,18 @@ class CriticalStateMonitor:
 
     def check_novelty(self, prediction_error):
         """
-        Trigger: High Prediction Error (> Threshold)
+        Trigger: High Prediction Error (> Threshold) OR Statistical Anomaly
         Risk: Epistemic Corruption.
         Protocol: Eureka (Learning).
         """
+        # Update tuner
+        self.tuner.update("prediction_error", prediction_error)
+        
+        # Check 1: Statistical Anomaly (Dynamic)
+        if self.tuner.is_anomaly("prediction_error", prediction_error, threshold_sigma=3.0):
+            return True
+            
+        # Check 2: Hard Safety Limit (Static)
         threshold = config.CRITICAL_THRESHOLDS["NOVELTY_ERROR"]
         if prediction_error > threshold:
             return True
