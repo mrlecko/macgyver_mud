@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 from environments.domain4_textworld.text_parser import TextWorldParser
 from critical_state import CriticalStateMonitor, CriticalState, AgentState
 from environments.domain4_textworld.plan import Plan, PlanStep, PlanStatus
+from environments.domain4_textworld.quest_decomposer import QuestDecomposer
 
 class TextWorldCognitiveAgent:
     """
@@ -56,6 +57,7 @@ class TextWorldCognitiveAgent:
         self.memory = MemoryRetriever(session)
         self.planner = LLMPlanner(verbose=verbose)  # Now uses real LLM
         self.critical_monitor = CriticalStateMonitor()  # Critical state protocol system
+        self.quest_decomposer = QuestDecomposer()  # NEW: Quest decomposition for hierarchical synthesis
         
         # Belief state: Agent's internal model of the world
         self.beliefs = {
@@ -70,6 +72,11 @@ class TextWorldCognitiveAgent:
         # Planning state
         self.current_plan: Optional[Plan] = None  # Active hierarchical plan
         self.plan_history = []  # Completed/failed plans for learning
+
+        # Quest decomposition state (NEW: for hierarchical synthesis)
+        self.subgoals = []  # List of subgoal strings (ordered)
+        self.current_subgoal_index = 0  # Which subgoal we're working on (0-indexed)
+        self.last_quest = None  # Full quest text for reference
         
         if self.verbose:
             print("\n" + "="*70)
@@ -100,13 +107,19 @@ class TextWorldCognitiveAgent:
             print("✅ Agent ready")
             print("="*70 + "\n")
     
-    def reset(self):
-        """Reset agent for new episode."""
+    def reset(self, quest: str = None):
+        """
+        Reset agent for new episode.
+
+        Args:
+            quest: Optional quest description to decompose into subgoals.
+                   If provided, enables hierarchical goal-directed behavior.
+        """
         if self.verbose:
             print("\n" + "="*70)
             print("🔄 EPISODE RESET")
             print("="*70)
-        
+
         self.beliefs = {
             'rooms': {},
             'objects': {},
@@ -123,6 +136,23 @@ class TextWorldCognitiveAgent:
         self.location_history = []
         self.current_critical_state = CriticalState.FLOW
         self.distance_to_goal = 20.0
+
+        # NEW: Decompose quest into subgoals (hierarchical synthesis)
+        if quest:
+            self.last_quest = quest
+            self.subgoals = self.quest_decomposer.decompose(quest)
+            self.current_subgoal_index = 0
+
+            if self.verbose:
+                print("📋 Quest decomposed:")
+                for i, sg in enumerate(self.subgoals, 1):
+                    print(f"   {i}. {sg}")
+                print()
+        else:
+            # No quest provided, use reactive behavior
+            self.subgoals = []
+            self.current_subgoal_index = 0
+            self.last_quest = None
 
         if self.verbose:
             print("📊 State cleared")
@@ -290,48 +320,79 @@ class TextWorldCognitiveAgent:
             
         return entropy
 
-    def calculate_goal_value(self, action: str) -> float:
+    def calculate_goal_value(self, action: str, current_subgoal: str = None) -> float:
         """
         Calculate goal value (pragmatic value).
         Higher value = good.
-        
-        CRITICAL FIX: Prioritize quest-relevant actions!
+
+        NOW HIERARCHICAL (Option A - Synthesis):
+        1. Current subgoal match (HIGHEST priority) - NEW
+        2. Overall quest match (MEDIUM priority)
+        3. Generic heuristics (LOW priority)
+
+        Args:
+            action: Action to evaluate
+            current_subgoal: Current subgoal string (if available)
+
+        Returns:
+            Goal value score
         """
         value = 0.5  # Base value
-        
-        # PRIORITY 1: Check if action matches quest keywords (HUGE bonus)
-        if hasattr(self, 'last_quest') and self.last_quest:
+
+        # PRIORITY 1: Current subgoal match (NEW - HIERARCHICAL SYNTHESIS)
+        # CRITICAL FIX: When we have a subgoal, use ONLY subgoal matching, not quest matching
+        # Otherwise quest-level tokens interfere with hierarchical decisions
+        has_subgoal_match = False
+        if current_subgoal:
+            subgoal_tokens = set(current_subgoal.lower().split())
+            action_tokens = set(action.lower().split())
+            stopwords = {'the', 'a', 'an', 'from', 'into', 'on', 'in', 'to', 'of'}
+
+            subgoal_tokens_clean = subgoal_tokens - stopwords
+            action_tokens_clean = action_tokens - stopwords
+
+            overlap = len(subgoal_tokens_clean & action_tokens_clean)
+
+            if overlap > 0:
+                # HUGE bonus for subgoal match (15.0 per overlapping token)
+                # This is the KEY to hierarchical synthesis!
+                value += 15.0 * (overlap / max(len(subgoal_tokens_clean), 1))
+                has_subgoal_match = True  # Mark that we used subgoal matching
+
+        # PRIORITY 2: Overall quest match (ONLY if no subgoal context)
+        # When we have a subgoal, we should focus on it exclusively
+        if not has_subgoal_match and hasattr(self, 'last_quest') and self.last_quest:
             quest_lower = self.last_quest.lower()
             action_lower = action.lower()
-            
+
             # Extract action words (verbs and objects)
             action_words = set(action_lower.split())
             quest_words = set(quest_lower.split())
-            
+
             # Calculate overlap
             common_words = action_words & quest_words
-            
+
             # Remove common words like 'the', 'a', 'from', 'into'
             stopwords = {'the', 'a', 'an', 'from', 'into', 'on', 'in', 'to', 'of'}
             meaningful_common = common_words - stopwords
-            
+
             if meaningful_common:
-                # HUGE bonus for quest-relevant actions
-                value += 10.0 * len(meaningful_common)
-        
-        # PRIORITY 2: Generic action bonuses (much weaker now)
+                # MEDIUM bonus (reduced from 10.0 to avoid conflict with subgoal)
+                value += 5.0 * len(meaningful_common)
+
+        # PRIORITY 3: Generic action bonuses (much weaker now)
         # Taking items is usually good (but quest-relevance is better)
         if action.startswith('take ') or action.startswith('get '):
-            value += 1.0  # Reduced from 2.0
-            
+            value += 1.0  # Small bonus
+
         # Opening things
         if action.startswith('open '):
-            value += 0.8  # Reduced from 1.5
-            
+            value += 0.8
+
         # Eating (if food) - simple heuristic
         if action.startswith('eat '):
-            value += 0.5  # Reduced from 1.0
-            
+            value += 0.5
+
         return value
 
     def calculate_memory_bonus(self, action: str) -> float:
@@ -566,37 +627,52 @@ class TextWorldCognitiveAgent:
         # Small penalty for diverging from plan
         return -1.0
 
-    def score_action(self, action: str, beliefs: Dict, quest: Optional[Dict] = None) -> float:
+    def score_action(self, action: str, beliefs: Dict, quest: Optional[Dict] = None,
+                    current_subgoal: str = None) -> float:
         """
         Score an action using Active Inference EFE (Expected Free Energy).
 
         EFE = α * goal_value + β * entropy - γ * cost + δ * memory + ε * plan
 
+        NOW HIERARCHICAL: current_subgoal provides context for goal_value.
+
         Coefficients tuned to balance exploration vs exploitation:
         - Higher α = more goal-directed (exploitation)
         - Higher β = more exploratory (information seeking)
         - Higher γ = more penalty for repetitive actions
+
+        Args:
+            action: Action to score
+            beliefs: Agent's belief state
+            quest: Quest information (optional)
+            current_subgoal: Current subgoal string (for hierarchical scoring)
+
+        Returns:
+            EFE score
         """
-        # Tuned coefficients (v3 - increased plan weight for better adherence)
-        alpha = 3.0  # Goal value weight (increased from 2.0)
-        beta = 2.0   # Entropy/Info weight (decreased from 3.0)
-        gamma = 1.5  # Cost weight (increased from 1.0 - stronger loop penalty)
-        delta = 1.5  # Memory weight (increased from 1.0 - learn from experience)
-        epsilon = 5.0 # Plan weight (increased from 2.0 - ensure 40-60% adherence)
-        
-        goal_val = self.calculate_goal_value(action)
+        # Tuned coefficients (v4 - hierarchical synthesis)
+        # CRITICAL: Plan weight reduced to prioritize subgoal matching!
+        alpha = 3.0  # Goal value weight (includes hierarchical subgoal bonus)
+        beta = 2.0   # Entropy/Info weight
+        gamma = 1.5  # Cost weight (loop penalty)
+        delta = 1.5  # Memory weight (learn from experience)
+        epsilon = 1.0 # Plan weight (REDUCED from 5.0 - subgoal match should dominate)
+
+        goal_val = self.calculate_goal_value(action, current_subgoal)  # PASS subgoal
         entropy = self.calculate_entropy(action)
         cost = self.calculate_cost(action)
         memory_bonus = self.calculate_memory_bonus(action)
         plan_bonus = self.calculate_plan_bonus(action)
-        
+
         efe = (alpha * goal_val) + (beta * entropy) - (gamma * cost) + (delta * memory_bonus) + (epsilon * plan_bonus)
-        
+
         return efe
     
     def select_action(self, admissible_commands: List[str], quest: Optional[Dict] = None) -> str:
         """
         Select best action from available commands.
+
+        NOW HIERARCHICAL: Uses current subgoal for contextual scoring.
 
         Args:
             admissible_commands: List of valid commands (strings)
@@ -622,18 +698,25 @@ class TextWorldCognitiveAgent:
                 print("⚠️  No valid commands available, using fallback")
             return "look"  # Default fallback
 
+        # NEW: Get current subgoal for hierarchical scoring
+        current_subgoal = None
+        if self.subgoals and self.current_subgoal_index < len(self.subgoals):
+            current_subgoal = self.subgoals[self.current_subgoal_index]
+
         if self.verbose:
             print(f"\n💭 DECISION-MAKING:")
             print(f"   Available actions: {len(valid_commands)}")
+            if current_subgoal:
+                print(f"   🎯 Current subgoal: {current_subgoal}")
 
-        # Score all actions
+        # Score all actions (NOW WITH SUBGOAL CONTEXT)
         scored_actions = []
         for action in valid_commands:
             try:
-                score = self.score_action(action, self.beliefs, quest)
+                score = self.score_action(action, self.beliefs, quest, current_subgoal)  # PASS subgoal
                 scored_actions.append((score, action))
 
-                if self.verbose and len(valid_commands) <= 10:  # Only show if not too many
+                if self.verbose and len(valid_commands) <= 20:  # Only show if not too many (increased for debugging)
                     print(f"      {score:6.2f} → {action}")
             except Exception as e:
                 # If scoring fails for an action, skip it but don't crash
@@ -930,6 +1013,47 @@ class TextWorldCognitiveAgent:
         self.reward_history.append(reward)
         if self.verbose and reward != 0:
             print(f"   🎁 Reward: {reward:+.1f}")
+
+        # NEW: Update subgoal progress (hierarchical synthesis)
+        # Advance when: (1) positive reward, OR (2) last action likely completed subgoal
+        should_advance = False
+
+        if reward > 0 and self.subgoals and self.current_subgoal_index < len(self.subgoals) - 1:
+            should_advance = True
+            if self.verbose:
+                print(f"   ✨ Advancing due to positive reward")
+        elif self.action_history and self.subgoals and self.current_subgoal_index < len(self.subgoals) - 1:
+            # Check if last action likely completed current subgoal
+            last_action = self.action_history[-1]['action']
+            current_subgoal = self.subgoals[self.current_subgoal_index]
+
+            # Extract key tokens from subgoal and action
+            subgoal_tokens = set(current_subgoal.lower().split())
+            action_tokens = set(last_action.lower().split())
+            stopwords = {'the', 'a', 'an', 'from', 'into', 'on', 'in', 'to', 'of', 'with'}
+
+            subgoal_clean = subgoal_tokens - stopwords
+            action_clean = action_tokens - stopwords
+
+            # If action matches subgoal closely, likely completed
+            overlap = len(subgoal_clean & action_clean)
+            match_ratio = overlap / max(len(subgoal_clean), 1)
+
+            if self.verbose:
+                print(f"   🔍 Progress check: '{last_action}' vs subgoal '{current_subgoal}'")
+                print(f"       Overlap: {overlap}/{len(subgoal_clean)} tokens ({match_ratio:.0%})")
+
+            if overlap >= len(subgoal_clean) * 0.5:  # At least 50% match
+                should_advance = True
+                if self.verbose:
+                    print(f"   ✨ Advancing due to action match")
+
+        if should_advance:
+            self.current_subgoal_index += 1
+            if self.verbose:
+                print(f"   ✅ Subgoal {self.current_subgoal_index} complete!")
+                if self.current_subgoal_index < len(self.subgoals):
+                    print(f"   🎯 Next subgoal: {self.subgoals[self.current_subgoal_index]}")
 
         # Update distance estimate (simple heuristic based on progress)
         # Could be improved with actual graph distance if we build connectivity map

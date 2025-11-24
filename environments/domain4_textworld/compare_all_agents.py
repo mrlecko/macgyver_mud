@@ -132,10 +132,13 @@ def run_cognitive_agent(game_file: str, max_steps: int = 20) -> dict:
     session = driver.session()
 
     agent = TextWorldCognitiveAgent(session=session, verbose=False)
-    agent.last_quest = game_state.objective
+
+    # NEW: Use reset(quest) to enable hierarchical synthesis
+    agent.reset(quest=game_state.objective)
 
     step = 0
     total_reward = 0.0
+    last_reward = 0.0  # Track incremental reward
     done = False
     actions = []
 
@@ -148,7 +151,7 @@ def run_cognitive_agent(game_file: str, max_steps: int = 20) -> dict:
         action = agent.step(
             observation=obs,
             feedback=obs,
-            reward=total_reward,
+            reward=last_reward,  # Pass INCREMENTAL reward from last step
             done=False,
             admissible_commands=commands,
             quest=None
@@ -156,6 +159,7 @@ def run_cognitive_agent(game_file: str, max_steps: int = 20) -> dict:
 
         actions.append(action)
         game_state, reward, done = env.step(action)
+        last_reward = reward  # Store for next iteration
         total_reward += reward
 
     env.close()
