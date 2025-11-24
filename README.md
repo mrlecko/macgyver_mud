@@ -18,6 +18,7 @@ This isn't just another reinforcement learning demo. It's a **production-grade c
 - **Episodic Memory** — Deliberative counterfactual learning (learns from "what could have been")
 - **Critical State Protocols** — Meta-cognitive robustness reflexes (PANIC, SCARCITY, DEADLOCK, etc.)
 - **Lyapunov Stability Monitoring** — Formal dynamical systems safety guarantees
+- **Generalized Credit Assignment** — "Blame the Path" safety mechanism to avoid catastrophic failures [Docs](docs/CREDIT_ASSIGNMENT.md)
 - **Integration-Tested Multi-System Coordination** — Verified system boundaries across all subsystems
 
 **Built for:** Researchers studying cognitive architectures, AI safety engineers, and developers building robust autonomous systems.
@@ -106,6 +107,7 @@ Most AI agents optimize for a single objective. This architecture demonstrates:
                        │ informed by
 ┌──────────────────────▼──────────────────────────────────────┐
 │ HIPPOCAMPUS (Episodic Memory)                               │
+│ • Generalized Credit Assignment: "Blame the Path" logic to avoid catastrophic failures (traps) by remembering dangerous sequences. [Read more](docs/CREDIT_ASSIGNMENT.md). │
 │ • Counterfactual path generation ("what if" scenarios)      │
 │ • Regret analysis & offline learning                        │
 │ • Updates procedural memory (context-aware skill stats)     │

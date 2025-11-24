@@ -165,6 +165,12 @@ class ShiftingMazeEnv:
                 reward = 10.0
                 info["success"] = "Found new safe path to goal"
 
+            elif action == "move_to_TRAP" and self.state == "C":
+                self.state = "TRAP"
+                reward = -10.0
+                self.done = True
+                info["trap"] = "Caught in trap after phase shift"
+
             else:
                 reward = -1.0
                 info["error"] = f"Invalid action {action} from {self.state}"

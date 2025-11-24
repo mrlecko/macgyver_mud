@@ -13,6 +13,7 @@ from graph_model import (
 )
 from critical_state import CriticalStateMonitor, CriticalState, AgentState
 from scoring import score_skill, score_skill_with_memory, compute_epistemic_value
+from memory.credit_assignment import CreditAssignment
 
 class AgentEscalationError(Exception):
     """Raised when the agent enters the ESCALATION state (Circuit Breaker)."""
@@ -121,6 +122,9 @@ class AgentRuntime:
             self.episodic_memory = None
             self.counterfactual_generator = None
             self.current_episode_path = []
+            
+        # Generalized Credit Assignment (Online Safety)
+        self.credit_assignment = CreditAssignment()
         
     def _get_belief_category(self, p_unlocked: float) -> str:
         """
@@ -184,10 +188,20 @@ class AgentRuntime:
 
         # Determine context (belief-based, NOT ground truth)
         context = {"belief_category": self._get_belief_category(self.p_unlocked)}
+        state_repr = context["belief_category"] # Use belief category as state for credit assignment
 
         scored_skills = []
 
         for skill in skills:
+            # SAFETY CHECK: Credit Assignment
+            # If this skill is known to lead to failure from this state, penalize it heavily
+            if not self.credit_assignment.is_safe(state_repr, skill["name"]):
+                # Apply massive penalty
+                score = -999.0
+                explanation = "⛔ BLOCKED by Credit Assignment (Known Failure Path)"
+                scored_skills.append((score, skill, explanation))
+                continue
+
             if self.use_procedural_memory:
                 # Get skill statistics
                 stats = get_skill_stats(
@@ -340,6 +354,11 @@ class AgentRuntime:
 
             boosted_skills = []
             for base_score, skill, explanation in scored_skills:
+                # Skip if already penalized by credit assignment
+                if base_score <= -999.0:
+                    boosted_skills.append((base_score, skill, explanation))
+                    continue
+                    
                 silver = build_silver_stamp(skill["name"], skill.get("cost", 1.0), self.p_unlocked)
                 k_skill = silver["k_explore"]
                 alignment = 1.0 - abs(k_skill - target_k)
@@ -581,6 +600,9 @@ class AgentRuntime:
         self.reward_history = []
         self.history = []
         self.last_prediction_error = 0.0
+        
+        # Reset Credit Assignment history (but keep failed paths!)
+        self.credit_assignment.reset()
 
         # Reset critical state monitor history (Issue #10 fix)
         if hasattr(self, 'monitor'):
@@ -613,9 +635,24 @@ class AgentRuntime:
 
             # Record belief before action
             p_before = self.p_unlocked
+            
+            # Record step for credit assignment (state = belief category)
+            belief_cat = self._get_belief_category(p_before)
+            self.credit_assignment.record_step(belief_cat, selected_skill["name"])
 
             # Simulate skill execution
             observation, p_after, escaped = self.simulate_skill(selected_skill)
+            
+            # Calculate reward (proxy) for credit assignment
+            # In this simple domain, we don't have explicit rewards, so we infer them
+            # Success = +10, Failure/Stuck = -1, Trap (if we had one) = -10
+            # For now, we assume standard step cost unless we define a trap
+            reward = -1.0 
+            if escaped:
+                reward = 10.0
+            
+            # Process outcome for credit assignment
+            self.credit_assignment.process_outcome(reward)
             
             # FIX #1: Track state after each action
             if config.ENABLE_EPISODIC_MEMORY:

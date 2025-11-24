@@ -142,11 +142,15 @@ class CognitiveAgent:
     """Full cognitive architecture with DEADLOCK detection."""
     def __init__(self):
         self.name = "Cognitive"
-        self.monitor = CriticalStateMonitor()
         self.reset()
         
     def reset(self):
         """Reset for new episode."""
+        # CRITICAL FIX: Create NEW monitor each episode!
+        # The monitor's state_history persists across episodes, causing
+        # ESCALATION after first DEADLOCK detection
+        self.monitor = CriticalStateMonitor()
+        
         self.history = []
         self.reward_history = []
         self.steps_remaining = 100
