@@ -123,14 +123,16 @@ class HubrisAwareAgent:
 
             # Explore: choose action NOT in learned path
             # CRITICAL: Only explore at decision points, not when stuck
-            if len(available_actions) > 1:
-                for action in available_actions:
-                    if action not in self.learned_path:
-                        print(f"       → Exploring new action: {action}")
-                        return action
-
-            # If no new actions available or only one option, continue with normal behavior
-            # (This prevents getting stuck at states with only one action)
+            # New logic: attempt to find any action not in learned_path.
+            # If none exist, still explore by picking the first available action to break out of the learned loop.
+            for action in available_actions:
+                if action not in self.learned_path:
+                    print(f"       → Exploring new action: {action}")
+                    return action
+            # If all actions are part of the learned path, still explore by selecting the first available action.
+            if available_actions:
+                print(f"       → Exploring despite learned path: {available_actions[0]}")
+                return available_actions[0]
 
         # Normal behavior: follow learned path
         if self.learned_path[self.path_index % 3] in available_actions:

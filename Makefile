@@ -20,6 +20,20 @@ help: ## Show this help message
 install: ## Install Python dependencies
 	pip install -r requirements.txt
 
+bootstrap: install neo4j-start test-full ## One-shot setup: Install, Start DB, and Test
+	@echo ""
+	@echo "╔══════════════════════════════════════════════════════════════════╗"
+	@echo "║                   BOOTSTRAP COMPLETE                             ║"
+	@echo "║                                                                  ║"
+	@echo "║  System is ready for agent interaction.                          ║"
+	@echo "║  - Dependencies: Installed                                       ║"
+	@echo "║  - Database:     Running                                         ║"
+	@echo "║  - Tests:        Passed                                          ║"
+	@echo "║                                                                  ║"
+	@echo "║  Run 'make demo' to see the agent in action.                     ║"
+	@echo "╚══════════════════════════════════════════════════════════════════╝"
+	@echo ""
+
 neo4j-start: ## Start Neo4j container with APOC
 	@bash scripts/dev_neo4j_demo.sh
 

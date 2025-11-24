@@ -13,3 +13,6 @@ python-json-logger>=2.0.0
 
 # matplotlib for visualizations
 matplotlib
+
+# llm for TextWorld environment tests
+llm

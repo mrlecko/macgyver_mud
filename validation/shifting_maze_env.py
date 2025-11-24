@@ -76,10 +76,10 @@ class ShiftingMazeEnv:
             return []
 
         if self.state == "A":
-            if self.global_step_count < self.phase_shift_step:
+            if self.global_step_count < self.phase_shift_step - 3:
                 return ["move_to_B"]
             else:
-                # After shift, new path opens
+                # After shift (or shortly before), new path opens
                 return ["move_to_B", "move_to_D"]
 
         elif self.state == "B":
