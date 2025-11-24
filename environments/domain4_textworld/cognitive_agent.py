@@ -49,7 +49,9 @@ class TextWorldCognitiveAgent:
         self.parser = TextWorldParser()
         # Import here to avoid circular imports if any
         from .memory_system import MemoryRetriever
+        from .llm_planner import LLMPlanner
         self.memory = MemoryRetriever(session)
+        self.planner = LLMPlanner()
         
         # Belief state: Agent's internal model of the world
         self.beliefs = {
@@ -60,6 +62,8 @@ class TextWorldCognitiveAgent:
             'quest_state': {},     # Progress toward goals
             'uncertainty': {}      # Confidence in each belief
         }
+        
+        self.current_plan = []  # List of planned actions
         
         if self.verbose:
             print("\n" + "="*70)
@@ -312,24 +316,53 @@ class TextWorldCognitiveAgent:
                 
         return bonus
 
+    def generate_plan(self, goal: str) -> List[str]:
+        """
+        Generate a plan for the given goal using the Planner.
+        """
+        context = str(self.beliefs)
+        plan = self.planner.generate_plan(goal, context)
+        self.current_plan = plan
+        if self.verbose:
+            print(f"🗺️  Generated Plan: {plan}")
+        return plan
+
+    def calculate_plan_bonus(self, action: str) -> float:
+        """
+        Calculate score adjustment based on the current plan.
+        Matches next step -> Huge Bonus
+        """
+        if not self.current_plan:
+            return 0.0
+            
+        next_step = self.current_plan[0]
+        
+        # Simple string matching (fuzzy would be better)
+        if next_step in action:
+            return 10.0
+            
+        return 0.0
+
     def score_action(self, action: str, beliefs: Dict, quest: Optional[Dict] = None) -> float:
         """
         Score an action using Active Inference EFE.
         
-        EFE = α * goal_value + β * entropy - γ * cost + δ * memory
+        EFE = α * goal_value + β * entropy - γ * cost + δ * memory + ε * plan
         """
         # Coefficients
         alpha = 2.0  # Goal value weight
         beta = 3.0   # Entropy/Info weight (Encourage exploration)
         gamma = 1.0  # Cost weight
         delta = 1.0  # Memory weight
+        epsilon = 1.0 # Plan weight
         
         goal_val = self.calculate_goal_value(action)
         entropy = self.calculate_entropy(action)
         cost = self.calculate_cost(action)
         memory_bonus = self.calculate_memory_bonus(action)
+        plan_bonus = self.calculate_plan_bonus(action)
         
-        efe = (alpha * goal_val) + (beta * entropy) - (gamma * cost) + (delta * memory_bonus)
+        efe = (alpha * goal_val) + (beta * entropy) - (gamma * cost) + (delta * memory_bonus) + (epsilon * plan_bonus)
         
         return efe
     
