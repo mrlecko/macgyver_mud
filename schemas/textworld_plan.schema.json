@@ -1,0 +1,69 @@
+{
+  "type": "object",
+  "required": ["goal", "strategy", "steps", "success_criteria", "contingencies", "confidence"],
+  "properties": {
+    "goal": {
+      "type": "string",
+      "minLength": 5,
+      "description": "The high-level objective to achieve"
+    },
+    "strategy": {
+      "type": "string",
+      "minLength": 20,
+      "description": "WHY this approach will work (reasoning)"
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 7,
+      "description": "Concrete action steps in sequence",
+      "items": {
+        "type": "object",
+        "required": ["description", "action_pattern"],
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 5,
+            "description": "What this step accomplishes"
+          },
+          "action_pattern": {
+            "type": "string",
+            "minLength": 3,
+            "description": "Keyword to match in action (e.g., 'take key', 'examine', 'unlock')"
+          }
+        }
+      }
+    },
+    "success_criteria": {
+      "type": "string",
+      "minLength": 10,
+      "description": "HOW to know if the goal is achieved"
+    },
+    "contingencies": {
+      "type": "object",
+      "description": "Backup plans for common failures",
+      "properties": {
+        "stuck": {
+          "type": "string",
+          "description": "What to do if can't proceed"
+        },
+        "failed": {
+          "type": "string",
+          "description": "What to do if approach fails"
+        },
+        "unexpected": {
+          "type": "string",
+          "description": "What to do if something unexpected happens"
+        }
+      },
+      "additionalProperties": true
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "How confident are you this plan will work? (0.0 - 1.0)"
+    }
+  },
+  "additionalProperties": false
+}

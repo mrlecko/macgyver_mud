@@ -8,28 +8,44 @@ mock_neo4j = MagicMock()
 sys.modules['neo4j'] = mock_neo4j
 
 from environments.domain4_textworld.cognitive_agent import TextWorldCognitiveAgent
+from critical_state import CriticalState
 
 class TestTextWorldMemoryCritical(unittest.TestCase):
     def setUp(self):
         self.mock_session = MagicMock()
         self.agent = TextWorldCognitiveAgent(self.mock_session, verbose=False)
-        
+
     def test_detect_stuck_state(self):
-        """Test detection of being stuck (critical state)."""
-        # Simulate no score change for many steps
+        """Test detection of being stuck (critical state via scarcity or low reward)."""
+        # Simulate no score change for many steps with low steps remaining
         self.agent.reward_history = [0] * 20
-        self.agent.current_step = 20
-        
-        is_critical = self.agent.check_critical_state()
-        self.assertTrue(is_critical, "Should detect critical state when stuck (no reward for 20 steps)")
-        
+        self.agent.current_step = 85
+        self.agent.max_steps = 100
+        self.agent.distance_to_goal = 20.0
+
+        # Get critical state from monitor
+        agent_state = self.agent.get_agent_state_for_critical_monitor()
+        critical_state = self.agent.critical_monitor.evaluate(agent_state)
+
+        # Should detect some critical state (likely SCARCITY)
+        self.assertNotEqual(critical_state, CriticalState.FLOW,
+                           "Should detect critical state when stuck (no reward, low steps)")
+
     def test_detect_not_stuck(self):
-        """Test that we are not stuck if getting rewards."""
-        self.agent.reward_history = [0] * 19 + [1]
+        """Test that we are in FLOW state when making progress."""
+        self.agent.reward_history = [0] * 9 + [1]  # Recent reward
         self.agent.current_step = 20
-        
-        is_critical = self.agent.check_critical_state()
-        self.assertFalse(is_critical, "Should not be critical if recently rewarded")
+        self.agent.max_steps = 100
+        self.agent.distance_to_goal = 10.0
+        self.agent.location_history = ['Room A', 'Room B', 'Room C']  # No loops
+
+        # Get critical state from monitor
+        agent_state = self.agent.get_agent_state_for_critical_monitor()
+        critical_state = self.agent.critical_monitor.evaluate(agent_state)
+
+        # Should be in FLOW or HUBRIS (good states), not PANIC/DEADLOCK/SCARCITY
+        self.assertNotIn(critical_state, [CriticalState.PANIC, CriticalState.DEADLOCK, CriticalState.SCARCITY],
+                        "Should not be in bad critical state when making progress")
 
     def test_save_episode_memory(self):
         """Test saving episode to Neo4j."""

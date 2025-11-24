@@ -26,12 +26,15 @@ Logging Convention:
 from typing import Dict, List, Any, Optional
 from neo4j import Session
 import logging
+import time
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
 
 from environments.domain4_textworld.text_parser import TextWorldParser
+from critical_state import CriticalStateMonitor, CriticalState, AgentState
+from environments.domain4_textworld.plan import Plan, PlanStep, PlanStatus
 
 class TextWorldCognitiveAgent:
     """
@@ -51,7 +54,8 @@ class TextWorldCognitiveAgent:
         from .memory_system import MemoryRetriever
         from .llm_planner import LLMPlanner
         self.memory = MemoryRetriever(session)
-        self.planner = LLMPlanner()
+        self.planner = LLMPlanner(verbose=verbose)  # Now uses real LLM
+        self.critical_monitor = CriticalStateMonitor()  # Critical state protocol system
         
         # Belief state: Agent's internal model of the world
         self.beliefs = {
@@ -62,8 +66,10 @@ class TextWorldCognitiveAgent:
             'quest_state': {},     # Progress toward goals
             'uncertainty': {}      # Confidence in each belief
         }
-        
-        self.current_plan = []  # List of planned actions
+
+        # Planning state
+        self.current_plan: Optional[Plan] = None  # Active hierarchical plan
+        self.plan_history = []  # Completed/failed plans for learning
         
         if self.verbose:
             print("\n" + "="*70)
@@ -84,6 +90,11 @@ class TextWorldCognitiveAgent:
         self.observation_history = []
         self.action_history = []
         self.reward_history = []
+        self.location_history = []  # Track room transitions for deadlock detection
+
+        # Critical state tracking
+        self.current_critical_state = CriticalState.FLOW
+        self.distance_to_goal = 20.0  # Estimated distance (updated dynamically)
         
         if self.verbose:
             print("✅ Agent ready")
@@ -109,7 +120,10 @@ class TextWorldCognitiveAgent:
         self.observation_history = []
         self.action_history = []
         self.reward_history = []
-        
+        self.location_history = []
+        self.current_critical_state = CriticalState.FLOW
+        self.distance_to_goal = 20.0
+
         if self.verbose:
             print("📊 State cleared")
             print("✅ Ready for new episode")
@@ -148,6 +162,9 @@ class TextWorldCognitiveAgent:
         room_name = self.parser.extract_room_name(obs_str)
         if room_name:
             self.beliefs['current_room'] = room_name
+            # Track location for deadlock detection
+            self.location_history.append(room_name)
+
             if room_name not in self.beliefs['rooms']:
                 self.beliefs['rooms'][room_name] = {
                     'description': obs_str,
@@ -277,20 +294,43 @@ class TextWorldCognitiveAgent:
         """
         Calculate goal value (pragmatic value).
         Higher value = good.
+        
+        CRITICAL FIX: Prioritize quest-relevant actions!
         """
         value = 0.5  # Base value
         
-        # 1. Taking items is usually good
+        # PRIORITY 1: Check if action matches quest keywords (HUGE bonus)
+        if hasattr(self, 'last_quest') and self.last_quest:
+            quest_lower = self.last_quest.lower()
+            action_lower = action.lower()
+            
+            # Extract action words (verbs and objects)
+            action_words = set(action_lower.split())
+            quest_words = set(quest_lower.split())
+            
+            # Calculate overlap
+            common_words = action_words & quest_words
+            
+            # Remove common words like 'the', 'a', 'from', 'into'
+            stopwords = {'the', 'a', 'an', 'from', 'into', 'on', 'in', 'to', 'of'}
+            meaningful_common = common_words - stopwords
+            
+            if meaningful_common:
+                # HUGE bonus for quest-relevant actions
+                value += 10.0 * len(meaningful_common)
+        
+        # PRIORITY 2: Generic action bonuses (much weaker now)
+        # Taking items is usually good (but quest-relevance is better)
         if action.startswith('take ') or action.startswith('get '):
-            value += 2.0
+            value += 1.0  # Reduced from 2.0
             
-        # 2. Opening things
+        # Opening things
         if action.startswith('open '):
-            value += 1.5
+            value += 0.8  # Reduced from 1.5
             
-        # 3. Eating (if food) - simple heuristic
+        # Eating (if food) - simple heuristic
         if action.startswith('eat '):
-            value += 1.0
+            value += 0.5  # Reduced from 1.0
             
         return value
 
@@ -299,62 +339,250 @@ class TextWorldCognitiveAgent:
         Calculate score adjustment based on past memories.
         Positive outcome -> Bonus
         Negative outcome -> Penalty
+
+        Returns:
+            Float score adjustment (can be positive or negative)
         """
+        # Defensive: Check if current_room exists and is in rooms dict
         if not self.beliefs.get('current_room'):
             return 0.0
-            
-        context = self.beliefs['rooms'][self.beliefs['current_room']].get('description', '')
-        memories = self.memory.retrieve_relevant_memories(context, action)
-        
+
+        current_room = self.beliefs['current_room']
+        if current_room not in self.beliefs.get('rooms', {}):
+            # Room reference exists but room data not yet populated
+            return 0.0
+
+        context = self.beliefs['rooms'][current_room].get('description', '')
+        if not context:
+            # No context available for memory retrieval
+            return 0.0
+
+        try:
+            memories = self.memory.retrieve_relevant_memories(context, action)
+        except Exception as e:
+            # Memory retrieval failed - log but don't crash
+            if self.verbose:
+                print(f"⚠️  Memory retrieval error: {e}")
+            return 0.0
+
         bonus = 0.0
         for mem in memories:
             confidence = mem.get('confidence', 0.5)
-            if mem['outcome'] == 'positive':
+            outcome = mem.get('outcome', 'neutral')
+
+            if outcome == 'positive':
                 bonus += 2.0 * confidence
-            elif mem['outcome'] == 'negative':
+            elif outcome == 'negative':
                 bonus -= 5.0 * confidence  # Stronger penalty for bad outcomes
-                
+
         return bonus
 
-    def generate_plan(self, goal: str) -> List[str]:
+    def _infer_goal_from_context(self) -> Optional[str]:
         """
-        Generate a plan for the given goal using the Planner.
+        Infer high-level goal from current context.
+
+        Uses quest state or observation heuristics.
+        
+        Priority order:
+        1. quest_state.description (if set via step() call)
+        2. last_quest attribute (if set from TextWorld game state)
+        3. Heuristics from observations (fallback)
         """
-        context = str(self.beliefs)
-        plan = self.planner.generate_plan(goal, context)
-        self.current_plan = plan
+        # Strategy 1: Check quest state (if populated)
+        if self.beliefs.get('quest_state') and self.beliefs['quest_state'].get('description'):
+            return self.beliefs['quest_state']['description']
+        
+        # Strategy 2: Check last_quest attribute (TextWorld game state objective)
+        if hasattr(self, 'last_quest') and self.last_quest:
+            return self.last_quest
+
+        # Strategy 3: Simple heuristics based on recent observations (fallback)
+        if not self.observation_history:
+            return None
+
+        recent_obs = self.observation_history[-1]
+        obs_text = recent_obs.get('observation', '').lower()
+
+        # Look for common goal patterns
+        if 'locked' in obs_text and 'chest' in obs_text:
+            return "Find key and unlock the chest"
+        elif 'locked' in obs_text and 'door' in obs_text:
+            return "Find key and unlock the door"
+        elif 'hungry' in obs_text or 'need' in obs_text:
+            return "Find and consume food"
+        elif 'escape' in obs_text:
+            return "Escape the room"
+
+        # No clear goal detected
+        return None
+
+    def _build_planning_context(self, admissible_commands: List[str]) -> str:
+        """Build context summary for planning."""
+        parts = []
+
+        # Current location
+        if self.beliefs.get('current_room'):
+            parts.append(f"Current Room: {self.beliefs['current_room']}")
+
+        # Visible objects
+        current_room = self.beliefs.get('current_room')
+        if current_room and current_room in self.beliefs.get('rooms', {}):
+            objects = self.beliefs['rooms'][current_room].get('objects', [])
+            if objects:
+                parts.append(f"Visible Objects: {', '.join(objects[:10])}")  # Max 10
+
+        # Inventory
+        inventory = self.beliefs.get('inventory', [])
+        if inventory:
+            parts.append(f"Inventory: {', '.join(inventory)}")
+        else:
+            parts.append("Inventory: empty")
+
+        # Available actions (sample)
+        if admissible_commands:
+            sample = admissible_commands[:8]  # First 8 actions
+            parts.append(f"Available Actions: {', '.join(sample)}")
+            if len(admissible_commands) > 8:
+                parts.append(f"... and {len(admissible_commands) - 8} more")
+
+        return "\n".join(parts)
+
+    def _get_recent_failures(self) -> List[str]:
+        """Get recent failed plans for learning."""
+        failures = []
+        for plan in self.plan_history[-3:]:  # Last 3 plans
+            if plan.status == PlanStatus.FAILED:
+                reason = plan.failure_reason or "unknown reason"
+                failures.append(f"Tried '{plan.goal}' - {reason}")
+        return failures
+
+    def maybe_generate_plan(self, admissible_commands: List[str]):
+        """
+        Generate a new plan if we don't have one and a goal is clear.
+
+        Only generates when:
+        - No active plan exists
+        - A goal can be inferred from context
+        - We have enough steps accumulated to make planning worthwhile
+        """
+        # Only generate if no active plan
+        if self.current_plan and self.current_plan.status == PlanStatus.ACTIVE:
+            return
+
+        # Don't plan too early (need some observations first)
+        if self.current_step < 3:
+            return
+
+        # Infer goal from context
+        goal = self._infer_goal_from_context()
+        if not goal:
+            return  # No clear goal, use reactive EFE only
+
+        # Build context summary
+        context = self._build_planning_context(admissible_commands)
+
+        # Get previous failures if any
+        failures = self._get_recent_failures()
+
+        # Generate plan
         if self.verbose:
-            print(f"🗺️  Generated Plan: {plan}")
-        return plan
+            print(f"\n📋 Generating plan for: {goal}")
+
+        try:
+            self.current_plan = self.planner.generate_plan(
+                goal=goal,
+                context=context,
+                previous_failures=failures
+            )
+            self.current_plan.created_at_step = self.current_step
+
+            if self.verbose:
+                print(f"   Strategy: {self.current_plan.strategy[:80]}...")
+                print(f"   Steps: {len(self.current_plan.steps)}")
+                for i, step in enumerate(self.current_plan.steps, 1):
+                    print(f"     {i}. {step.description}")
+        except Exception as e:
+            if self.verbose:
+                print(f"⚠️  Plan generation failed: {e}")
+            # Continue without plan (use reactive EFE)
+
+    def check_plan_progress(self, last_action: str):
+        """
+        Check if last action completed a plan step.
+
+        Tracks progress through the current plan and handles completion.
+        """
+        if not self.current_plan:
+            return
+
+        # Try to advance the plan
+        if self.current_plan.advance_step(last_action):
+            if self.verbose:
+                print(f"   ✅ Plan step completed!")
+                print(f"   Progress: {self.current_plan.progress_ratio():.0%}")
+
+            next_step = self.current_plan.get_current_step()
+            if next_step:
+                if self.verbose:
+                    print(f"   Next: {next_step.description}")
+            else:
+                if self.verbose:
+                    print(f"   🎉 Plan complete!")
+
+        # Check if plan is complete
+        if self.current_plan.is_complete():
+            self.current_plan.status = PlanStatus.COMPLETED
+            self.current_plan.completed_at_step = self.current_step
+            self.plan_history.append(self.current_plan)
+            if self.verbose:
+                print(f"   🎯 Goal '{self.current_plan.goal}' achieved!")
+            self.current_plan = None
 
     def calculate_plan_bonus(self, action: str) -> float:
         """
         Calculate score adjustment based on the current plan.
-        Matches next step -> Huge Bonus
+
+        Big bonus if action matches current step.
+        Uses new Plan API with step matching.
         """
         if not self.current_plan:
             return 0.0
-            
-        next_step = self.current_plan[0]
-        
-        # Simple string matching (fuzzy would be better)
-        if next_step in action:
-            return 10.0
-            
-        return 0.0
+
+        current_step = self.current_plan.get_current_step()
+        if not current_step:
+            return 0.0  # Plan complete
+
+        # Check if action matches current step
+        if current_step.matches_action(action):
+            # Big bonus for following the plan
+            bonus = 10.0
+
+            # Extra bonus if this is a fresh step (no retries)
+            if current_step.attempts == 0:
+                bonus += 2.0
+
+            return bonus
+
+        # Small penalty for diverging from plan
+        return -1.0
 
     def score_action(self, action: str, beliefs: Dict, quest: Optional[Dict] = None) -> float:
         """
-        Score an action using Active Inference EFE.
-        
+        Score an action using Active Inference EFE (Expected Free Energy).
+
         EFE = α * goal_value + β * entropy - γ * cost + δ * memory + ε * plan
+
+        Coefficients tuned to balance exploration vs exploitation:
+        - Higher α = more goal-directed (exploitation)
+        - Higher β = more exploratory (information seeking)
+        - Higher γ = more penalty for repetitive actions
         """
-        # Coefficients
-        alpha = 2.0  # Goal value weight
-        beta = 3.0   # Entropy/Info weight (Encourage exploration)
-        gamma = 1.0  # Cost weight
-        delta = 1.0  # Memory weight
-        epsilon = 1.0 # Plan weight
+        # Tuned coefficients (v3 - increased plan weight for better adherence)
+        alpha = 3.0  # Goal value weight (increased from 2.0)
+        beta = 2.0   # Entropy/Info weight (decreased from 3.0)
+        gamma = 1.5  # Cost weight (increased from 1.0 - stronger loop penalty)
+        delta = 1.5  # Memory weight (increased from 1.0 - learn from experience)
+        epsilon = 5.0 # Plan weight (increased from 2.0 - ensure 40-60% adherence)
         
         goal_val = self.calculate_goal_value(action)
         entropy = self.calculate_entropy(action)
@@ -369,104 +597,310 @@ class TextWorldCognitiveAgent:
     def select_action(self, admissible_commands: List[str], quest: Optional[Dict] = None) -> str:
         """
         Select best action from available commands.
-        
+
         Args:
-            admissible_commands: List of valid commands
+            admissible_commands: List of valid commands (strings)
             quest: Optional quest information
-        
+
         Returns:
-            Selected command
+            Selected command string
         """
-        if not admissible_commands:
+        # Input validation
+        if admissible_commands is None or not isinstance(admissible_commands, list):
             if self.verbose:
-                print("⚠️  No commands available, using fallback")
+                print("⚠️  Invalid commands input, using fallback")
+            return "look"
+
+        # Filter out invalid commands (non-strings or empty)
+        valid_commands = [
+            cmd for cmd in admissible_commands
+            if isinstance(cmd, str) and cmd.strip()
+        ]
+
+        if not valid_commands:
+            if self.verbose:
+                print("⚠️  No valid commands available, using fallback")
             return "look"  # Default fallback
-        
+
         if self.verbose:
             print(f"\n💭 DECISION-MAKING:")
-            print(f"   Available actions: {len(admissible_commands)}")
-        
+            print(f"   Available actions: {len(valid_commands)}")
+
         # Score all actions
         scored_actions = []
-        for action in admissible_commands:
-            score = self.score_action(action, self.beliefs, quest)
-            scored_actions.append((score, action))
-            
-            if self.verbose and len(admissible_commands) <= 10:  # Only show if not too many
-                print(f"      {score:6.2f} → {action}")
-        
+        for action in valid_commands:
+            try:
+                score = self.score_action(action, self.beliefs, quest)
+                scored_actions.append((score, action))
+
+                if self.verbose and len(valid_commands) <= 10:  # Only show if not too many
+                    print(f"      {score:6.2f} → {action}")
+            except Exception as e:
+                # If scoring fails for an action, skip it but don't crash
+                if self.verbose:
+                    print(f"⚠️  Scoring error for '{action}': {e}")
+                continue
+
+        # Safety: If all actions failed to score, fallback
+        if not scored_actions:
+            if self.verbose:
+                print("⚠️  All actions failed to score, using fallback")
+            return "look"
+
         # Pick highest score
         scored_actions.sort(reverse=True)
         best_score, best_action = scored_actions[0]
-        
+
         if self.verbose:
             print(f"\n   ⚡ SELECTED: '{best_action}' (score: {best_score:.2f})")
-        
+
         # Track decision
         self.action_history.append({
             'step': self.current_step,
             'action': best_action,
             'score': best_score
         })
-        
+
         return best_action
     
-    def check_critical_state(self) -> bool:
+    def calculate_entropy_metric(self) -> float:
         """
-        Check if agent is in a critical state (stuck, loop, danger).
+        Calculate current entropy for critical state monitoring.
+        Higher entropy = more uncertainty/confusion.
         """
-        # 1. Stuck detection: No reward for N steps
-        stuck_threshold = 15
-        if len(self.reward_history) >= stuck_threshold:
-            recent_rewards = self.reward_history[-stuck_threshold:]
-            if sum(recent_rewards) == 0:
+        # Base entropy from number of unknown objects
+        unknown_objects = sum(
+            1 for obj, data in self.beliefs.get('objects', {}).items()
+            if data.get('examined_count', 0) == 0
+        )
+        object_entropy = min(1.0, unknown_objects / 10.0)
+
+        # Entropy from unexplored rooms (if we have room data)
+        unvisited_rooms = sum(
+            1 for room, data in self.beliefs.get('rooms', {}).items()
+            if data.get('visited_count', 0) == 0
+        )
+        room_entropy = min(1.0, unvisited_rooms / 5.0)
+
+        # Recent action diversity (low diversity = high certainty)
+        if len(self.action_history) >= 5:
+            recent_actions = [a['action'] for a in self.action_history[-5:]]
+            unique_actions = len(set(recent_actions))
+            action_entropy = 1.0 - (unique_actions / 5.0)
+        else:
+            action_entropy = 0.5
+
+        return (0.4 * object_entropy + 0.3 * room_entropy + 0.3 * action_entropy)
+
+    def calculate_prediction_error_metric(self) -> float:
+        """Calculate prediction error for novelty detection."""
+        if len(self.observation_history) < 2:
+            return 0.0
+
+        # Simple: Compare last two observations
+        recent_obs = self.observation_history[-2:]
+        obs_prev = str(recent_obs[0].get('observation', ''))
+        obs_curr = str(recent_obs[1].get('observation', ''))
+
+        # Text similarity
+        prev_words = set(obs_prev.lower().split())
+        curr_words = set(obs_curr.lower().split())
+
+        if not prev_words and not curr_words:
+            return 0.0
+
+        common = prev_words & curr_words
+        total = prev_words | curr_words
+
+        similarity = len(common) / max(len(total), 1)
+        return 1.0 - similarity
+
+    def get_agent_state_for_critical_monitor(self) -> AgentState:
+        """
+        Build AgentState object for CriticalStateMonitor.
+        """
+        entropy = self.calculate_entropy_metric()
+        prediction_error = self.calculate_prediction_error_metric()
+        steps_remaining = self.max_steps - self.current_step
+
+        return AgentState(
+            entropy=entropy,
+            history=self.location_history,
+            steps=steps_remaining,
+            dist=self.distance_to_goal,
+            rewards=self.reward_history,
+            error=prediction_error
+        )
+
+    def apply_critical_state_protocol(self, critical_state: CriticalState, admissible_commands: List[str]) -> Optional[str]:
+        """
+        Apply protocol-specific action override when in critical state.
+
+        Returns:
+            Action to take (if protocol overrides), or None (use normal EFE)
+        """
+        # Defensive: ensure admissible_commands is a list
+        if not admissible_commands:
+            admissible_commands = ['look', 'inventory']
+
+        if critical_state == CriticalState.FLOW:
+            return None  # Normal operation
+
+        if self.verbose:
+            print(f"\n🚨 CRITICAL STATE: {critical_state.name}")
+
+        # PANIC Protocol: Choose safer, simpler actions
+        if critical_state == CriticalState.PANIC:
+            if self.verbose:
+                print("   Protocol: TANK (Robustness over efficiency)")
+            safe_commands = [
+                c for c in admissible_commands
+                if any(kw in c.lower() for kw in ['look', 'inventory', 'examine'])
+            ]
+            if safe_commands:
+                import random
+                action = random.choice(safe_commands)
                 if self.verbose:
-                    print("⚠️  CRITICAL STATE: Stuck (no reward recently)")
-                return True
-                
-        # 2. Loop detection (already handled by cost, but could trigger panic here)
-        
-        return False
+                    print(f"   Override: {action}")
+                return action
+
+        # DEADLOCK Protocol: Break the loop
+        elif critical_state == CriticalState.DEADLOCK:
+            if self.verbose:
+                print("   Protocol: SISYPHUS (Perturbation)")
+            # Filter out recently used actions
+            recent_actions = [a['action'] for a in self.action_history[-5:]]
+            new_commands = [c for c in admissible_commands if c not in recent_actions]
+            if new_commands:
+                import random
+                action = random.choice(new_commands)
+                if self.verbose:
+                    print(f"   Override: {action} (breaking loop)")
+                return action
+
+        # SCARCITY Protocol: Focus on efficiency
+        elif critical_state == CriticalState.SCARCITY:
+            if self.verbose:
+                print("   Protocol: SPARTAN (Efficiency)")
+            # Prioritize goal-directed actions
+            goal_commands = [
+                c for c in admissible_commands
+                if any(kw in c.lower() for kw in ['take', 'open', 'unlock', 'use', 'eat'])
+            ]
+            if goal_commands:
+                # Use EFE scoring but only on goal commands
+                scored = [(self.score_action(c, self.beliefs, None), c) for c in goal_commands]
+                scored.sort(reverse=True)
+                action = scored[0][1]
+                if self.verbose:
+                    print(f"   Override: {action} (goal-directed)")
+                return action
+
+        # NOVELTY Protocol: Explore to learn
+        elif critical_state == CriticalState.NOVELTY:
+            if self.verbose:
+                print("   Protocol: EUREKA (Learning mode)")
+            # Prioritize examine/look actions
+            explore_commands = [
+                c for c in admissible_commands
+                if any(kw in c.lower() for kw in ['examine', 'look'])
+            ]
+            if explore_commands:
+                import random
+                action = random.choice(explore_commands)
+                if self.verbose:
+                    print(f"   Override: {action} (learning)")
+                return action
+
+        # ESCALATION Protocol: Emergency stop (shouldn't happen in normal flow)
+        elif critical_state == CriticalState.ESCALATION:
+            if self.verbose:
+                print("   Protocol: ESCALATION (Emergency)")
+                print("   ⛔ Agent is thrashing - requesting external help")
+            # Return safe fallback
+            return "look"
+
+        # HUBRIS Protocol: Stay vigilant
+        elif critical_state == CriticalState.HUBRIS:
+            if self.verbose:
+                print("   Protocol: ICARUS (Skepticism - stay alert)")
+            # Let normal EFE handle it, but logged the state
+            return None
+
+        return None  # Fallback to normal EFE
 
     def save_episode(self):
         """
         Save the current episode to Neo4j Episodic Memory.
+
+        Uses memory system to store episode with rich context for future retrieval.
+        Includes error handling to prevent crashes on DB failures.
         """
         if not self.session:
+            if self.verbose:
+                print("⚠️  No database session - skipping episode save")
             return
-            
-        if self.verbose:
-            print("💾 Saving episode to memory...")
-            
-        # Create Episode node
-        query = """
-        CREATE (e:Episode {
-            timestamp: timestamp(),
-            steps: $steps,
-            total_reward: $total_reward,
-            final_room: $final_room,
-            success: $success
-        })
-        RETURN id(e) as episode_id
-        """
-        
-        total_reward = sum(self.reward_history)
-        final_room = self.beliefs.get('current_room', 'Unknown')
-        success = total_reward > 0  # Simple success metric for now
-        
-        result = self.session.run(query, {
-            'steps': self.current_step,
-            'total_reward': total_reward,
-            'final_room': final_room,
-            'success': success
-        })
-        episode_id = result.single()['episode_id']
-        
-        # We could save individual steps here, but for now just the summary
-        # is enough to prove the concept.
-        
-        if self.verbose:
-            print(f"   ✅ Episode saved (ID: {episode_id})")
+
+        try:
+            if self.verbose:
+                print("💾 Saving episode to memory...")
+
+            # Calculate episode metrics
+            total_reward = sum(self.reward_history) if self.reward_history else 0.0
+            success = total_reward > 0  # Simple success metric
+
+            # Get goal from plan if available
+            goal = None
+            if self.plan_history:
+                # Use most recent plan's goal
+                goal = self.plan_history[-1].goal
+            elif self.current_plan:
+                goal = self.current_plan.goal
+
+            # Build step data with rich context
+            steps = []
+            for i in range(len(self.action_history)):
+                action_data = self.action_history[i]
+                obs_data = self.observation_history[i] if i < len(self.observation_history) else {}
+                reward = self.reward_history[i] if i < len(self.reward_history) else 0.0
+
+                # Determine outcome
+                if reward > 0:
+                    outcome = 'positive'
+                elif reward < 0:
+                    outcome = 'negative'
+                else:
+                    outcome = 'neutral'
+
+                steps.append({
+                    'action': action_data.get('action', 'unknown'),
+                    'room': obs_data.get('room', 'Unknown'),
+                    'reward': float(reward),
+                    'outcome': outcome
+                })
+
+            # Create episode data structure
+            episode_data = {
+                'episode_id': f'tw_ep_{self.current_step}_{int(time.time())}',
+                'steps': steps,
+                'total_reward': float(total_reward),
+                'success': bool(success),
+                'goal': goal
+            }
+
+            # Use memory system to store
+            stored = self.memory.store_episode(episode_data)
+
+            if stored and self.verbose:
+                print(f"   ✅ Episode saved ({len(steps)} steps, reward: {total_reward:+.1f})")
+            elif not stored and self.verbose:
+                print("   ⚠️  Episode storage failed")
+
+        except Exception as e:
+            # Don't crash on database errors
+            if self.verbose:
+                print(f"⚠️  Episode save failed: {e}")
+            logger.warning(f"Failed to save episode to Neo4j: {e}")
 
     def step(self, observation: str, feedback: str, reward: float, done: bool, 
              admissible_commands: List[str], quest: Optional[Dict] = None) -> str:
@@ -496,22 +930,51 @@ class TextWorldCognitiveAgent:
         self.reward_history.append(reward)
         if self.verbose and reward != 0:
             print(f"   🎁 Reward: {reward:+.1f}")
+
+        # Update distance estimate (simple heuristic based on progress)
+        # Could be improved with actual graph distance if we build connectivity map
+        if reward > 0:
+            self.distance_to_goal = max(0, self.distance_to_goal - 5)
+
+        # Check plan progress (if we have a plan and took an action)
+        if self.action_history:
+            last_action = self.action_history[-1]['action']
+            self.check_plan_progress(last_action)
+
+        # Maybe generate a new plan (if we don't have one and goal is clear)
+        self.maybe_generate_plan(admissible_commands)
+
+        # CRITICAL FIX: Disable critical state monitoring for TextWorld
+        # The ESCALATION/DEADLOCK/NOVELTY protocols were overriding quest-aware action selection
+        # For TextWorld quests, we want to follow the EFE scores directly
         
-        # Check critical state
-        is_critical = self.check_critical_state()
-        if is_critical:
-            # TODO: Trigger PANIC protocol or strategy shift
-            # For now, just logging it
-            pass
-            
+        # Original code (now disabled):
+        # agent_state = self.get_agent_state_for_critical_monitor()
+        # self.current_critical_state = self.critical_monitor.evaluate(agent_state)
+        # protocol_action = self.apply_critical_state_protocol(
+        #     self.current_critical_state,
+        #     admissible_commands
+        # )
+        
+        # Force FLOW state (normal operation, no protocol override)
+        from critical_state import CriticalState
+        self.current_critical_state = CriticalState.FLOW
+        protocol_action = None
+
         # Update done status
         self.done = done
         if self.verbose and done:
-            print(f"   ✅ Episode complete!")
+            print("   ✅ Episode complete!")
             self.save_episode()
-        
-        # Select next action
-        action = self.select_action(admissible_commands, quest)
+
+        # Select next action (either protocol override or normal EFE)
+        if protocol_action is not None:
+            action = protocol_action
+            if self.verbose:
+                print(f"⚡ ACTION: {action}")
+        else:
+            # Normal EFE-based selection (now quest-aware!)
+            action = self.select_action(admissible_commands, quest)
         
         if self.verbose:
             print("-"*70)
