@@ -30,7 +30,7 @@ The pattern is:
 
 Why is this called "silver"?
 -----------------------------
-In the larger metrology work this demo plugs into, we treat
+In the larger metrology work this innovation is from, we treat
 Pythagorean means + small rational fields as a kind of "silver gauge"
 – a way of summarising trade-offs (here: goal vs information vs cost)
 in a very compact, algebraic form.
