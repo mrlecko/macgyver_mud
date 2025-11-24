@@ -15,6 +15,9 @@
 This isn't just another reinforcement learning demo. It's a **production-grade cognitive architecture** that combines:
 
 - **Active Inference** — Fast, intuitive decision-making via Expected Free Energy minimization
+- **Hierarchical Goal Synthesis** — Strategic decomposition with tactical optimization (NEW: TextWorld domain)
+- **Quest-Aware Memory** — Memory retrieval filtered by hierarchical context with subgoal isolation
+- **Geometric Analysis** — Silver Gauge (Pythagorean means) for decomposition quality assessment
 - **Episodic Memory** — Deliberative counterfactual learning (learns from "what could have been")
 - **Critical State Protocols** — Meta-cognitive robustness reflexes (PANIC, SCARCITY, DEADLOCK, etc.)
 - **Lyapunov Stability Monitoring** — Formal dynamical systems safety guarantees
@@ -180,26 +183,31 @@ The agent stores **counterfactual paths** and learns from them WITHOUT new envir
 
 ### Multi-Domain Validation
 
-**The architecture is validated across THREE distinct problem domains:**
+**The architecture is validated across FOUR distinct problem domains:**
 
-| Domain | Environment | Problem Type | Critical States Tested | Test Command |
+| Domain | Environment | Problem Type | Key Features Tested | Test Command |
 |:---|:---|:---|:---|:---|
+| **TextWorld** 🆕 | `environments/domain4_textworld/` | Sequential planning, quest-based | Hierarchical synthesis, quest-aware memory, geometric analysis | `python environments/domain4_textworld/compare_all_agents.py` |
 | **MacGyver MUD** | Core scenario | Discrete, small state | PANIC, DEADLOCK, HUBRIS | `python3 validation/comparative_stress_test.py` |
 | **Infinite Labyrinth** | `environments/labyrinth.py` | Continuous, divergent | PANIC, ESCALATION | `pytest validation/test_lyapunov.py` |
 | **Graph Labyrinth** | `environments/graph_labyrinth.py` | Discrete spatial, large | DEADLOCK, SCARCITY, NOVELTY | `pytest tests/test_graph_labyrinth.py` |
 
 **Multi-Domain Test Execution:**
 ```bash
-# Test 1: MacGyver MUD (Discrete Decision-Making)
+# Test 1: TextWorld (Sequential Planning with Hierarchical Synthesis) 🆕
+python environments/domain4_textworld/compare_all_agents.py
+pytest tests/test_textworld_*.py tests/test_quest_*.py tests/test_geometric_*.py -v
+
+# Test 2: MacGyver MUD (Discrete Decision-Making)
 python3 validation/comparative_stress_test.py
 
-# Test 2: Infinite Labyrinth (Continuous Stability)
+# Test 3: Infinite Labyrinth (Continuous Stability)
 pytest validation/test_lyapunov.py -v
 
-# Test 3: Graph Labyrinth (Spatial Navigation)
+# Test 4: Graph Labyrinth (Spatial Navigation)
 pytest tests/test_graph_labyrinth.py -v
 
-# Test 4: Episodic Memory with GraphLabyrinth
+# Test 5: Episodic Memory with GraphLabyrinth
 python3 validation/episodic_replay_demo.py
 ```
 
@@ -210,17 +218,24 @@ python3 validation/episodic_replay_demo.py
 
 **Domain Characteristics:**
 
-**1. Labyrinth (Continuous)**
+**1. TextWorld (Sequential Planning)** 🆕
+- State: Text-based quest with explicit goal structure
+- Challenge: Hierarchical decomposition of "First X, then Y, finally Z" quests
+- Tests: Quest decomposition, subgoal tracking, geometric coherence analysis, quest-aware memory
+- **Performance:** 100% success (3 steps) matching LLM baselines
+- **Key Innovation:** Hierarchical synthesis demonstrating cognitive principles generalize across abstraction levels
+
+**2. Labyrinth (Continuous)**
 - State: `(entropy ∈ [0,1], distance ∈ ℝ⁺, stress ∈ [0,∞))`
 - Challenge: Unbounded divergence (infinite mode) or goal convergence (goal mode)
 - Tests: Lyapunov stability monitoring, PANIC protocol, ESCALATION circuit breaker
 
-**2. Graph Labyrinth (Discrete Spatial)**
+**3. Graph Labyrinth (Discrete Spatial)**
 - State: Neo4j graph with 10-30 rooms
 - Challenge: Multi-room navigation with potential loops
 - Tests: DEADLOCK detection, SCARCITY under time pressure, spatial reasoning
 
-**3. Silent Meeting (Coordination)**  
+**4. Silent Meeting (Coordination)**
 - State: 5 discrete choices
 - Challenge: Multi-agent coordination without communication
 - Tests: Schelling point identification (experimental)
