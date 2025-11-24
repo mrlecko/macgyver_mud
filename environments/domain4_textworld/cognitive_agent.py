@@ -54,10 +54,12 @@ class TextWorldCognitiveAgent:
         # Import here to avoid circular imports if any
         from .memory_system import MemoryRetriever
         from .llm_planner import LLMPlanner
+        from .quest_geometric_analyzer import QuestGeometricAnalyzer
         self.memory = MemoryRetriever(session)
         self.planner = LLMPlanner(verbose=verbose)  # Now uses real LLM
         self.critical_monitor = CriticalStateMonitor()  # Critical state protocol system
-        self.quest_decomposer = QuestDecomposer()  # NEW: Quest decomposition for hierarchical synthesis
+        self.quest_decomposer = QuestDecomposer()  # Quest decomposition for hierarchical synthesis (Option A)
+        self.geometric_analyzer = QuestGeometricAnalyzer(verbose=verbose)  # NEW (Option B - Phase 2): Geometric analysis
         
         # Belief state: Agent's internal model of the world
         self.beliefs = {
@@ -73,10 +75,17 @@ class TextWorldCognitiveAgent:
         self.current_plan: Optional[Plan] = None  # Active hierarchical plan
         self.plan_history = []  # Completed/failed plans for learning
 
-        # Quest decomposition state (NEW: for hierarchical synthesis)
+        # Quest decomposition state (Option A: hierarchical synthesis)
         self.subgoals = []  # List of subgoal strings (ordered)
         self.current_subgoal_index = 0  # Which subgoal we're working on (0-indexed)
         self.last_quest = None  # Full quest text for reference
+
+        # Geometric analysis state (Option B - Phase 2)
+        self.last_geometric_analysis = None  # Analysis results for current quest decomposition
+
+        # Subgoal progress tracking (NEW - Option B Phase 3)
+        self.steps_on_current_subgoal = 0  # How many steps taken on current subgoal
+        self.subgoal_step_counts = []  # Historical: steps taken on each completed subgoal
         
         if self.verbose:
             print("\n" + "="*70)
@@ -137,22 +146,38 @@ class TextWorldCognitiveAgent:
         self.current_critical_state = CriticalState.FLOW
         self.distance_to_goal = 20.0
 
-        # NEW: Decompose quest into subgoals (hierarchical synthesis)
+        # Decompose quest into subgoals (Option A: hierarchical synthesis)
         if quest:
             self.last_quest = quest
             self.subgoals = self.quest_decomposer.decompose(quest)
             self.current_subgoal_index = 0
 
+            # Perform geometric analysis on decomposition (Option B - Phase 2)
+            self.last_geometric_analysis = self.geometric_analyzer.analyze_subgoal_coherence(
+                quest, self.subgoals
+            )
+
+            # Log geometric analysis to Neo4j for research
+            self._log_geometric_analysis_to_neo4j(quest, self.subgoals, self.last_geometric_analysis)
+
+            # Initialize subgoal progress tracking (NEW - Option B Phase 3)
+            self.steps_on_current_subgoal = 0
+            self.subgoal_step_counts = []
+
             if self.verbose:
                 print("📋 Quest decomposed:")
                 for i, sg in enumerate(self.subgoals, 1):
                     print(f"   {i}. {sg}")
+                print(f"📐 Geometric analysis: coherence={self.last_geometric_analysis['overall_coherence']:.3f}")
                 print()
         else:
             # No quest provided, use reactive behavior
             self.subgoals = []
             self.current_subgoal_index = 0
             self.last_quest = None
+            self.last_geometric_analysis = None
+            self.steps_on_current_subgoal = 0
+            self.subgoal_step_counts = []
 
         if self.verbose:
             print("📊 State cleared")
@@ -395,11 +420,20 @@ class TextWorldCognitiveAgent:
 
         return value
 
-    def calculate_memory_bonus(self, action: str) -> float:
+    def calculate_memory_bonus(self, action: str, current_subgoal: str = None) -> float:
         """
         Calculate score adjustment based on past memories.
+
+        NOW QUEST-AWARE (Option B - Phase 1):
+        - Uses current subgoal to filter memories (hierarchical isolation)
+        - Falls back to generic retrieval if no subgoal (backward compatible)
+
         Positive outcome -> Bonus
         Negative outcome -> Penalty
+
+        Args:
+            action: Action to evaluate
+            current_subgoal: Optional current subgoal for filtering (NEW)
 
         Returns:
             Float score adjustment (can be positive or negative)
@@ -419,7 +453,13 @@ class TextWorldCognitiveAgent:
             return 0.0
 
         try:
-            memories = self.memory.retrieve_relevant_memories(context, action)
+            # NEW: Pass subgoal context to memory retrieval
+            memories = self.memory.retrieve_relevant_memories(
+                context,
+                action,
+                current_subgoal=current_subgoal,
+                quest=self.last_quest if hasattr(self, 'last_quest') else None
+            )
         except Exception as e:
             # Memory retrieval failed - log but don't crash
             if self.verbose:
@@ -437,6 +477,54 @@ class TextWorldCognitiveAgent:
                 bonus -= 5.0 * confidence  # Stronger penalty for bad outcomes
 
         return bonus
+
+    def _log_geometric_analysis_to_neo4j(self, quest: str, subgoals: List[str], analysis: Dict[str, Any]):
+        """
+        Log geometric analysis results to Neo4j for research.
+
+        NEW (Option B - Phase 2): Store geometric metrics for analysis of
+        decomposition quality over episodes.
+
+        Args:
+            quest: Quest text
+            subgoals: List of subgoals
+            analysis: Analysis dict with coherence and Pythagorean means
+        """
+        if not self.session:
+            return
+
+        try:
+            query = """
+            CREATE (g:GeometricAnalysis {
+                quest: $quest,
+                subgoals: $subgoals,
+                coherence: $coherence,
+                harmonic_mean: $harmonic,
+                geometric_mean: $geometric,
+                arithmetic_mean: $arithmetic,
+                balance_ratio: $balance_ratio,
+                timestamp: timestamp()
+            })
+            RETURN g.coherence AS coherence
+            """
+
+            self.session.run(
+                query,
+                quest=quest,
+                subgoals=subgoals,
+                coherence=analysis['overall_coherence'],
+                harmonic=analysis['pythagorean_means']['harmonic'],
+                geometric=analysis['pythagorean_means']['geometric'],
+                arithmetic=analysis['pythagorean_means']['arithmetic'],
+                balance_ratio=analysis['balance_ratio']
+            )
+
+            if self.verbose:
+                print(f"   💾 Logged geometric analysis to Neo4j")
+
+        except Exception as e:
+            if self.verbose:
+                print(f"   ⚠️ Geometric analysis logging error: {e}")
 
     def _infer_goal_from_context(self) -> Optional[str]:
         """
@@ -661,7 +749,7 @@ class TextWorldCognitiveAgent:
         goal_val = self.calculate_goal_value(action, current_subgoal)  # PASS subgoal
         entropy = self.calculate_entropy(action)
         cost = self.calculate_cost(action)
-        memory_bonus = self.calculate_memory_bonus(action)
+        memory_bonus = self.calculate_memory_bonus(action, current_subgoal)  # NEW: PASS subgoal to memory
         plan_bonus = self.calculate_plan_bonus(action)
 
         efe = (alpha * goal_val) + (beta * entropy) - (gamma * cost) + (delta * memory_bonus) + (epsilon * plan_bonus)
@@ -1008,13 +1096,17 @@ class TextWorldCognitiveAgent:
         
         # Update beliefs from observation
         self.update_beliefs(observation, feedback)
-        
+
         # Track reward
         self.reward_history.append(reward)
         if self.verbose and reward != 0:
             print(f"   🎁 Reward: {reward:+.1f}")
 
-        # NEW: Update subgoal progress (hierarchical synthesis)
+        # NEW (Option B - Phase 3): Increment step counter for current subgoal
+        if self.subgoals:
+            self.steps_on_current_subgoal += 1
+
+        # Update subgoal progress (Option A: hierarchical synthesis)
         # Advance when: (1) positive reward, OR (2) last action likely completed subgoal
         should_advance = False
 
@@ -1049,6 +1141,11 @@ class TextWorldCognitiveAgent:
                     print(f"   ✨ Advancing due to action match")
 
         if should_advance:
+            # NEW (Option B - Phase 3): Track steps taken on completed subgoal
+            if self.subgoals:
+                self.subgoal_step_counts.append(self.steps_on_current_subgoal)
+                self.steps_on_current_subgoal = 0  # Reset for next subgoal
+
             self.current_subgoal_index += 1
             if self.verbose:
                 print(f"   ✅ Subgoal {self.current_subgoal_index} complete!")
