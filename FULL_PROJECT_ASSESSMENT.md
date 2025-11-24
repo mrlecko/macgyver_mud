@@ -30,9 +30,9 @@ It validates this architecture across **three distinct domains**, proving genera
 
 ### Strengths
 - **Bicameral Design:** The separation of "Cortex" (Active Inference) and "Brainstem" (Critical States) is a brilliant implementation of dual-process theory (System 1 vs. System 2).
-- **Meta-Cognition:** The [CriticalStateMonitor](file:///home/juancho/macgyver_mud/critical_state.py#27-229) is not just a rule engine; it uses entropy, prediction error, and reward history to modulate the agent's behavior (e.g., switching from "Flow" to "Panic" or "Deadlock").
-- **Control Theory Integration:** The use of **Lyapunov Stability** ([control/lyapunov.py](file:///home/juancho/macgyver_mud/control/lyapunov.py)) to monitor system stability is a unique and sophisticated touch that bridges classical control theory with AI.
-- **Memory Systems:** The implementation of **Episodic Memory** with **Counterfactual Generation** ([memory/counterfactual_generator.py](file:///home/juancho/macgyver_mud/memory/counterfactual_generator.py)) demonstrates deep understanding of reinforcement learning and causal reasoning.
+- **Meta-Cognition:** The [CriticalStateMonitor](/critical_state.py#27-229) is not just a rule engine; it uses entropy, prediction error, and reward history to modulate the agent's behavior (e.g., switching from "Flow" to "Panic" or "Deadlock").
+- **Control Theory Integration:** The use of **Lyapunov Stability** ([control/lyapunov.py](/control/lyapunov.py)) to monitor system stability is a unique and sophisticated touch that bridges classical control theory with AI.
+- **Memory Systems:** The implementation of **Episodic Memory** with **Counterfactual Generation** ([memory/counterfactual_generator.py](/memory/counterfactual_generator.py)) demonstrates deep understanding of reinforcement learning and causal reasoning.
 
 ### Weaknesses
 - **Complexity:** The architecture is arguably over-engineered for simple text games. The `QuestGeometricAnalyzer` (calculating Pythagorean means of subgoal coherence) is fascinating but perhaps overkill for the current success rate.
@@ -43,13 +43,13 @@ It validates this architecture across **three distinct domains**, proving genera
 ## 3. CODE QUALITY & ENGINEERING PRACTICES
 
 ### Strengths
-- **Test-Driven Development (TDD):** The `tests/` directory is exemplary (43 files), covering everything from unit logic to integration scenarios. The Phase 2 work on [test_quest_aware_deadlock.py](file:///home/juancho/macgyver_mud/tests/test_quest_aware_deadlock.py) is a textbook example of TDD.
+- **Test-Driven Development (TDD):** The `tests/` directory is exemplary (43 files), covering everything from unit logic to integration scenarios. The Phase 2 work on [test_quest_aware_deadlock.py](/tests/test_quest_aware_deadlock.py) is a textbook example of TDD.
 - **Type Hinting & Documentation:** Code is consistently typed (`typing.List`, `typing.Dict`) and docstrings are comprehensive.
 - **Modular Design:** Components are loosely coupled. You can swap out the `LLMPlanner` or `MemoryRetriever` without breaking the system.
-- **Clean Code:** [agent_runtime.py](file:///home/juancho/macgyver_mud/agent_runtime.py) is a model of readable, maintainable Python code.
+- **Clean Code:** [agent_runtime.py](/agent_runtime.py) is a model of readable, maintainable Python code.
 
 ### Weaknesses
-- **Dependency Heaviness:** Requires Neo4j, multiple LLM calls, and specific Python versions. Setup is non-trivial (though [Makefile](file:///home/juancho/macgyver_mud/Makefile) helps).
+- **Dependency Heaviness:** Requires Neo4j, multiple LLM calls, and specific Python versions. Setup is non-trivial (though [Makefile](/Makefile) helps).
 
 ---
 
@@ -62,7 +62,7 @@ It validates this architecture across **three distinct domains**, proving genera
 
 ### Domain 2: Labyrinth (Graph & Sim)
 - **Focus:** Long-horizon stability, Lyapunov monitoring, Divergence detection.
-- **Performance:** **Validated**. The [LabyrinthEnvironment](file:///home/juancho/macgyver_mud/environments/labyrinth.py#4-108) successfully demonstrates the agent's ability to detect instability (entropy growth) and trigger "Escalation" protocols.
+- **Performance:** **Validated**. The [LabyrinthEnvironment](/environments/labyrinth.py#4-108) successfully demonstrates the agent's ability to detect instability (entropy growth) and trigger "Escalation" protocols.
 - **Verdict:** Excellent demonstration of control theory applied to AI safety.
 
 ### Domain 3: TextWorld (Phase 2)
@@ -76,8 +76,8 @@ It validates this architecture across **three distinct domains**, proving genera
 ## 5. DOCUMENTATION & PHILOSOPHY
 
 ### Strengths
-- **The 72 Aphorisms:** [docs/blog_series/04_72_aphorisms.md](file:///home/juancho/macgyver_mud/docs/blog_series/04_72_aphorisms.md) is a masterpiece of engineering wisdom. It frames the project not just as code, but as a manifesto for "Robust AI."
-- **Mathematical Elegance:** [scoring_silver.py](file:///home/juancho/macgyver_mud/scoring_silver.py) demonstrates a rare ability to apply pure math (Pythagorean means) to practical engineering problems (decision shaping).
+- **The 72 Aphorisms:** [docs/blog_series/04_72_aphorisms.md](/docs/blog_series/04_72_aphorisms.md) is a masterpiece of engineering wisdom. It frames the project not just as code, but as a manifesto for "Robust AI."
+- **Mathematical Elegance:** [scoring_silver.py](/scoring_silver.py) demonstrates a rare ability to apply pure math (Pythagorean means) to practical engineering problems (decision shaping).
 - **Transparency:** [TEXTWORLD_PHASE2_FINAL_REPORT.md](file:///home/juancho/.gemini/antigravity/brain/63bd8663-6f1d-4f30-99df-938f5387af46/TEXTWORLD_PHASE2_FINAL_REPORT.md) is brutally honest about failures and improvements. This intellectual honesty is a huge plus.
 
 ---

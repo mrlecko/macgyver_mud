@@ -25,8 +25,8 @@ Their work exhibits a rare synthesis of three distinct disciplines:
 
 ### A. Theoretical Depth
 Most engineers use libraries. This author **derives principles**.
-- **Evidence:** The "Silver Gauge" ([scoring_silver.py](file:///home/juancho/macgyver_mud/scoring_silver.py)) uses Pythagorean means to create a novel decision-shaping metric. This isn't a standard library feature; it's a derived mathematical tool tailored to the problem.
-- **Evidence:** The "72 Aphorisms" ([docs/blog_series/04_72_aphorisms.md](file:///home/juancho/macgyver_mud/docs/blog_series/04_72_aphorisms.md)) show a profound understanding of AI failure modes that comes only from deep experience (or deep study of safety literature).
+- **Evidence:** The "Silver Gauge" ([scoring_silver.py](/scoring_silver.py)) uses Pythagorean means to create a novel decision-shaping metric. This isn't a standard library feature; it's a derived mathematical tool tailored to the problem.
+- **Evidence:** The "72 Aphorisms" ([docs/blog_series/04_72_aphorisms.md](/docs/blog_series/04_72_aphorisms.md)) show a profound understanding of AI failure modes that comes only from deep experience (or deep study of safety literature).
 
 ### B. Architectural Vision
 The author thinks in **systems and interactions**, not just input/output.
@@ -36,7 +36,7 @@ The author thinks in **systems and interactions**, not just input/output.
 ### C. Engineering Rigor
 Despite the high-level concepts, the implementation is grounded in **solid engineering practices**.
 - **Evidence:** 43 test files covering unit, integration, and "red team" scenarios.
-- **Evidence:** The use of [Makefile](file:///home/juancho/macgyver_mud/Makefile) for reproducible builds and environments.
+- **Evidence:** The use of [Makefile](/Makefile) for reproducible builds and environments.
 - **Evidence:** Clear separation of concerns (Perception, Memory, Control, Planning).
 
 ---
@@ -51,7 +51,7 @@ The author is **brutally honest** about limitations.
 ### B. Safety-First Mindset
 The author prioritizes **robustness over optimization**.
 - **Evidence:** The entire "Brainstem" concept is designed to *stop* the agent from doing dangerous things, even if it reduces reward.
-- **Evidence:** The implementation of "Generalized Credit Assignment" ([docs/CREDIT_ASSIGNMENT.md](file:///home/juancho/macgyver_mud/docs/CREDIT_ASSIGNMENT.md)) to prevent catastrophic forgetting/failure.
+- **Evidence:** The implementation of "Generalized Credit Assignment" ([docs/CREDIT_ASSIGNMENT.md](/docs/CREDIT_ASSIGNMENT.md)) to prevent catastrophic forgetting/failure.
 
 ### C. The "Teacher" Persona
 The author writes code to be **read and understood**.

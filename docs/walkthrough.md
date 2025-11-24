@@ -145,22 +145,22 @@ One of the most innovative aspects is the **three-layer cognitive architecture:*
 | **Test Coverage** | 192 tests (99.5% pass) | Exceptional |
 | **Integration Tests** | 10 dedicated | Rare in research code |
 | **Architecture** | Clean separation | Production-grade |
-| **Configuration** | Centralized in [config.py](file:///home/juancho/macgyver_mud/config.py) | Professional |
+| **Configuration** | Centralized in [config.py](/config.py) | Professional |
 | **Dependencies** | 5 core libs | Minimal, focused |
 
 ### Key Files Analysis
 
-**[agent_runtime.py](file:///home/juancho/macgyver_mud/agent_runtime.py) (1,076 lines)**
+**[agent_runtime.py](/agent_runtime.py) (1,076 lines)**
 - **Strengths:** Well-structured, clear comments, comprehensive logging
 - **Concerns:** Large (god object), could benefit from extraction into smaller components
 - **Grade:** A- (88/100)
 
-**[critical_state.py](file:///home/juancho/macgyver_mud/critical_state.py) (154 lines)**
+**[critical_state.py](/critical_state.py) (154 lines)**
 - **Strengths:** Elegant threshold-based detection, clean enum design
 - **Concerns:** Thresholds are hand-tuned (acknowledged limitation)
 - **Grade:** A (91/100)
 
-**[config.py](file:///home/juancho/macgyver_mud/config.py) (223 lines)**
+**[config.py](/config.py) (223 lines)**
 - **Strengths:** All magic numbers extracted, environment variable support
 - **Concerns:** None significant
 - **Grade:** A+ (95/100)
@@ -216,13 +216,13 @@ def test_episodic_learning_changes_skill_preferences():
 ### Surprise #3: Neo4j Deprecation Warnings 
 **Surprise Level: 3/10** (Expected)
 
-**Found:** Multiple Neo4j driver warnings about using deprecated [id()](file:///home/juancho/macgyver_mud/config.py#183-201) function.
+**Found:** Multiple Neo4j driver warnings about using deprecated [id()](/config.py#183-201) function.
 
 ```
 WARNING: 'id' has been replaced by 'elementId or an application-generated id'
 ```
 
-**Assessment:** This is a non-critical compatibility issue. Neo4j 4.4 is deprecating [id()](file:///home/juancho/macgyver_mud/config.py#183-201) in favor of `elementId()`. The functionality still works, but the codebase should migrate to avoid future breaking changes.
+**Assessment:** This is a non-critical compatibility issue. Neo4j 4.4 is deprecating [id()](/config.py#183-201) in favor of `elementId()`. The functionality still works, but the codebase should migrate to avoid future breaking changes.
 
 **Impact:** Low (warnings only, no functional issues)  
 **Fix effort:** ~2 hours to update queries
@@ -304,7 +304,7 @@ The **Bicameral Architecture** is a genuinely novel contribution:
    **Fix Effort:** 4-8 hours investigation + fix
 
 2. **Neo4j Deprecation Warnings**  
-   **Issue:** Using deprecated [id()](file:///home/juancho/macgyver_mud/config.py#183-201) function  
+   **Issue:** Using deprecated [id()](/config.py#183-201) function  
    **Impact:** Future compatibility risk  
    **Fix Effort:** ~2 hours
 
@@ -328,7 +328,7 @@ The **Bicameral Architecture** is a genuinely novel contribution:
    **Fix Effort:** 1-2 days editing
 
 6. **Agent Runtime Refactoring**  
-   **Issue:** [agent_runtime.py](file:///home/juancho/macgyver_mud/agent_runtime.py) is 1,076 lines (god object)  
+   **Issue:** [agent_runtime.py](/agent_runtime.py) is 1,076 lines (god object)  
    **Impact:** Maintenance complexity  
    **Fix Effort:** 2-3 days (Strategy pattern extraction)
 
@@ -390,7 +390,7 @@ The **Bicameral Architecture** is a genuinely novel contribution:
 ### Long-Term (1-3 Months)
 
 9. **Learn thresholds** - Replace hand-tuned values with meta-learning
-10. **Refactor [agent_runtime.py](file:///home/juancho/macgyver_mud/agent_runtime.py)** - Extract Strategy pattern
+10. **Refactor [agent_runtime.py](/agent_runtime.py)** - Extract Strategy pattern
 11. **Continuous control** - Extend to continuous state/action spaces
 12. **Write paper** - Publish the Bicameral Architecture
 

@@ -12,13 +12,13 @@ We ended with a **Sentient Architecture**:
 4.  **The Safety:** Escalation Protocol (The Circuit Breaker).
 
 ## 2. Full Spectrum Test Results
-*   **Unit Tests:** [tests/test_geometric_controller.py](file:///home/juancho/macgyver_mud/tests/test_geometric_controller.py), [tests/test_critical_states.py](file:///home/juancho/macgyver_mud/tests/test_critical_states.py) -> **PASS**
-*   **Geometric Trap:** [validation/geometric_trap_experiment.py](file:///home/juancho/macgyver_mud/validation/geometric_trap_experiment.py) -> **PASS** (Agent avoids traps).
-*   **Red Team (Original):** [validation/red_team_experiment.py](file:///home/juancho/macgyver_mud/validation/red_team_experiment.py) -> **PASS** (Agent meets threshold).
-*   **Adaptive Red Team:** [validation/adaptive_red_team.py](file:///home/juancho/macgyver_mud/validation/adaptive_red_team.py) -> **PASS** (Agent handles oscillation).
-*   **Critical Red Team:** [validation/critical_state_red_team.py](file:///home/juancho/macgyver_mud/validation/critical_state_red_team.py) -> **PASS** (Agent handles Hubris, Deadlock, Novelty, Scarcity).
-*   **Maximum Attack:** [validation/comparative_stress_test.py](file:///home/juancho/macgyver_mud/validation/comparative_stress_test.py) -> **PASS** (Agent escapes local optimum in 1 step).
-*   **Escalation:** [validation/escalation_red_team.py](file:///home/juancho/macgyver_mud/validation/escalation_red_team.py) -> **PASS** (Circuit breaker trips on thrashing).
+*   **Unit Tests:** [tests/test_geometric_controller.py](/tests/test_geometric_controller.py), [tests/test_critical_states.py](/tests/test_critical_states.py) -> **PASS**
+*   **Geometric Trap:** [validation/geometric_trap_experiment.py](/validation/geometric_trap_experiment.py) -> **PASS** (Agent avoids traps).
+*   **Red Team (Original):** [validation/red_team_experiment.py](/validation/red_team_experiment.py) -> **PASS** (Agent meets threshold).
+*   **Adaptive Red Team:** [validation/adaptive_red_team.py](/validation/adaptive_red_team.py) -> **PASS** (Agent handles oscillation).
+*   **Critical Red Team:** [validation/critical_state_red_team.py](/validation/critical_state_red_team.py) -> **PASS** (Agent handles Hubris, Deadlock, Novelty, Scarcity).
+*   **Maximum Attack:** [validation/comparative_stress_test.py](/validation/comparative_stress_test.py) -> **PASS** (Agent escapes local optimum in 1 step).
+*   **Escalation:** [validation/escalation_red_team.py](/validation/escalation_red_team.py) -> **PASS** (Circuit breaker trips on thrashing).
 
 ## 3. Learnings & Reflections
 
@@ -32,7 +32,7 @@ The combination of **Rules** (Critical States) and **Learning** (Active Inferenc
 *   Learning handles the *nuance* (Flow).
 
 ### C. The Cost of Evolution
-Evolving the architecture broke legacy tests. We had to refactor [test_geometric_controller.py](file:///home/juancho/macgyver_mud/tests/test_geometric_controller.py) multiple times to align with the new "Reactive" reality (replacing Hysteresis). This taught us that **tests must evolve with the philosophy**.
+Evolving the architecture broke legacy tests. We had to refactor [test_geometric_controller.py](/tests/test_geometric_controller.py) multiple times to align with the new "Reactive" reality (replacing Hysteresis). This taught us that **tests must evolve with the philosophy**.
 
 ## 4. Surprise Level
 **Level: 3/10 (Low Surprise, High Satisfaction)**

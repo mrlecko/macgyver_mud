@@ -54,7 +54,7 @@ else:
     self.episodic_memory = None
 ```
 
-### 2. Episode Completion ([run_episode](file:///home/juancho/macgyver_mud/agent_runtime.py#513-604))
+### 2. Episode Completion ([run_episode](/agent_runtime.py#513-604))
 
 ```python
 # Store episode in episodic memory
@@ -68,12 +68,12 @@ if config.ENABLE_EPISODIC_MEMORY and self.episodic_memory:
 
 ### 3. Helper Methods
 
-**[_store_episode_memory(episode_id)](file:///home/juancho/macgyver_mud/agent_runtime.py#682-722)**
+**[_store_episode_memory(episode_id)](/agent_runtime.py#682-722)**
 - Stores actual path taken
 - Generates 3 counterfactual alternatives
 - Calculates regret for each
 
-**[_perform_offline_learning()](file:///home/juancho/macgyver_mud/agent_runtime.py#723-797)**
+**[_perform_offline_learning()](/agent_runtime.py#723-797)**
 - Replays last 5 episodes
 - Analyzes counterfactual improvements
 - Prints insights (future: updates skill priors)
@@ -127,32 +127,32 @@ Total learning opportunities: 1686 steps saved if optimal
 ✅ `55/55 tests pass` - All existing tests still work
 
 ### Episodic Memory Unit Tests
-✅ [test_store_and_retrieve_episode](file:///home/juancho/macgyver_mud/tests/test_episodic_memory.py#41-62) - Storage/retrieval works
-✅ [test_store_counterfactuals](file:///home/juancho/macgyver_mud/tests/test_episodic_memory.py#63-104) - Multiple CFs stored correctly
-✅ [test_regret_calculation](file:///home/juancho/macgyver_mud/tests/test_episodic_memory.py#105-114) - Regret formula correct
-✅ [test_counterfactual_generation](file:///home/juancho/macgyver_mud/tests/test_episodic_memory.py#115-128) - Generates plausible alternatives
-✅ [test_offline_learning](file:///home/juancho/macgyver_mud/tests/test_episodic_memory.py#129-167) - Mock validation of learning
+✅ [test_store_and_retrieve_episode](/tests/test_episodic_memory.py#41-62) - Storage/retrieval works
+✅ [test_store_counterfactuals](/tests/test_episodic_memory.py#63-104) - Multiple CFs stored correctly
+✅ [test_regret_calculation](/tests/test_episodic_memory.py#105-114) - Regret formula correct
+✅ [test_counterfactual_generation](/tests/test_episodic_memory.py#115-128) - Generates plausible alternatives
+✅ [test_offline_learning](/tests/test_episodic_memory.py#129-167) - Mock validation of learning
 
 ### Stress Tests
-✅ [test_overfitting_trap](file:///home/juancho/macgyver_mud/tests/test_episodic_stress.py#49-122) - 50% diversity maintained (safe threshold)
-✅ [test_regret_spiral](file:///home/juancho/macgyver_mud/tests/test_episodic_stress.py#123-221) - 70% utility retained after 10 episodes
-✅ [test_combined_stress](file:///home/juancho/macgyver_mud/tests/test_episodic_stress.py#222-278) - System functional under combined load
+✅ [test_overfitting_trap](/tests/test_episodic_stress.py#49-122) - 50% diversity maintained (safe threshold)
+✅ [test_regret_spiral](/tests/test_episodic_stress.py#123-221) - 70% utility retained after 10 episodes
+✅ [test_combined_stress](/tests/test_episodic_stress.py#222-278) - System functional under combined load
 
 ---
 
 ## Files Modified/Created
 
 ### Modified
-- [/home/juancho/macgyver_mud/config.py](file:///home/juancho/macgyver_mud/config.py) - Added 4 config flags
-- [/home/juancho/macgyver_mud/agent_runtime.py](file:///home/juancho/macgyver_mud/agent_runtime.py) - Integrated episodic memory
-- [/home/juancho/macgyver_mud/environments/graph_labyrinth.py](file:///home/juancho/macgyver_mud/environments/graph_labyrinth.py) - Fixed distance bug
+- [/home/juancho/macgyver_mud/config.py](/config.py) - Added 4 config flags
+- [/home/juancho/macgyver_mud/agent_runtime.py](/agent_runtime.py) - Integrated episodic memory
+- [/home/juancho/macgyver_mud/environments/graph_labyrinth.py](/environments/graph_labyrinth.py) - Fixed distance bug
 
 ### Created
-- [/home/juancho/macgyver_mud/memory/episodic_replay.py](file:///home/juancho/macgyver_mud/memory/episodic_replay.py) - Core module
-- [/home/juancho/macgyver_mud/memory/counterfactual_generator.py](file:///home/juancho/macgyver_mud/memory/counterfactual_generator.py) - CF generation
-- [/home/juancho/macgyver_mud/tests/test_episodic_memory.py](file:///home/juancho/macgyver_mud/tests/test_episodic_memory.py) - Unit tests
-- [/home/juancho/macgyver_mud/tests/test_episodic_stress.py](file:///home/juancho/macgyver_mud/tests/test_episodic_stress.py) - Stress tests
-- [/home/juancho/macgyver_mud/validation/episodic_replay_demo.py](file:///home/juancho/macgyver_mud/validation/episodic_replay_demo.py) - Demo script
+- [/home/juancho/macgyver_mud/memory/episodic_replay.py](/memory/episodic_replay.py) - Core module
+- [/home/juancho/macgyver_mud/memory/counterfactual_generator.py](/memory/counterfactual_generator.py) - CF generation
+- [/home/juancho/macgyver_mud/tests/test_episodic_memory.py](/tests/test_episodic_memory.py) - Unit tests
+- [/home/juancho/macgyver_mud/tests/test_episodic_stress.py](/tests/test_episodic_stress.py) - Stress tests
+- [/home/juancho/macgyver_mud/validation/episodic_replay_demo.py](/validation/episodic_replay_demo.py) - Demo script
 
 ---
 
