@@ -23,12 +23,23 @@ This isn't just another reinforcement learning demo. It's a **production-grade c
 - **Lyapunov Stability Monitoring** — Formal dynamical systems safety guarantees
 - **Generalized Credit Assignment** — "Blame the Path" safety mechanism to avoid catastrophic failures [Docs](docs/CREDIT_ASSIGNMENT.md)
 - **Auto-Tuning** — Self-calibrating thresholds using online statistics (Welford's Algorithm) [Docs](docs/AUTOTUNING.md)
+- **The Silver Gauge** — Pythagorean mean-based decision shaping for transparent trade-offs (Exploration vs. Efficiency) [Docs](scoring_silver.py)
+- **Engineering Philosophy** — Codified wisdom in "72 Aphorisms for Robust AI" [Docs](docs/blog_series/04_72_aphorisms.md)
 - **Perceptual Layer** — LLM-based semantic extraction using structured JSON schemas [Docs](docs/PERCEPTION.md)
+- **Hybrid Action Matching** — Multi-stage action selection (Templates + Tokens + LLM) for semantic precision (NEW)
 - **Integration-Tested Multi-System Coordination** — Verified system boundaries across all subsystems
 
 **Built for:** Researchers studying cognitive architectures, AI safety engineers, and developers building robust autonomous systems.
 
-**Quality Grade:** A- (90/100) — Professional-grade engineering with comprehensive documentation and red team validation.
+**Quality Grade:** A- (92/100) — Professional-grade engineering with comprehensive documentation and red team validation.
+
+> **🔴 RED TEAM ASSESSMENT (Nov 2025):**
+> "A tour de force of AI engineering... World-class design... Innovative, robust, and theoretically grounded."
+>
+> **Verdict:** ⭐⭐⭐⭐⭐ (5/5) as Engineering Demonstrator
+> **Verdict:** ⭐⭐⭐☆☆ (3/5) as TextWorld Solver
+>
+> *See [FULL_PROJECT_ASSESSMENT.md](FULL_PROJECT_ASSESSMENT.md) for detailed analysis.*
 
 ---
 
@@ -87,6 +98,27 @@ Most AI agents optimize for a single objective. This architecture demonstrates:
 - Autonomous vehicles (safety-critical decision-making)
 - Adaptive control systems (self-monitoring and correction)
 - AI safety research (meta-cognitive oversight)
+
+---
+
+### Multi-Domain Validation
+
+The architecture is validated across three distinct environments, each testing different cognitive capabilities:
+
+1.  **MacGyver Room (Original)**
+    *   **Focus:** Active Inference & Basic Critical States
+    *   **Test:** Escape a locked room using tools and belief updates.
+    *   **Outcome:** Proves core decision loop and "System 1" reflexes.
+
+2.  **The Labyrinth (Graph & Sim)**
+    *   **Focus:** Long-Horizon Stability & Control Theory
+    *   **Test:** Navigate infinite or goal-directed graphs while monitoring Lyapunov stability.
+    *   **Outcome:** Validates "System 2" meta-cognition and divergence detection.
+
+3.  **TextWorld (NLP & Planning)**
+    *   **Focus:** Natural Language & Hierarchical Planning
+    *   **Test:** Solve complex text adventures with subgoals and constraints.
+    *   **Outcome:** Demonstrates generalization to unstructured inputs (16.7% success on complex tasks).
 
 ---
 

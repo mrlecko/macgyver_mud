@@ -54,12 +54,38 @@ class CriticalStateMonitor:
             
         return False
 
-    def check_scarcity(self, steps_remaining, distance_to_goal):
+    def check_scarcity(self, steps_remaining, distance_to_goal, agent_state=None):
         """
-        Trigger: Steps < Distance * Factor
+        Trigger: Steps < Distance * Factor (OR Quest-Aware: Steps < Subgoals * Factor)
         Risk: Death before Glory.
         Protocol: Spartan (Efficiency).
+        
+        QUEST-AWARE (NEW):
+        If agent has quest context, use remaining subgoals to estimate needed steps.
         """
+        # QUEST-AWARE MODE: Use remaining subgoals for better estimation
+        if (agent_state and 
+            hasattr(agent_state, 'has_quest') and 
+            agent_state.has_quest and
+            hasattr(agent_state, 'current_subgoal_index')):
+            
+            # Calculate remaining subgoals
+            # Heuristic: Each subgoal needs ~2-3 steps on average
+            if hasattr(agent_state, 'total_subgoals'):
+                remaining_subgoals = agent_state.total_subgoals - agent_state.current_subgoal_index
+            else:
+                # Fallback if we don't track total
+                remaining_subgoals = max(1, 5 - agent_state.current_subgoal_index)
+            
+            steps_per_subgoal = 2.5  # Average steps needed per subgoal
+            estimated_steps_needed = remaining_subgoals * steps_per_subgoal
+            
+            # Add 20% buffer
+            threshold = estimated_steps_needed * 1.2
+            
+            return steps_remaining < threshold
+        
+        # ORIGINAL MODE: Distance-based estimation (for non-quest scenarios)
         factor = config.CRITICAL_THRESHOLDS["SCARCITY_FACTOR"]
         if steps_remaining < distance_to_goal * factor:
             return True
@@ -85,12 +111,42 @@ class CriticalStateMonitor:
             
         return False
 
-    def check_deadlock(self, location_history):
+    def check_deadlock(self, location_history, agent_state=None):
         """
-        Trigger: Cycle Detection (A -> B -> A -> B)
+        Trigger: Cycle Detection (A -> B -> A -> B) OR Quest-Aware Stuck Detection
         Risk: Infinite Loop.
         Protocol: Sisyphus (Perturbation).
+        
+        QUEST-AWARE (NEW):
+        If agent has quest context, detect stuck-on-subgoal instead of location loops.
+        - TRUE DEADLOCK: 6+ steps on same subgoal with no progress
+        - NOT DEADLOCK: Advancing through subgoals (even if revisiting locations)
         """
+        # QUEST-AWARE MODE: If agent_state has quest context, use subgoal-based detection
+        if (agent_state and 
+            hasattr(agent_state, 'has_quest') and 
+            agent_state.has_quest and
+            hasattr(agent_state, 'steps_on_current_subgoal')):
+            
+            # Check if stuck on same subgoal
+            steps_on_subgoal = agent_state.steps_on_current_subgoal
+            deadlock_threshold = 6  # Allow 5 steps for exploration, 6+ = stuck
+            
+            if steps_on_subgoal < deadlock_threshold:
+                return False  # Still exploring
+            
+            # 6+ steps on subgoal - check if making progress via rewards
+            if len(agent_state.reward_history) >= 5:
+                recent_rewards = agent_state.reward_history[-5:]
+                total_recent_reward = sum(recent_rewards)
+                
+                if total_recent_reward > 0:
+                    return False  # Making progress (getting rewards)
+            
+            # 6+ steps on subgoal, no rewards = STUCK
+            return True
+        
+        # ORIGINAL MODE: Location-based cycle detection (for non-quest scenarios)
         window = config.CRITICAL_THRESHOLDS["DEADLOCK_WINDOW"]
         if len(location_history) < window:
             return False
@@ -150,11 +206,11 @@ class CriticalStateMonitor:
         # 1. Determine Raw State (The "Reptilian Reflex")
         raw_state = CriticalState.FLOW
         
-        if self.check_scarcity(agent_state.steps_remaining, agent_state.distance_to_goal):
+        if self.check_scarcity(agent_state.steps_remaining, agent_state.distance_to_goal, agent_state):  # PASS agent_state
             raw_state = CriticalState.SCARCITY
         elif self.check_panic(agent_state.entropy):
             raw_state = CriticalState.PANIC
-        elif self.check_deadlock(agent_state.location_history):
+        elif self.check_deadlock(agent_state.location_history, agent_state):  # PASS agent_state for quest-aware
             raw_state = CriticalState.DEADLOCK
         elif self.check_novelty(agent_state.prediction_error):
             raw_state = CriticalState.NOVELTY

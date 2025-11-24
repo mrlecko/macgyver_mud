@@ -1,0 +1,779 @@
+{
+  "Quest Agent": {
+    "agent_name": "Quest Agent",
+    "overall_success_rate": 0.1,
+    "overall_success_count": "2/20",
+    "avg_steps": 45.9,
+    "easy_success_rate": 0.0,
+    "medium_success_rate": 0.1,
+    "hard_success_rate": 0.2,
+    "results_by_game": [
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go north",
+          "go east",
+          "go west",
+          "go east",
+          "close refrigerator",
+          "examine board",
+          "examine board",
+          "examine board",
+          "examine bowl",
+          "examine board"
+        ],
+        "difficulty": "easy",
+        "game_file": "easy_game_seed_100.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "close chest",
+          "examine chest",
+          "go north",
+          "go east",
+          "drop Comic Strip Calendar",
+          "examine Comic Strip Calendar",
+          "examine Comic Strip Calendar",
+          "examine Comic Strip Calendar",
+          "go west",
+          "go east"
+        ],
+        "difficulty": "easy",
+        "game_file": "easy_game_seed_101.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "close dresser",
+          "drop stick of butter",
+          "examine stick of butter",
+          "examine dresser",
+          "examine dresser",
+          "examine dresser",
+          "open dresser",
+          "close dresser",
+          "examine dresser",
+          "examine dresser"
+        ],
+        "difficulty": "easy",
+        "game_file": "easy_game_seed_102.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "drop insect",
+          "go north",
+          "go east",
+          "open type K chest",
+          "close type K chest",
+          "examine type K chest",
+          "close box",
+          "drop type K keycard",
+          "examine box",
+          "examine box"
+        ],
+        "difficulty": "easy",
+        "game_file": "easy_game_seed_103.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "examine kettle",
+          "go south",
+          "go east",
+          "take towel from rack",
+          "put towel on rack",
+          "examine box",
+          "examine box",
+          "examine box",
+          "examine rack",
+          "examine box"
+        ],
+        "difficulty": "easy",
+        "game_file": "easy_game_seed_104.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "drop spherical key",
+          "examine spherical chest",
+          "examine spherical chest",
+          "examine spherical chest",
+          "examine spherical key",
+          "examine spherical chest",
+          "examine portal",
+          "examine portal",
+          "examine portal",
+          "drop tv"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_200.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "examine shelf",
+          "go north",
+          "take type O key from stand",
+          "drop type O key",
+          "examine type O key",
+          "examine type O key",
+          "examine type O key",
+          "take type O key",
+          "drop type O key",
+          "examine stand"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_201.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go west",
+          "examine case",
+          "open case",
+          "take fudge scented latchkey from case",
+          "drop fudge scented latchkey",
+          "examine fudge scented latchkey",
+          "examine fudge scented latchkey",
+          "examine fudge scented latchkey",
+          "take fudge scented latchkey",
+          "drop fudge scented latchkey"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_202.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "examine door",
+          "go west",
+          "take Canadian latchkey from locker",
+          "examine Canadian locker",
+          "examine Canadian locker",
+          "examine Canadian locker",
+          "take Canadian latchkey from locker",
+          "take Canadian latchkey from locker",
+          "take Canadian latchkey from locker",
+          "examine Canadian locker"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_203.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "examine keycard",
+          "examine keycard",
+          "examine keycard",
+          "examine passageway",
+          "examine keycard",
+          "go west",
+          "examine chest",
+          "examine chest",
+          "examine chest",
+          "go east"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_204.z8"
+      },
+      {
+        "success": true,
+        "steps": 8,
+        "reward": 1,
+        "actions": [
+          "drop type 4 latchkey",
+          "go west",
+          "take keycard from rack",
+          "go east",
+          "unlock locker with keycard",
+          "open locker",
+          "take mop from locker",
+          "drop mop"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_205.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "examine TextWorld locker",
+          "go west",
+          "examine Henderson's limited edition latchkey",
+          "examine Henderson's limited edition chest",
+          "examine Henderson's limited edition chest",
+          "examine Henderson's limited edition chest",
+          "examine Henderson's limited edition latchkey",
+          "examine Henderson's limited edition chest",
+          "go east",
+          "examine TextWorld locker"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_206.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "close cabinet",
+          "go west",
+          "take spherical keycard from bed stand",
+          "unlock spherical locker with spherical keycard",
+          "open spherical locker",
+          "take cushion from spherical locker",
+          "go east",
+          "drop cushion",
+          "drop spherical keycard",
+          "examine cabinet"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_207.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "close locker",
+          "go west",
+          "go west",
+          "go north",
+          "examine nest of grubs",
+          "go south",
+          "go east",
+          "close freezer",
+          "close hatch",
+          "drop laptop"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_208.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "examine mantle",
+          "go north",
+          "examine cuboid latchkey",
+          "examine cuboid latchkey",
+          "examine cuboid latchkey",
+          "examine cuboid safe",
+          "examine cuboid safe",
+          "examine cuboid safe",
+          "examine cuboid latchkey",
+          "examine cuboid safe"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_209.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "drop novel",
+          "examine spherical key",
+          "examine spherical safe",
+          "examine spherical safe",
+          "examine spherical safe",
+          "examine spherical key",
+          "examine spherical safe",
+          "go west",
+          "examine locker",
+          "examine locker"
+        ],
+        "difficulty": "hard",
+        "game_file": "hard_game_seed_300.z8"
+      },
+      {
+        "success": true,
+        "steps": 10,
+        "reward": 1,
+        "actions": [
+          "put burger on board",
+          "go south",
+          "go east",
+          "go north",
+          "take latchkey from counter",
+          "go south",
+          "unlock safe with latchkey",
+          "open safe",
+          "take coconut from safe",
+          "eat coconut"
+        ],
+        "difficulty": "hard",
+        "game_file": "hard_game_seed_301.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "examine type I key",
+          "examine type I chest",
+          "examine type I chest",
+          "examine type I chest",
+          "examine type I key",
+          "examine type I chest",
+          "go south",
+          "examine portal",
+          "examine portal",
+          "examine portal"
+        ],
+        "difficulty": "hard",
+        "game_file": "hard_game_seed_302.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "drop broccoli",
+          "go west",
+          "go north",
+          "take latchkey from bed stand",
+          "go south",
+          "unlock locker with latchkey",
+          "examine locker",
+          "examine locker",
+          "examine locker",
+          "lock locker with latchkey"
+        ],
+        "difficulty": "hard",
+        "game_file": "hard_game_seed_303.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "examine couch",
+          "take latchkey from couch",
+          "unlock portal with latchkey",
+          "open portal",
+          "go north",
+          "examine Henderson's limited edition keycard",
+          "examine Henderson's limited edition gateway",
+          "examine Henderson's limited edition gateway",
+          "examine Henderson's limited edition gateway",
+          "examine Henderson's limited edition keycard"
+        ],
+        "difficulty": "hard",
+        "game_file": "hard_game_seed_304.z8"
+      }
+    ]
+  },
+  "Cognitive Agent": {
+    "agent_name": "Cognitive Agent",
+    "overall_success_rate": 0.05,
+    "overall_success_count": "1/20",
+    "avg_steps": 47.85,
+    "easy_success_rate": 0.2,
+    "medium_success_rate": 0.0,
+    "hard_success_rate": 0.0,
+    "results_by_game": [
+      {
+        "success": true,
+        "steps": 7,
+        "reward": 1,
+        "actions": [
+          "go north",
+          "look",
+          "go east",
+          "take teapot from bowl",
+          "examine refrigerator",
+          "examine bowl",
+          "insert teapot into refrigerator"
+        ],
+        "difficulty": "easy",
+        "game_file": "easy_game_seed_100.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "take cushion from chest",
+          "examine Comic Strip Calendar",
+          "examine chest",
+          "examine safe",
+          "insert cushion into chest",
+          "take cushion from chest",
+          "insert cushion into chest",
+          "examine chest",
+          "look",
+          "look"
+        ],
+        "difficulty": "easy",
+        "game_file": "easy_game_seed_101.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "insert stick of butter into dresser",
+          "examine dresser",
+          "go west",
+          "look",
+          "take butterfly",
+          "drop butterfly",
+          "look",
+          "look",
+          "look",
+          "look"
+        ],
+        "difficulty": "easy",
+        "game_file": "easy_game_seed_102.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "examine type K keycard",
+          "examine insect",
+          "examine type K keycard",
+          "examine insect",
+          "examine insect",
+          "go north",
+          "look",
+          "look",
+          "look",
+          "look"
+        ],
+        "difficulty": "easy",
+        "game_file": "easy_game_seed_103.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go south",
+          "look",
+          "go east",
+          "go west",
+          "go east",
+          "take towel from rack",
+          "examine box",
+          "put towel on rack",
+          "look",
+          "look"
+        ],
+        "difficulty": "easy",
+        "game_file": "easy_game_seed_104.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "unlock spherical chest with spherical key",
+          "examine spherical chest",
+          "open spherical chest",
+          "take latchkey from spherical chest",
+          "examine spherical chest",
+          "insert tv into spherical chest",
+          "take tv from spherical chest",
+          "insert spherical key into spherical chest",
+          "take spherical key from spherical chest",
+          "insert tv into spherical chest"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_200.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "examine type O door",
+          "examine shelf",
+          "examine type O door",
+          "examine type O door",
+          "examine type O door",
+          "inventory",
+          "look",
+          "look",
+          "look",
+          "look"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_201.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "examine fudge scented box",
+          "examine fudge scented box",
+          "examine fudge scented box",
+          "examine fudge scented box",
+          "examine fudge scented box",
+          "go west",
+          "look",
+          "look",
+          "look",
+          "look"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_202.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go west",
+          "look",
+          "take Canadian latchkey from locker",
+          "examine Canadian latchkey",
+          "look",
+          "examine Canadian locker",
+          "examine locker",
+          "go east",
+          "look",
+          "go west"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_203.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go west",
+          "examine chest",
+          "go east",
+          "examine passageway",
+          "go west",
+          "inventory",
+          "look",
+          "look",
+          "look",
+          "look"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_204.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go west",
+          "look",
+          "take keycard from rack",
+          "go east",
+          "examine locker",
+          "look",
+          "examine keycard",
+          "examine type 4 latchkey",
+          "unlock locker with keycard",
+          "open locker"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_205.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go west",
+          "look",
+          "take Henderson's limited edition latchkey",
+          "look",
+          "look",
+          "unlock Henderson's limited edition chest with Henderson's limited edition latchkey",
+          "open Henderson's limited edition chest",
+          "take TextWorld passkey from Henderson's limited edition chest",
+          "insert TextWorld passkey into Henderson's limited edition chest",
+          "take TextWorld passkey from Henderson's limited edition chest"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_206.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go west",
+          "look",
+          "take spherical keycard from bed stand",
+          "examine spherical keycard",
+          "unlock spherical locker with spherical keycard",
+          "open spherical locker",
+          "examine bed stand",
+          "take cushion from spherical locker",
+          "put cushion on bed stand",
+          "take cushion from bed stand"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_207.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go west",
+          "examine laptop",
+          "look",
+          "examine freezer",
+          "look",
+          "examine freezer",
+          "examine freezer",
+          "go east",
+          "look",
+          "examine laptop"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_208.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go north",
+          "look",
+          "take cuboid latchkey",
+          "examine cuboid safe",
+          "unlock cuboid safe with cuboid latchkey",
+          "lock cuboid safe with cuboid latchkey",
+          "unlock cuboid safe with cuboid latchkey",
+          "inventory",
+          "look",
+          "look"
+        ],
+        "difficulty": "medium",
+        "game_file": "medium_game_seed_209.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "put novel on mantle",
+          "examine mantle",
+          "take novel from mantle",
+          "put novel on mantle",
+          "take novel from mantle",
+          "look",
+          "look",
+          "look",
+          "look",
+          "look"
+        ],
+        "difficulty": "hard",
+        "game_file": "hard_game_seed_300.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go east",
+          "look",
+          "go west",
+          "go east",
+          "go south",
+          "inventory",
+          "look",
+          "look",
+          "look",
+          "look"
+        ],
+        "difficulty": "hard",
+        "game_file": "hard_game_seed_301.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "take type I key",
+          "examine laptop",
+          "unlock type I chest with type I key",
+          "open type I chest",
+          "take latchkey from type I chest",
+          "insert type I key into type I chest",
+          "take type I key from type I chest",
+          "insert latchkey into type I chest",
+          "take latchkey from type I chest",
+          "insert type I key into type I chest"
+        ],
+        "difficulty": "hard",
+        "game_file": "hard_game_seed_302.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "go west",
+          "examine locker",
+          "examine fridge",
+          "go east",
+          "examine fondue",
+          "examine broccoli",
+          "go north",
+          "look",
+          "eat broccoli",
+          "look"
+        ],
+        "difficulty": "hard",
+        "game_file": "hard_game_seed_303.z8"
+      },
+      {
+        "success": false,
+        "steps": 50,
+        "reward": 0,
+        "actions": [
+          "take latchkey from couch",
+          "examine fondue",
+          "unlock portal with latchkey",
+          "open portal",
+          "go north",
+          "examine sandwich",
+          "look",
+          "examine sandwich",
+          "examine sandwich",
+          "examine Henderson's limited edition gateway"
+        ],
+        "difficulty": "hard",
+        "game_file": "hard_game_seed_304.z8"
+      }
+    ]
+  }
+}

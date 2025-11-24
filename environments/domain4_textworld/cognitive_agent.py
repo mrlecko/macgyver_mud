@@ -35,7 +35,8 @@ logger = logging.getLogger(__name__)
 from environments.domain4_textworld.text_parser import TextWorldParser
 from critical_state import CriticalStateMonitor, CriticalState, AgentState
 from environments.domain4_textworld.plan import Plan, PlanStep, PlanStatus
-from environments.domain4_textworld.quest_decomposer import QuestDecomposer
+from environments.domain4_textworld.enhanced_quest_decomposer import EnhancedQuestDecomposer
+from environments.domain4_textworld.hybrid_action_matcher import HybridActionMatcher
 
 class TextWorldCognitiveAgent:
     """
@@ -58,7 +59,8 @@ class TextWorldCognitiveAgent:
         self.memory = MemoryRetriever(session)
         self.planner = LLMPlanner(verbose=verbose)  # Now uses real LLM
         self.critical_monitor = CriticalStateMonitor()  # Critical state protocol system
-        self.quest_decomposer = QuestDecomposer()  # Quest decomposition for hierarchical synthesis (Option A)
+        self.decomposer = EnhancedQuestDecomposer()  # LLM-based with few-shot prompting  # Quest decomposition for hierarchical synthesis (Option A)
+        self.action_matcher = HybridActionMatcher()  # Template + LLM matching for precise action selection
         self.geometric_analyzer = QuestGeometricAnalyzer(verbose=verbose)  # NEW (Option B - Phase 2): Geometric analysis
         
         # Belief state: Agent's internal model of the world
@@ -149,7 +151,7 @@ class TextWorldCognitiveAgent:
         # Decompose quest into subgoals (Option A: hierarchical synthesis)
         if quest:
             self.last_quest = quest
-            self.subgoals = self.quest_decomposer.decompose(quest)
+            self.subgoals = self.decomposer.decompose(quest)  # Enhanced LLM-based decomposition
             self.current_subgoal_index = 0
 
             # Perform geometric analysis on decomposition (Option B - Phase 2)
@@ -347,13 +349,12 @@ class TextWorldCognitiveAgent:
 
     def calculate_goal_value(self, action: str, current_subgoal: str = None) -> float:
         """
-        Calculate goal value (pragmatic value).
-        Higher value = good.
+        Calculate goal value (pragmatic value) using HYBRID MATCHER.
+        Higher value = better match to current subgoal.
 
-        NOW HIERARCHICAL (Option A - Synthesis):
-        1. Current subgoal match (HIGHEST priority) - NEW
-        2. Overall quest match (MEDIUM priority)
-        3. Generic heuristics (LOW priority)
+        ENHANCED (Phase 2 - Action Matching):
+        Uses template matching + token overlap + optional LLM scoring
+        for much more precise action-to-subgoal matching.
 
         Args:
             action: Action to evaluate
@@ -362,63 +363,28 @@ class TextWorldCognitiveAgent:
         Returns:
             Goal value score
         """
-        value = 0.5  # Base value
-
-        # PRIORITY 1: Current subgoal match (NEW - HIERARCHICAL SYNTHESIS)
-        # CRITICAL FIX: When we have a subgoal, use ONLY subgoal matching, not quest matching
-        # Otherwise quest-level tokens interfere with hierarchical decisions
-        has_subgoal_match = False
-        if current_subgoal:
-            subgoal_tokens = set(current_subgoal.lower().split())
-            action_tokens = set(action.lower().split())
-            stopwords = {'the', 'a', 'an', 'from', 'into', 'on', 'in', 'to', 'of'}
-
-            subgoal_tokens_clean = subgoal_tokens - stopwords
-            action_tokens_clean = action_tokens - stopwords
-
-            overlap = len(subgoal_tokens_clean & action_tokens_clean)
-
-            if overlap > 0:
-                # HUGE bonus for subgoal match (15.0 per overlapping token)
-                # This is the KEY to hierarchical synthesis!
-                value += 15.0 * (overlap / max(len(subgoal_tokens_clean), 1))
-                has_subgoal_match = True  # Mark that we used subgoal matching
-
-        # PRIORITY 2: Overall quest match (ONLY if no subgoal context)
-        # When we have a subgoal, we should focus on it exclusively
-        if not has_subgoal_match and hasattr(self, 'last_quest') and self.last_quest:
-            quest_lower = self.last_quest.lower()
-            action_lower = action.lower()
-
-            # Extract action words (verbs and objects)
-            action_words = set(action_lower.split())
-            quest_words = set(quest_lower.split())
-
-            # Calculate overlap
-            common_words = action_words & quest_words
-
-            # Remove common words like 'the', 'a', 'from', 'into'
-            stopwords = {'the', 'a', 'an', 'from', 'into', 'on', 'in', 'to', 'of'}
-            meaningful_common = common_words - stopwords
-
-            if meaningful_common:
-                # MEDIUM bonus (reduced from 10.0 to avoid conflict with subgoal)
-                value += 5.0 * len(meaningful_common)
-
-        # PRIORITY 3: Generic action bonuses (much weaker now)
-        # Taking items is usually good (but quest-relevance is better)
-        if action.startswith('take ') or action.startswith('get '):
-            value += 1.0  # Small bonus
-
-        # Opening things
-        if action.startswith('open '):
-            value += 0.8
-
-        # Eating (if food) - simple heuristic
-        if action.startswith('eat '):
-            value += 0.5
-
-        return value
+        if not current_subgoal:
+            # No subgoal context, use simple heuristics
+            value = 0.5
+            if action.startswith('take ') or action.startswith('get '):
+                value += 1.0
+            elif action.startswith('open '):
+                value += 0.8
+            return value
+        
+        # Use hybrid matcher for precise scoring
+        # Note: We don't use LLM here yet to keep speed up
+        # LLM is used in select_action for top candidates
+        context = f"Location: {self.current_room}" if hasattr(self, 'current_room') else ""
+        
+        score = self.action_matcher.score_action(
+            action=action,
+            subgoal=current_subgoal,
+            context=context,
+            use_llm=False  # Save LLM for top-3 refinement in select_action
+        )
+        
+        return score
 
     def calculate_memory_bonus(self, action: str, current_subgoal: str = None) -> float:
         """
@@ -818,9 +784,32 @@ class TextWorldCognitiveAgent:
                 print("⚠️  All actions failed to score, using fallback")
             return "look"
 
-        # Pick highest score
+        # Sort by score
         scored_actions.sort(reverse=True)
-        best_score, best_action = scored_actions[0]
+        
+        # HYBRID APPROACH: Refine top 3 with LLM for precision
+        if current_subgoal and len(scored_actions) >= 3:
+            # Get top 3 candidates by base score
+            top_3 = scored_actions[:3]
+            top_actions = [action for _, action in top_3]
+            
+            # Use hybrid matcher to refine with LLM
+            context = f"Location: {self.current_room}" if hasattr(self, 'current_room') else ""
+            refined_action, refined_score = self.action_matcher.select_best_action(
+                actions=top_actions,
+                subgoal=current_subgoal,
+                context=context,
+                llm_for_top_n=3  # LLM scores all 3
+            )
+            
+            best_action = refined_action
+            best_score = refined_score
+            
+            if self.verbose:
+                print(f"   🔍 LLM refined top 3 → '{best_action}'")
+        else:
+            # No subgoal or too few actions, just use highest base score
+            best_score, best_action = scored_actions[0]
 
         if self.verbose:
             print(f"\n   ⚡ SELECTED: '{best_action}' (score: {best_score:.2f})")
@@ -889,12 +878,15 @@ class TextWorldCognitiveAgent:
     def get_agent_state_for_critical_monitor(self) -> AgentState:
         """
         Build AgentState object for CriticalStateMonitor.
+        
+        NOW QUEST-AWARE: Includes subgoal progress for DEADLOCK detection.
         """
         entropy = self.calculate_entropy_metric()
         prediction_error = self.calculate_prediction_error_metric()
         steps_remaining = self.max_steps - self.current_step
-
-        return AgentState(
+        
+        # Create base state
+        state = AgentState(
             entropy=entropy,
             history=self.location_history,
             steps=steps_remaining,
@@ -902,6 +894,18 @@ class TextWorldCognitiveAgent:
             rewards=self.reward_history,
             error=prediction_error
         )
+        
+        # ADD QUEST-AWARE CONTEXT for quest-aware protocols
+        # This allows critical state monitor to detect stuck-on-subgoal vs advancing-through-plan
+        if hasattr(self, 'steps_on_current_subgoal'):
+            state.steps_on_current_subgoal = self.steps_on_current_subgoal
+        if hasattr(self, 'current_subgoal_index'):
+            state.current_subgoal_index = self.current_subgoal_index
+        if hasattr(self, 'subgoals'):
+            state.has_quest = len(self.subgoals) > 0
+            state.total_subgoals = len(self.subgoals)  # For SCARCITY calculation
+        
+        return state
 
     def apply_critical_state_protocol(self, critical_state: CriticalState, admissible_commands: List[str]) -> Optional[str]:
         """
@@ -1165,22 +1169,18 @@ class TextWorldCognitiveAgent:
         # Maybe generate a new plan (if we don't have one and goal is clear)
         self.maybe_generate_plan(admissible_commands)
 
-        # CRITICAL FIX: Disable critical state monitoring for TextWorld
-        # The ESCALATION/DEADLOCK/NOVELTY protocols were overriding quest-aware action selection
-        # For TextWorld quests, we want to follow the EFE scores directly
-        
-        # Original code (now disabled):
-        # agent_state = self.get_agent_state_for_critical_monitor()
-        # self.current_critical_state = self.critical_monitor.evaluate(agent_state)
-        # protocol_action = self.apply_critical_state_protocol(
-        #     self.current_critical_state,
-        #     admissible_commands
-        # )
-        
-        # Force FLOW state (normal operation, no protocol override)
+        # QUEST-AWARE CRITICAL STATES (Phase 2 Enhancement)
+        # NOW ENABLED with quest-aware protocols that distinguish:
+        # - TRUE DEADLOCK: Stuck on subgoal with no progress
+        # - VALID BACKTRACKING: Advancing through subgoals
         from critical_state import CriticalState
-        self.current_critical_state = CriticalState.FLOW
-        protocol_action = None
+        
+        agent_state = self.get_agent_state_for_critical_monitor()
+        self.current_critical_state = self.critical_monitor.evaluate(agent_state)
+        protocol_action = self.apply_critical_state_protocol(
+            self.current_critical_state,
+            admissible_commands
+        )
 
         # Update done status
         self.done = done
