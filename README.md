@@ -333,7 +333,7 @@ If you use this work, please cite:
 - Documentation drafting (docstrings, README sections)
 - Refactoring (code improvements, optimizations)
 - Mathematical verification (formula checking)
-
+ok
 ---
 
 ## 👤 About the Author
