@@ -186,7 +186,10 @@ agent = AgentRuntime(config)
 
 ## 📊 Novel Contributions
 
-### 1. Geometric Decision Analysis (Silver Gauge)
+### 1. Geometric Decision Analysis
+
+[Explanation Here](https://mrlecko.github.io/macgyver_mud/)
+
 **Innovation:** Uses Pythagorean means to extract interpretable "shape" from decision scores
 
 **Existing work:** Most Active Inference implementations output scalar Expected Free Energy
@@ -308,7 +311,10 @@ If you use this work, please cite:
 - **AI-Augmented Development** (LLMs as co-developer, 10x velocity)
 - **Red Team Testing** (adversarial validation)
 - **Integration Testing** (multi-system boundary validation)
-- **Geometric Analysis** (novel mathematical techniques)
+
+### Ancient Practices
+- **Geometric Analysis** (novel application of Pythagorean mathematical techniques)
+- **Stoicism** (application of Stoicism to agent & systems design)
 
 ---
 
@@ -316,7 +322,7 @@ If you use this work, please cite:
 
 **Human Responsibilities:**
 - Architecture design (Bicameral Mind, Critical States)
-- Novel algorithms (Silver Gauge, Panic Protocols)
+- Novel algorithms (Geometric Decision 'Shapes', Panic Protocols)
 - Integration decisions (how systems interact)
 - Testing strategy (what to test, how to validate)
 - Quality standards (acceptance criteria)
@@ -401,9 +407,11 @@ MIT License - Use freely, cite generously, contribute openly.
 
 ## 🎬 See It In Action
 
+### Demo Pages
+- [Pythagorean Mean Decision Geometry Visualizer](https://mrlecko.github.io/macgyver_mud/) - Interactive decision analysis
+
 ### Demo Videos
 - [Loop Detection Demo](docs/demos/honey_pot_escape.gif) - Watch agent detect and escape deadlock
-- [Silver Gauge Visualizer](docs/demos/silver_gauge_visualizer.html) - Interactive decision analysis
 - [Episodic Learning](validation/episodic_replay_demo.py) - Counterfactual reasoning in action
 
 ### Key Demos
