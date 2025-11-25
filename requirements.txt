@@ -16,3 +16,6 @@ matplotlib
 
 # llm for TextWorld environment tests
 llm
+
+pandas
+networkx

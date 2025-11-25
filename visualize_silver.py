@@ -41,9 +41,15 @@ def extract_silver_data(session) -> List[Dict[str, Any]]:
             'door_state': record['door_state'],
             'escaped': record['escaped'],
             'step_index': record['step_index'],
-            'p_before': record['p_before'],
+            'p_before': float(record['p_before']) if record['p_before'] is not None else 0.0,
             **stamp  # Unpack all stamp fields
         })
+        
+        # Ensure numeric types for critical fields
+        if 'k_explore' in data[-1]:
+            data[-1]['k_explore'] = float(data[-1]['k_explore'])
+        if 'k_efficiency' in data[-1]:
+            data[-1]['k_efficiency'] = float(data[-1]['k_efficiency'])
 
     return data
 
@@ -287,7 +293,8 @@ def plot_temporal_evolution(data: List[Dict], output_file='temporal_evolution.pn
     # k_explore evolution
     axes[0].plot(ep_ids, avg_k_explores, linewidth=2, color='steelblue',
                  marker='o', markersize=4, alpha=0.7)
-    axes[0].fill_between(ep_ids, 0, avg_k_explores, alpha=0.2, color='steelblue')
+    # Ensure arrays are float type for fill_between
+    axes[0].fill_between(ep_ids, 0, np.array(avg_k_explores, dtype=float), alpha=0.2, color='steelblue')
     axes[0].set_ylabel('Avg k_explore', fontsize=12)
     axes[0].set_title('Geometric Evolution Over Episodes', fontsize=14, weight='bold')
     axes[0].grid(alpha=0.3)
@@ -296,7 +303,8 @@ def plot_temporal_evolution(data: List[Dict], output_file='temporal_evolution.pn
     # k_efficiency evolution
     axes[1].plot(ep_ids, avg_k_efficiencies, linewidth=2, color='coral',
                  marker='o', markersize=4, alpha=0.7)
-    axes[1].fill_between(ep_ids, 0, avg_k_efficiencies, alpha=0.2, color='coral')
+    # Ensure arrays are float type for fill_between
+    axes[1].fill_between(ep_ids, 0, np.array(avg_k_efficiencies, dtype=float), alpha=0.2, color='coral')
     axes[1].set_ylabel('Avg k_efficiency', fontsize=12)
     axes[1].grid(alpha=0.3)
     axes[1].axhline(0.5, color='gray', linestyle='--', alpha=0.3)
