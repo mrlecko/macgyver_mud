@@ -334,10 +334,6 @@ If you use this work, please cite:
 - Refactoring (code improvements, optimizations)
 - Mathematical verification (formula checking)
 
-**Result:** 10x faster development without quality compromise
-
-**Why this matters:** Demonstrates expertise in modern AI-augmented development workflows - critical skill for 2025+ software engineering roles.
-
 ---
 
 ## 👤 About the Author
