@@ -2,8 +2,7 @@
 import unittest
 from unittest.mock import MagicMock
 from environments.domain4_textworld.cognitive_agent import TextWorldCognitiveAgent
-# We will create this class shortly
-# from environments.domain4_textworld.llm_planner import LLMPlanner
+from environments.domain4_textworld.plan import Plan, PlanStep
 
 class TestHierarchicalPlanning(unittest.TestCase):
     def setUp(self):
@@ -18,8 +17,20 @@ class TestHierarchicalPlanning(unittest.TestCase):
         Test that the agent can generate a plan for a high-level goal.
         """
         goal = "Open the safe"
-        # Mock the planner response
-        expected_plan = ['find key', 'take key', 'unlock safe', 'open safe']
+        # Mock the planner response - return a Plan object
+        expected_steps = [
+            PlanStep(description="Find key", action_pattern="find key"),
+            PlanStep(description="Take key", action_pattern="take key"),
+            PlanStep(description="Unlock safe", action_pattern="unlock safe"),
+            PlanStep(description="Open safe", action_pattern="open safe")
+        ]
+        expected_plan = Plan(
+            goal=goal,
+            strategy="Multi-step safe opening",
+            steps=expected_steps,
+            success_criteria="Safe is open",
+            contingencies={}
+        )
         self.agent.planner.generate_plan.return_value = expected_plan
         
         plan = self.agent.generate_plan(goal)
@@ -31,8 +42,18 @@ class TestHierarchicalPlanning(unittest.TestCase):
         """
         Test that actions matching the current plan step get a massive score bonus.
         """
-        # Set a plan
-        self.agent.current_plan = ['take key', 'unlock safe']
+        # Set a plan using Plan class
+        steps = [
+            PlanStep(description="Take key", action_pattern="take key"),
+            PlanStep(description="Unlock safe", action_pattern="unlock safe")
+        ]
+        self.agent.current_plan = Plan(
+            goal="Open safe",
+            strategy="Take key then unlock",
+            steps=steps,
+            success_criteria="Safe unlocked",
+            contingencies={}
+        )
         
         # 'take key' is the next step
         score_plan = self.agent.score_action('take key', self.agent.beliefs)

@@ -709,13 +709,13 @@ class TextWorldCognitiveAgent:
             EFE score
         """
         # Tuned coefficients (v4 - hierarchical synthesis)
-        # Tuned coefficients (v4.2 - hierarchical synthesis fix)
-        # CRITICAL: Further reduced beta to prioritize goal-directed actions over exploration
+        # Tuned coefficients (v4.3 - final tuning)
+        # Balanced for both goal-directed behavior and plan adherence
         alpha = 5.0  # Goal value weight (goal-directed)
-        beta = 0.5   # Entropy/Info weight (reduced from 1.0 to minimize explore bias)
+        beta = 0.5   # Entropy/Info weight (reduced to minimize explore bias)
         gamma = 1.5  # Cost weight (loop penalty)
         delta = 1.5  # Memory weight (learn from experience)
-        epsilon = 1.0 # Plan weight (REDUCED from 5.0 - subgoal match should dominate)
+        epsilon = 3.0 # Plan weight (increased for better plan adherence while allowing subgoal match to dominate)
 
         goal_val = self.calculate_goal_value(action, current_subgoal)  # PASS subgoal
         entropy = self.calculate_entropy(action)

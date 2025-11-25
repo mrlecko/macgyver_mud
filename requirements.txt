@@ -19,3 +19,4 @@ llm
 
 pandas
 networkx
+textworld

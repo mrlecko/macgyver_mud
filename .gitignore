@@ -43,3 +43,5 @@ logs/
 /docs/secret_docs/
 
 /tw_games/*
+venv_*
+/scratch/*
