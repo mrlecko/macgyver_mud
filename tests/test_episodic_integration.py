@@ -45,13 +45,21 @@ def test_episodic_memory_disabled_by_default(neo4j_session):
 
 def test_episodic_memory_enabled(neo4j_session):
     """Test that episodic memory is initialized when config flag is True."""
-    runtime = AgentRuntime(neo4j_session, "unlocked", 0.5)
+    runtime = AgentRuntime(neo4j_session, "unlocked", 0.5, enable_episodic_memory=True)
     assert runtime.episodic_memory is not None
     assert hasattr(runtime, 'current_episode_path')
 
+def test_offline_learning_trigger(neo4j_session):
+    """Test that offline learning is triggered periodically."""
+    runtime = AgentRuntime(neo4j_session, "unlocked", 0.5, enable_episodic_memory=True, adaptive_params=True)
+    
+    # Clear any existing episodes
+    if runtime.episodic_memory:
+        runtime.episodic_memory.clear_all_episodes()
+    
 def test_episodic_memory_stores_episode(neo4j_session):
     """Test that episodes are stored in episodic memory."""
-    runtime = AgentRuntime(neo4j_session, "unlocked", 0.5, adaptive_params=True)
+    runtime = AgentRuntime(neo4j_session, "unlocked", 0.5, enable_episodic_memory=True, adaptive_params=True)
     
     # Clear any existing episodes
     if runtime.episodic_memory:

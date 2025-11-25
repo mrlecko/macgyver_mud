@@ -36,7 +36,10 @@ class AgentRuntime:
                  use_procedural_memory: bool = False,
                  adaptive_params: bool = False,
                  verbose_memory: bool = False,
-                 skill_mode: str = "hybrid"):
+                 skill_mode: str = "hybrid",
+                 enable_episodic_memory: bool = None,
+                 episodic_update_priors: bool = None,
+                 episodic_learning_rate: float = None):
         """
         Initialize agent runtime.
 
@@ -48,70 +51,78 @@ class AgentRuntime:
             adaptive_params: Enable meta-parameter adaptation
             verbose_memory: Show memory reasoning in decision logs
             skill_mode: Skill filtering mode: "crisp", "balanced", or "hybrid" (default)
+            enable_episodic_memory: Enable episodic memory (overrides config if set)
+            episodic_update_priors: Enable skill prior updates (overrides config if set)
+            episodic_learning_rate: Learning rate for skill updates (overrides config if set)
         """
         self.session = session
+        
+        # Get agent from graph
+        agent_data = get_agent(session, config.AGENT_NAME)
+        if not agent_data:
+            raise ValueError(f"Agent '{config.AGENT_NAME}' not found in graph")
+        self.agent_id = agent_data["id"]
+        
         self.door_state = door_state
+        self.p_unlocked = initial_belief if initial_belief is not None else get_initial_belief(session, self.agent_id, config.STATE_VAR_NAME)
+        
+        # Store initial belief for resets
+        self._initial_belief = self.p_unlocked
+        
         self.use_procedural_memory = use_procedural_memory
         self.adaptive_params = adaptive_params
         self.verbose_memory = verbose_memory
         self.skill_mode = skill_mode
-
-        # Get agent from graph
-        agent = get_agent(session, config.AGENT_NAME)
-        if not agent:
-            raise ValueError(f"Agent '{config.AGENT_NAME}' not found in graph")
-
-        self.agent_id = agent["id"]
-
-        # Initialize belief
-        if initial_belief is None:
-            # Try to get from graph, or use config default
-            belief = get_initial_belief(session, self.agent_id, config.STATE_VAR_NAME)
-            self.p_unlocked = belief if belief is not None else config.INITIAL_BELIEF
+        
+        # Resolve episodic memory flags
+        if enable_episodic_memory is None:
+            self.enable_episodic_memory = config.ENABLE_EPISODIC_MEMORY
         else:
-            self.p_unlocked = initial_belief
+            self.enable_episodic_memory = enable_episodic_memory
+            
+        if episodic_update_priors is None:
+            self.episodic_update_priors = config.EPISODIC_UPDATE_SKILL_PRIORS
+        else:
+            self.episodic_update_priors = episodic_update_priors
+            
+        if episodic_learning_rate is None:
+            self.episodic_learning_rate = config.EPISODIC_LEARNING_RATE
+        else:
+            self.episodic_learning_rate = episodic_learning_rate
 
-        # Get meta-parameters (dynamic if adaptive)
-        if adaptive_params:
-            meta = get_meta_params(session, self.agent_id)
-            self.alpha = meta["alpha"]
-            self.beta = meta["beta"]
-            self.gamma = meta["gamma"]
-            self.episodes_completed = meta["episodes"]
+        # Initialize tracking
+        self.step_count = 0
+        self.decision_log = []
+        self.current_episode_id = None
+        self.escaped = False
+        
+        # Meta-learning state
+        self.episodes_completed = 0
+        if self.adaptive_params:
+            params = get_meta_params(session, self.agent_id)
+            self.alpha = params.get("alpha", config.ALPHA)
+            self.beta = params.get("beta", config.BETA)
+            self.gamma = params.get("gamma", config.GAMMA)
+            self.episodes_completed = params.get("episodes_completed", 0)
         else:
             self.alpha = config.ALPHA
             self.beta = config.BETA
             self.gamma = config.GAMMA
-            self.episodes_completed = 0
 
-        # Episode state
-        self.escaped = False
-        self.current_episode_id = None
-        self.step_count = 0
-
-        # Decision log for verbose mode
-        self.decision_log = []
+        # Initialize Credit Assignment
+        self.credit_assignment = CreditAssignment(session, self.agent_id)
         
-        # Geometric Controller State
-        self.geo_mode = "FLOW (Efficiency)" # Default
-        self.switch_history = [] # For oscillation detection
-        self.monitor = CriticalStateMonitor() # Critical State Monitor
-
-        # Lyapunov Stability Monitor (if enabled)
-        if config.ENABLE_LYAPUNOV_MONITORING:
-            from control.lyapunov import StabilityMonitor
-            self.lyapunov_monitor = StabilityMonitor()
-        else:
-            self.lyapunov_monitor = None
-
-        # Data Feeds for Critical States
-        self.reward_history = []
-        self.last_prediction_error = 0.0
-        self.steps_remaining = config.MAX_STEPS
-        self.history = []  # Step history for Lyapunov
+        # Initialize Critical State Monitor
+        self.monitor = CriticalStateMonitor()
+        self.geo_mode = "FLOW (Efficiency)" # Default mode
+        
+        # Initialize Lyapunov Monitor
+        from control.lyapunov import StabilityMonitor
+        self.lyapunov_monitor = StabilityMonitor() if config.ENABLE_LYAPUNOV_MONITORING else None
         
         # Episodic Memory (Offline Learning)
-        if config.ENABLE_EPISODIC_MEMORY:
+        self.episodic_memory = None
+        if self.enable_episodic_memory:
             from memory.episodic_replay import EpisodicMemory
             from memory.counterfactual_generator import CounterfactualGenerator
             self.episodic_memory = EpisodicMemory(session)
@@ -612,8 +623,10 @@ class AgentRuntime:
         episode_id = create_episode(self.session, self.agent_id, self.door_state)
         self.current_episode_id = episode_id
         
+        self.current_episode_id = episode_id
+        
         # FIX #1: Initialize path tracking for episodic memory
-        if config.ENABLE_EPISODIC_MEMORY:
+        if self.enable_episodic_memory:
             self.current_episode_path = []
             # Record initial state
             initial_state = {
@@ -655,7 +668,7 @@ class AgentRuntime:
             self.credit_assignment.process_outcome(reward)
             
             # FIX #1: Track state after each action
-            if config.ENABLE_EPISODIC_MEMORY:
+            if self.enable_episodic_memory:
                 state = {
                     'step': self.step_count + 1,
                     'belief': p_after,
@@ -695,7 +708,7 @@ class AgentRuntime:
             update_skill_stats(self.session, episode_id, self.escaped, self.step_count, context)
 
         # Store episode in episodic memory
-        if config.ENABLE_EPISODIC_MEMORY and self.episodic_memory:
+        if self.enable_episodic_memory and self.episodic_memory:
             self._store_episode_memory(episode_id)
             
             # Trigger offline learning every N episodes
@@ -889,7 +902,7 @@ class AgentRuntime:
                     print(f"    (Diverged at step {insight['divergence_point']})")
                 
                 # Update skill priors if enabled
-                if cfg.EPISODIC_UPDATE_SKILL_PRIORS and self.use_procedural_memory:
+                if self.episodic_update_priors and self.use_procedural_memory:
                     self._update_skill_priors_from_insights(insights, cfg)
                     print("\n✓ Skill priors updated based on counterfactual insights")
                 else:
@@ -943,7 +956,7 @@ class AgentRuntime:
             if stats:
                 # FIX #3: Calculate adjustment (negative for high regret)
                 # Remove /100 divisor - regret directly affects success rate
-                adjustment = -regret * cfg.EPISODIC_LEARNING_RATE / cfg.EPISODIC_REGRET_SCALE_FACTOR
+                adjustment = -regret * self.episodic_learning_rate / cfg.EPISODIC_REGRET_SCALE_FACTOR
                 
                 # Update success rate (bounded between 0 and 1)
                 current_rate = stats.get('success_rate', 0.5)
@@ -981,7 +994,7 @@ class AgentRuntime:
             else:
                 # FIX #5: Create stats if they don't exist
                 print(f"    Creating stats for {skill_name} (first counterfactual update)")
-                initial_rate = 0.5 - (regret * cfg.EPISODIC_LEARNING_RATE / 10)
+                initial_rate = 0.5 - (regret * self.episodic_learning_rate / 10)
                 initial_rate = max(0.0, min(1.0, initial_rate))
                 
                 self.session.run("""

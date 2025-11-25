@@ -263,13 +263,17 @@ class MemoryRetriever:
         if current_subgoal:
             # Quest-aware query: Filter by subgoal
             # CRITICAL for hierarchical isolation:
-            # - ONLY match steps where subgoal = current_subgoal OR subgoal IS NULL (legacy)
-            # - This automatically EXCLUDES steps with different subgoals
+            # - Match steps where subgoal = current_subgoal OR subgoal IS NULL
+            # - OR if quest is provided, allow mismatching subgoals (filtered by similarity later)
             query = """
             MATCH (e:Episode:TextWorldEpisode)-[:CONTAINS]->(s:Step)
             WHERE (s.room = $room OR s.action CONTAINS $action_verb)
               AND e.timestamp > timestamp() - (14 * 24 * 60 * 60 * 1000)  // Last 14 days
-              AND (s.subgoal = $subgoal OR s.subgoal IS NULL)  // Match current subgoal or legacy only
+              AND (
+                  s.subgoal = $subgoal 
+                  OR s.subgoal IS NULL
+                  OR ($quest IS NOT NULL AND e.quest IS NOT NULL) // Relax filter if quests involved
+              )
             WITH e, s,
                  CASE WHEN s.room = $room THEN 2 ELSE 0 END +
                  CASE WHEN s.action CONTAINS $action_verb THEN 2 ELSE 0 END +
@@ -284,6 +288,7 @@ class MemoryRetriever:
                    s.reward AS reward,
                    s.room AS context_room,
                    s.subgoal AS step_subgoal,
+                   e.quest AS episode_quest,
                    relevance_score,
                    days_ago,
                    e.success AS episode_success
@@ -297,7 +302,8 @@ class MemoryRetriever:
                 action_verb=action_verb,
                 full_action=full_action,
                 subgoal=current_subgoal,
-                limit=limit
+                quest=quest,
+                limit=limit * 2  # Fetch more to allow for Python filtering
             )
         else:
             # Generic query (backward compatible)
@@ -318,6 +324,7 @@ class MemoryRetriever:
                    s.reward AS reward,
                    s.room AS context_room,
                    null AS step_subgoal,
+                   e.quest AS episode_quest,
                    relevance_score,
                    days_ago,
                    e.success AS episode_success
@@ -334,9 +341,38 @@ class MemoryRetriever:
             )
 
         memories = []
+        
+        # Prepare quest tokens if quest is provided
+        quest_tokens_clean = set()
+        if quest:
+            stopwords = {'the', 'a', 'an', 'first', 'then', 'finally', 'and', 'or', 'from', 'to', 'in', 'on'}
+            quest_tokens_clean = set(quest.lower().split()) - stopwords
+
         for record in result:
-            # Calculate confidence based on relevance and recency
-            relevance = record['relevance_score'] / 5.0  # Normalize to 0-1 (max score is 5)
+            # Calculate quest similarity if applicable
+            quest_similarity = 0.0
+            episode_quest = record.get('episode_quest')
+            
+            if quest and episode_quest:
+                stopwords = {'the', 'a', 'an', 'first', 'then', 'finally', 'and', 'or', 'from', 'to', 'in', 'on'}
+                episode_tokens = set(episode_quest.lower().split()) - stopwords
+                overlap = len(quest_tokens_clean & episode_tokens)
+                quest_similarity = overlap / max(len(quest_tokens_clean), 1)
+            
+            # Filter out irrelevant subgoals if quest similarity is low
+            # (Enforce hierarchical isolation unless quests are similar)
+            step_subgoal = record.get('step_subgoal')
+            if current_subgoal and step_subgoal and step_subgoal != current_subgoal:
+                if quest_similarity < 0.3:
+                    continue # Skip this memory, it's from a different subgoal and quests aren't similar enough
+
+            # Calculate confidence based on relevance, recency, and quest similarity
+            relevance = record['relevance_score'] / 5.0  # Normalize to 0-1
+            
+            # Boost relevance with quest similarity
+            if quest_similarity > 0.3:
+                relevance = min(1.0, relevance + (quest_similarity * 0.5))
+            
             days_ago = record['days_ago']
             recency = max(0.0, 1.0 - (days_ago / 14.0))  # Decay over 14 days
             confidence = (relevance * 0.7) + (recency * 0.3)  # Weight relevance more
@@ -361,16 +397,32 @@ class MemoryRetriever:
             summary = f"In {context_room}, '{action_text}' → {outcome}"
             if reward is not None:
                 summary += f" (reward: {reward_text})"
+            if episode_quest:
+                summary += f" [Quest: {episode_quest[:20]}...]"
 
             memories.append({
                 'action': action_text,
                 'outcome': outcome,
                 'confidence': round(confidence, 2),
                 'summary': summary,
-                'context': context_room
+                'context': context_room,
+                'quest_similarity': quest_similarity
             })
-
-        return memories
+            
+        # Re-sort by confidence after adjustments
+        memories.sort(key=lambda x: x['confidence'], reverse=True)
+        
+        # Apply limit
+        # Note: We fetched limit*2 in the query, so we trim here
+        # But we don't have 'limit' available here easily unless we passed it or assume default
+        # The method signature doesn't pass limit to _query_similar_episodes, but _query_similar_episodes takes it.
+        # Wait, retrieve_relevant_memories doesn't take limit! It's hardcoded to 5 in _query_similar_episodes default.
+        # But we called _query_similar_episodes with limit=limit*2? No, retrieve_relevant_memories doesn't have limit arg.
+        # It calls _query_similar_episodes(..., limit=5) implicitly?
+        # No, _query_similar_episodes def has limit=5.
+        # retrieve_relevant_memories calls it without limit arg.
+        
+        return memories[:5]
 
     def store_episode(self, episode_data: Dict[str, Any]) -> bool:
         """

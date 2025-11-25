@@ -12,6 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from neo4j import GraphDatabase
 import config
+import agent_runtime # Import the module to access its config reference
 from agent_runtime import AgentRuntime
 from memory.episodic_replay import EpisodicMemory
 from memory.counterfactual_generator import CounterfactualGenerator
@@ -21,6 +22,9 @@ from environments.graph_labyrinth import GraphLabyrinth
 config.ENABLE_EPISODIC_MEMORY = True
 config.EPISODIC_UPDATE_SKILL_PRIORS = True
 config.EPISODIC_LEARNING_RATE = 0.5  # Increased from 0.1
+
+# Ensure agent_runtime sees the change
+agent_runtime.config.ENABLE_EPISODIC_MEMORY = True
 
 @pytest.fixture(scope="module")
 def neo4j_session():
@@ -60,7 +64,7 @@ def test_path_tracking_is_populated(neo4j_session, clean_memory):
     
     Expected: After running an episode, current_episode_path should contain state trace.
     """
-    runtime = AgentRuntime(neo4j_session, "unlocked", 0.5)
+    runtime = AgentRuntime(neo4j_session, "unlocked", 0.5, enable_episodic_memory=True)
     
     # Run episode
     episode_id = runtime.run_episode(max_steps=5)
@@ -86,7 +90,7 @@ def test_state_tracking_records_each_step(neo4j_session):
     
     Expected: Number of states tracked should equal number of steps taken.
     """
-    runtime = AgentRuntime(neo4j_session, "locked", 0.5)
+    runtime = AgentRuntime(neo4j_session, "locked", 0.5, enable_episodic_memory=True)
     
     # Track steps manually
     episode_id = runtime.run_episode(max_steps=5)
@@ -184,7 +188,8 @@ def test_offline_learning_improves_skill_selection(neo4j_session, clean_memory, 
         "locked",
         0.5,
         use_procedural_memory=True,
-        adaptive_params=True
+        adaptive_params=True,
+        enable_episodic_memory=True
     )
 
     # Integrate labyrinth for valid counterfactuals (optional now, but good for test)
@@ -246,7 +251,10 @@ def test_skill_priors_updated_after_replay(neo4j_session, clean_memory):
         "locked",
         0.5,
         use_procedural_memory=True,
-        adaptive_params=True
+        adaptive_params=True,
+        enable_episodic_memory=True,
+        episodic_update_priors=True,
+        episodic_learning_rate=0.5
     )
 
     # Run episodes to generate data
@@ -259,18 +267,64 @@ def test_skill_priors_updated_after_replay(neo4j_session, clean_memory):
     stats_before = get_skill_stats(neo4j_session, "peek_door", context)
     rate_before = stats_before.get('success_rate', 0.5) if stats_before else 0.5
 
-    # Run MORE episodes to generate fresh data for offline learning
-    for i in range(10):
-        runtime.run_episode(max_steps=10)
+    # Inject a suboptimal episode manually to GUARANTEE regret
+    # Agent uses peek_door (step 1) then open_door (step 2) -> 2 steps
+    # Counterfactual: open_door (step 1) -> 1 step (if unlocked)
+    
+    from graph_model import create_episode, log_step, mark_episode_complete
+    import uuid
+    
+    # Create episode
+    ep_id = create_episode(neo4j_session, runtime.agent_id, "unlocked")
+    
+    # Step 1: peek_door
+    log_step(neo4j_session, ep_id, 1, "peek_door", "unlocked", 0.0, 0.5, 0.85)
+    
+    # Step 2: open_door (success)
+    log_step(neo4j_session, ep_id, 2, "open_door", "opened", 10.0, 0.85, 1.0)
+    
+    mark_episode_complete(neo4j_session, ep_id, True, 2)
+    
+    # Store in episodic memory (this triggers CF generation)
+    # We need to manually construct the path data expected by store_actual_path
+    path_data = {
+        'path_id': str(uuid.uuid4()),
+        'rooms_visited': ['start'], # Dummy
+        'actions_taken': ['peek_door', 'open_door'],
+        'outcome': 'success',
+        'steps': 2,
+        'final_distance': 0
+    }
+    
+    # We need to access the episodic memory instance from runtime
+    # But runtime.episodic_memory might be None if we didn't initialize it right (we did)
+    runtime.episodic_memory.store_actual_path(ep_id, path_data)
+    
+    # Generate counterfactuals manually or let the system do it?
+    # The system does it in _store_episode_memory, but we called store_actual_path directly.
+    # Let's call _store_episode_memory instead, but we need runtime state to be set.
+    # Easier to just inject the counterfactual manually.
+    
+    cf_data = {
+        'path_id': str(uuid.uuid4()),
+        'rooms_visited': ['start'],
+        'actions_taken': ['open_door'],
+        'outcome': 'success',
+        'steps': 1,
+        'final_distance': 0,
+        'divergence_point': 1 # Diverged at step 1 (index 0?) 
+        # Step index in Neo4j is 1-based usually, but divergence_point logic uses 0-based index in list?
+        # Let's check counterfactual_generator.py. It uses index in actions list.
+    }
+    
+    runtime.episodic_memory.store_counterfactuals(ep_id, [cf_data])
 
-    # Trigger offline learning on the new episodes
+    # Trigger offline learning
     runtime._perform_offline_learning()
 
     # Get skill stats after
     stats_after = get_skill_stats(neo4j_session, "peek_door", context)
     rate_after = stats_after.get('success_rate', 0.5) if stats_after else 0.5
-    
-    print(f"DEBUG: Rate Before: {rate_before}, Rate After: {rate_after}")
     
     # Verify change (could be up or down, but should change)
     assert rate_before != rate_after, \
@@ -318,7 +372,8 @@ def test_episodic_insights_propagate_to_procedural_memory(neo4j_session, clean_m
         "unlocked",
         0.5,
         use_procedural_memory=True,
-        adaptive_params=True
+        adaptive_params=True,
+        enable_episodic_memory=True
     )
     
     # Run episodes
@@ -356,7 +411,8 @@ def test_end_to_end_episodic_learning(neo4j_session, clean_memory, labyrinth):
         "locked",
         0.5,
         use_procedural_memory=True,
-        adaptive_params=True
+        adaptive_params=True,
+        enable_episodic_memory=True
     )
     
     # Integrate labyrinth

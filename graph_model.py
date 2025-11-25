@@ -106,9 +106,15 @@ def get_skills(session: Session, agent_id: str) -> List[Dict[str, Any]]:
 
     skills = []
     for record in result:
+        if record["cost"] is None:
+            print(f"WARNING: Skill {record['name']} has no cost! Record: {record}")
+            cost = 1.0 # Default
+        else:
+            cost = float(record["cost"])
+            
         skills.append({
             "name": record["name"],
-            "cost": float(record["cost"]),
+            "cost": cost,
             "kind": record["kind"],
             "description": record.get("description", "")
         })
@@ -452,9 +458,15 @@ def get_skill_stats(session: Session, skill_name: str,
 
     # Calculate overall statistics
     total = stats["total_uses"]
-    overall_success_rate = (
-        stats["successful_episodes"] / total if total > 0 else 0.5
-    )
+    
+    # FIX: If counterfactuals adjusted the rate, use the stored rate
+    if stats.get("counterfactual_adjusted", False):
+        overall_success_rate = stats.get("success_rate", 0.5)
+    else:
+        overall_success_rate = (
+            stats["successful_episodes"] / total if total > 0 else 0.5
+        )
+        
     overall_confidence = min(1.0, total / 20.0)  # Full confidence at 20 uses
 
     result_dict = {

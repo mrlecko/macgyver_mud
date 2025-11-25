@@ -50,6 +50,25 @@ def verify_neo4j_connection():
         pytest.fail(f"Neo4j connection failed: {e}. Make sure Neo4j is running on port 17687 (run 'make neo4j-start')")
 
 
+def cleanup_neo4j(session):
+    """Wipe the entire database."""
+    session.run("MATCH (n) DETACH DELETE n")
+
+def init_neo4j(session):
+    """Initialize database with schema and default data."""
+    # Read cypher_init.cypher
+    init_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cypher_init.cypher")
+    with open(init_file, "r") as f:
+        cypher_script = f.read()
+    
+    # Split by semicolon to get individual statements
+    # (Simple split, assumes no semicolons in strings/comments which is true for this file)
+    statements = cypher_script.split(";")
+    
+    for statement in statements:
+        if statement.strip():
+            session.run(statement)
+
 @pytest.fixture(scope="function", autouse=True)
 def reset_neo4j_state():
     """
@@ -60,57 +79,21 @@ def reset_neo4j_state():
     """
     import config
     
-    # Cleanup BEFORE test runs (this is the key fix!)
+    # Cleanup BEFORE test runs
     try:
         driver = GraphDatabase.driver(
             config.NEO4J_URI,
             auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
         )
         with driver.session(database="neo4j") as session:
-            # Delete episode/step data created by previous tests
-            session.run("MATCH (s:Step) DETACH DELETE s")
-            session.run("MATCH (e:Episode) DETACH DELETE e")
-            session.run("MATCH (c:Counterfactual) DETACH DELETE c")
+            cleanup_neo4j(session)
+            init_neo4j(session)
             
-            # Reset skill stats to zero
-            session.run("""
-                MATCH (stats:SkillStats)
-                SET stats.total_uses = 0,
-                    stats.successful_episodes = 0,
-                    stats.failed_episodes = 0,
-                    stats.avg_steps_when_successful = 0.0,
-                    stats.avg_steps_when_failed = 0.0,
-                    stats.uncertain_uses = 0,
-                    stats.uncertain_successes = 0,
-                    stats.confident_locked_uses = 0,
-                    stats.confident_locked_successes = 0,
-                    stats.confident_unlocked_uses = 0,
-                    stats.confident_unlocked_successes = 0
-            """)
-            
-            # Reset belief to default
-            session.run("""
-                MATCH (b:Belief)
-                SET b.p_unlocked = 0.5
-            """)
-            
-            # Reset meta params to defaults
-            session.run("""
-                MATCH (meta:MetaParams)
-                SET meta.alpha = 1.0,
-                    meta.beta = 6.0,
-                    meta.gamma = 0.3,
-                    meta.episodes_completed = 0,
-                    meta.avg_steps_last_10 = 0.0,
-                    meta.success_rate_last_10 = 0.0
-            """)
         driver.close()
-    except Exception:
+    except Exception as e:
         # Silently ignore cleanup errors (Neo4j might not be ready yet)
+        print(f"Warning: Neo4j reset failed: {e}")
         pass
     
     # Now run the test with clean state
     yield
-    
-    # Optionally cleanup after test too (but main cleanup is above)
-    # This helps keep Neo4j clean but isn't critical for test isolation

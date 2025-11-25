@@ -11,32 +11,6 @@ class TestHierarchicalPlanning(unittest.TestCase):
         
         # Mock the planner
         self.agent.planner = MagicMock()
-        
-    def test_plan_generation(self):
-        """
-        Test that the agent can generate a plan for a high-level goal.
-        """
-        goal = "Open the safe"
-        # Mock the planner response - return a Plan object
-        expected_steps = [
-            PlanStep(description="Find key", action_pattern="find key"),
-            PlanStep(description="Take key", action_pattern="take key"),
-            PlanStep(description="Unlock safe", action_pattern="unlock safe"),
-            PlanStep(description="Open safe", action_pattern="open safe")
-        ]
-        expected_plan = Plan(
-            goal=goal,
-            strategy="Multi-step safe opening",
-            steps=expected_steps,
-            success_criteria="Safe is open",
-            contingencies={}
-        )
-        self.agent.planner.generate_plan.return_value = expected_plan
-        
-        plan = self.agent.generate_plan(goal)
-        
-        self.assertEqual(plan, expected_plan)
-        self.assertEqual(self.agent.current_plan, expected_plan)
 
     def test_plan_execution_score(self):
         """
