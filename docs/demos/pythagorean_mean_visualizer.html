@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Silver Gauge V2 - Complete Geometric Analysis</title>
+    <title>📐 Pythagorean Means Explorer</title>
     <style>
-        :root {
-            --primary: #2563eb;
-            --secondary: #7c3aed;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --bg: #f9fafb;
-            --text: #1f2937;
-            --border: #e5e7eb;
-            --explore-color: #3b82f6;
-            --efficiency-color: #8b5cf6;
-        }
+            :root {
+                /* Nordic Minimalist Palette */
+                --primary: #3d5a80;        /* Slate Blue - calm, confident */
+                --secondary: #7b6d8d;      /* Dusty Lavender - soft, refined */
+                --success: #50808e;        /* Teal Gray - balanced, modern */
+                --warning: #a87c4f;        /* Bronze - warm, organic */
+                --danger: #a05b5b;         /* Muted Rose - gentle warning */
+                --bg: #f5f5f4;             /* Stone White - natural, warm */
+                --text: #3a3a3a;           /* Soft Black - readable, not harsh */
+                --border: #d6d3ce;         /* Greige - sophisticated neutral */
+                --explore-color: #4a6fa5;  /* Periwinkle - exploratory, curious */
+                --efficiency-color: #8a7ba8; /* Lavender Gray - efficient, calm */
+            }
 
         * {
             margin: 0;
@@ -37,6 +38,7 @@
             padding: 3rem 2rem;
             text-align: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
         }
 
         header h1 {
@@ -53,6 +55,25 @@
         header .version {
             font-size: 0.9rem;
             opacity: 0.8;
+        }
+
+        .help-button {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .help-button:hover {
+            background: white;
+            color: var(--primary);
         }
 
         .container {
@@ -99,6 +120,7 @@
             border-radius: 12px;
             padding: 1.5rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: relative;
         }
 
         .control-card.goal { border-top: 4px solid #3b82f6; }
@@ -200,6 +222,61 @@
             font-size: 1.1rem;
             margin-bottom: 1.5rem;
             border: 2px dashed var(--border);
+        }
+
+        /* SVG Triangle Visualization */
+        .triangle-container {
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .triangle-svg {
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+        }
+
+        /* Canvas Decision Space */
+        .canvas-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .canvas-container h2 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .decision-canvas {
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            cursor: crosshair;
+        }
+
+        .canvas-legend {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid var(--text);
         }
 
         .means-visualization {
@@ -412,6 +489,168 @@
             margin-top: 0.5rem;
         }
 
+        /* Tutorial Overlay */
+        .tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tutorial-overlay.active {
+            display: flex;
+        }
+
+        .tutorial-content {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .tutorial-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .tutorial-close:hover {
+            background: #dc2626;
+        }
+
+        .tutorial-step {
+            margin-bottom: 2rem;
+        }
+
+        .tutorial-step h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .tutorial-step p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 0.8rem;
+        }
+
+        .tutorial-step ul {
+            margin-left: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .tutorial-step li {
+            margin-bottom: 0.5rem;
+        }
+
+        .tutorial-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .tutorial-btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tutorial-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tutorial-btn.primary:hover {
+            background: #1d4ed8;
+        }
+
+        .tutorial-btn.secondary {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        .tutorial-btn.secondary:hover {
+            background: #d1d5db;
+        }
+
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip .tooltip-icon {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 0.8rem;
+            line-height: 18px;
+            margin-left: 0.3rem;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            width: 300px;
+            background: #1f2937;
+            color: white;
+            text-align: left;
+            border-radius: 8px;
+            padding: 1rem;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -150px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
         .pedagogy-section {
             background: white;
             border-radius: 12px;
@@ -539,23 +778,83 @@
             .preset-grid {
                 grid-template-columns: 1fr;
             }
+
+            .help-button {
+                position: static;
+                margin-top: 1rem;
+            }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>🥈 The Silver Gauge V2</h1>
-        <div class="subtitle">Complete Geometric Analysis of Multi-Objective Decision Making</div>
-        <div class="version">Part of the MacGyver MUD Cognitive Architecture | Version 2.0</div>
+        <h1>📐 Pythagorean Means Explorer</h1>
+        <div class="subtitle">Geometric Analysis for Multi-Objective Decision-Making</div>
+        <div class="version">Version 3.0</div>
+        <button class="help-button" onclick="showTutorial()">❓ Tutorial</button>
     </header>
+
+    <!-- Tutorial Overlay -->
+    <div class="tutorial-overlay" id="tutorial-overlay">
+        <div class="tutorial-content">
+            <button class="tutorial-close" onclick="closeTutorial()">✕ Close</button>
+
+            <div class="tutorial-step">
+                <h3>👋 Welcome to the Pythagorean Mean Gauge</h3>
+                <p>This interactive visualizer demonstrates a novel approach to analyzing AI decision-making using <strong>Pythagorean means</strong>.</p>
+                <p>Traditional AI scoring produces a single number. The Pythagorean Mean Gauge reveals the <em>shape</em> of trade-offs.</p>
+            </div>
+
+            <div class="tutorial-step">
+                <h3>🎯 Key Concepts</h3>
+                <ul>
+                    <li><strong>Exploration Bundle:</strong> Analyzes balance between Goal and Information</li>
+                    <li><strong>Efficiency Bundle:</strong> Analyzes return-on-investment (Benefit vs Cost)</li>
+                    <li><strong>Shape Coefficient (k):</strong> Measures balance in [0,1] where 1.0 = perfect balance</li>
+                    <li><strong>H ≤ G ≤ A:</strong> Mathematical invariant showing Harmonic ≤ Geometric ≤ Arithmetic means</li>
+                </ul>
+            </div>
+
+            <div class="tutorial-step">
+                <h3>🎨 Visual Features</h3>
+                <ul>
+                    <li><strong>Color-coded Bars:</strong> Red (H) → Yellow (G) → Green (A) show the Pythagorean means</li>
+                    <li><strong>Triangle Visualization:</strong> Geometric representation of H, G, A relationship</li>
+                    <li><strong>Decision Space Plot:</strong> Shows your exploration history with color-coded trails</li>
+                    <li><strong>Dual Gauges:</strong> Separate gauges for exploration and efficiency</li>
+                </ul>
+            </div>
+
+            <div class="tutorial-step">
+                <h3>🚀 How to Use</h3>
+                <ol>
+                    <li><strong>Adjust Sliders:</strong> Move Goal, Info, and Cost sliders to see effects</li>
+                    <li><strong>Watch Triangles:</strong> See how H, G, A points move in the geometric space</li>
+                    <li><strong>Observe Gauges:</strong> Notice how k_explore and k_efficiency change</li>
+                    <li><strong>Try Presets:</strong> Click scenario buttons to see canonical examples</li>
+                    <li><strong>Track History:</strong> The canvas shows a trail of your decisions</li>
+                </ol>
+            </div>
+
+            <div class="tutorial-step">
+                <h3>💡 Tooltips Available</h3>
+                <p>Hover over the <span style="display: inline-block; width: 18px; height: 18px; background: #2563eb; color: white; border-radius: 50%; text-align: center; font-size: 0.8rem; line-height: 18px;">?</span> icons throughout the interface for detailed explanations.</p>
+            </div>
+
+            <div class="tutorial-buttons">
+                <button class="tutorial-btn primary" onclick="closeTutorial()">Got it! Let's explore</button>
+                <button class="tutorial-btn secondary" onclick="resetToDefault()">Reset to Defaults</button>
+            </div>
+        </div>
+    </div>
 
     <div class="container">
         <!-- Introduction -->
         <div class="intro-panel">
-            <h2>What You're Seeing</h2>
+            <h2>What You're Seeing <span class="tooltip"><span class="tooltip-icon">?</span><span class="tooltip-text">This visualizer shows how Pythagorean means (H, G, A) reveal the geometric structure of multi-objective decision-making, beyond simple scalar scoring.</span></span></h2>
             <p>This visualizer demonstrates a novel approach to analyzing decision-making in AI systems using <strong>Pythagorean means</strong>—a geometric lens that reveals the <em>shape</em> of trade-offs, not just the final score.</p>
             <p>Traditional AI scoring produces a single number: <code>score = α·goal + β·info - γ·cost</code></p>
-            <p>The Silver Gauge adds geometric structure by computing <strong>two shape coefficients</strong> that measure balance and efficiency.</p>
+            <p>The Pythagorean Mean Gauge adds geometric structure by computing <strong>two shape coefficients</strong> that measure balance and efficiency.</p>
             <div class="highlight">
                 💡 <strong>Key Insight:</strong> By measuring how Harmonic, Geometric, and Arithmetic means relate, we can distinguish between "balanced exploration" (k ≈ 1.0) and "specialist focus" (k ≈ 0.3) without changing the agent's behavior.
             </div>
@@ -565,7 +864,7 @@
         <div class="control-grid">
             <div class="control-card goal">
                 <div class="control-label">
-                    <span>🎯 Goal Value</span>
+                    <span>🎯 Goal Value <span class="tooltip"><span class="tooltip-icon">?</span><span class="tooltip-text">Expected contribution toward the objective. High values mean the action strongly advances your goal.</span></span></span>
                     <span class="control-value" id="goal-display">5.0</span>
                 </div>
                 <input type="range" id="goal-slider" min="0" max="10" step="0.1" value="5">
@@ -574,7 +873,7 @@
 
             <div class="control-card info">
                 <div class="control-label">
-                    <span>🔍 Information Gain</span>
+                    <span>🔍 Information Gain <span class="tooltip"><span class="tooltip-icon">?</span><span class="tooltip-text">Expected reduction in uncertainty. High values mean the action helps you learn about the environment.</span></span></span>
                     <span class="control-value" id="info-display">5.0</span>
                 </div>
                 <input type="range" id="info-slider" min="0" max="10" step="0.1" value="5">
@@ -583,7 +882,7 @@
 
             <div class="control-card cost">
                 <div class="control-label">
-                    <span>⚠️ Cost</span>
+                    <span>⚠️ Cost <span class="tooltip"><span class="tooltip-icon">?</span><span class="tooltip-text">Resource expenditure or risk. High cost affects the efficiency bundle, showing ROI trade-offs.</span></span></span>
                     <span class="control-value" id="cost-display">2.0</span>
                 </div>
                 <input type="range" id="cost-slider" min="0" max="10" step="0.1" value="2">
@@ -591,13 +890,81 @@
             </div>
         </div>
 
+         <!-- Presets -->
+        <div class="preset-section">
+            <h2>📌 Example Scenarios</h2>
+            <div class="preset-grid">
+                <button class="preset-btn" onclick="setPureExplorer()">
+                    <span class="preset-emoji">🔍</span>
+                    Pure Explorer
+                    <div class="preset-desc">High info, low goal, low cost</div>
+                </button>
+                <button class="preset-btn" onclick="setPureExploiter()">
+                    <span class="preset-emoji">🎯</span>
+                    Pure Exploiter
+                    <div class="preset-desc">High goal, low info, low cost</div>
+                </button>
+                <button class="preset-btn" onclick="setBalanced()">
+                    <span class="preset-emoji">⚖️</span>
+                    Balanced Agent
+                    <div class="preset-desc">Equal goal & info, moderate cost</div>
+                </button>
+                <button class="preset-btn" onclick="setExpensiveWin()">
+                    <span class="preset-emoji">💰</span>
+                    Expensive Win
+                    <div class="preset-desc">High goal, high cost</div>
+                </button>
+                <button class="preset-btn" onclick="setCheapExplore()">
+                    <span class="preset-emoji">🆓</span>
+                    Cheap Explore
+                    <div class="preset-desc">Low values, very low cost</div>
+                </button>
+                <button class="preset-btn" onclick="setPanicMode()">
+                    <span class="preset-emoji">🚨</span>
+                    PANIC Protocol
+                    <div class="preset-desc">High uncertainty, max info-seeking</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Decision Space Canvas -->
+        <div class="canvas-container">
+            <h2>📍 Decision Space Exploration <span class="tooltip"><span class="tooltip-icon">?</span><span class="tooltip-text">This plot shows the (Goal, Info) decision space. Your current position is the large dot, and past decisions form a colored trail. Colors indicate k_explore: red=specialist, yellow=moderate, green=balanced.</span></span></h2>
+            <canvas id="decision-canvas" class="decision-canvas" width="800" height="400"></canvas>
+            <div class="canvas-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ef4444;"></div>
+                    <span>Specialist (k < 0.5)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f59e0b;"></div>
+                    <span>Moderate (0.5 ≤ k < 0.8)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #10b981;"></div>
+                    <span>Balanced (k ≥ 0.8)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3b82f6;"></div>
+                    <span>Current Position</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Dual Bundle Visualization -->
         <div class="dual-panel">
             <!-- Exploration Bundle -->
             <div class="bundle-panel explore">
-                <h2>📊 Exploration Bundle</h2>
+                <h2>📊 Exploration Bundle <span class="tooltip"><span class="tooltip-icon">?</span><span class="tooltip-text">Analyzes the balance between Goal and Information. Shows whether the agent is a generalist (k≈1) or specialist (k≈0).</span></span></h2>
                 <div class="formula-display">
                     Analyzing: <strong>Goal</strong> vs <strong>Info</strong>
+                </div>
+
+                <!-- SVG Triangle -->
+                <div class="triangle-container">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Geometric Representation</h3>
+                    <svg id="explore-triangle" class="triangle-svg" width="100%" height="200" viewBox="0 0 400 200"></svg>
+                    <small style="color: #6b7280; font-style: italic;">Points: H (red) ≤ G (yellow) ≤ A (green)</small>
                 </div>
 
                 <div class="means-visualization">
@@ -653,9 +1020,16 @@
 
             <!-- Efficiency Bundle -->
             <div class="bundle-panel efficiency">
-                <h2>⚡ Efficiency Bundle</h2>
+                <h2>⚡ Efficiency Bundle <span class="tooltip"><span class="tooltip-icon">?</span><span class="tooltip-text">Analyzes the return-on-investment by comparing total benefit (Goal+Info) against Cost. Shows resource efficiency.</span></span></h2>
                 <div class="formula-display">
                     Analyzing: <strong>(Goal + Info)</strong> vs <strong>Cost</strong>
+                </div>
+
+                <!-- SVG Triangle -->
+                <div class="triangle-container">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Geometric Representation</h3>
+                    <svg id="efficiency-triangle" class="triangle-svg" width="100%" height="200" viewBox="0 0 400 200"></svg>
+                    <small style="color: #6b7280; font-style: italic;">Points: H (red) ≤ G (yellow) ≤ A (green)</small>
                 </div>
 
                 <div class="means-visualization">
@@ -710,46 +1084,13 @@
             </div>
         </div>
 
-        <!-- Presets -->
-        <div class="preset-section">
-            <h2>📌 Example Scenarios</h2>
-            <div class="preset-grid">
-                <button class="preset-btn" onclick="setPureExplorer()">
-                    <span class="preset-emoji">🔍</span>
-                    Pure Explorer
-                    <div class="preset-desc">High info, low goal, low cost</div>
-                </button>
-                <button class="preset-btn" onclick="setPureExploiter()">
-                    <span class="preset-emoji">🎯</span>
-                    Pure Exploiter
-                    <div class="preset-desc">High goal, low info, low cost</div>
-                </button>
-                <button class="preset-btn" onclick="setBalanced()">
-                    <span class="preset-emoji">⚖️</span>
-                    Balanced Agent
-                    <div class="preset-desc">Equal goal & info, moderate cost</div>
-                </button>
-                <button class="preset-btn" onclick="setExpensiveWin()">
-                    <span class="preset-emoji">💰</span>
-                    Expensive Win
-                    <div class="preset-desc">High goal, high cost</div>
-                </button>
-                <button class="preset-btn" onclick="setCheapExplore()">
-                    <span class="preset-emoji">🆓</span>
-                    Cheap Explore
-                    <div class="preset-desc">Low values, very low cost</div>
-                </button>
-                <button class="preset-btn" onclick="setPanicMode()">
-                    <span class="preset-emoji">🚨</span>
-                    PANIC Protocol
-                    <div class="preset-desc">High uncertainty, max info-seeking</div>
-                </button>
-            </div>
-        </div>
+       
 
-        <!-- Comprehensive Pedagogy -->
-        <div class="pedagogy-section">
-            <h2>📚 Complete Mathematical Framework</h2>
+        <!-- Comprehensive Pedagogy (Collapsed by default in v3) -->
+        <details class="pedagogy-section">
+            <summary style="cursor: pointer; font-size: 1.5rem; font-weight: bold; color: var(--primary); padding: 1rem 0;">
+                📚 Complete Mathematical Framework (Click to Expand)
+            </summary>
 
             <h3>1. What Are Pythagorean Means?</h3>
             <p>The three classical means—Harmonic (H), Geometric (G), and Arithmetic (A)—provide different ways to average two positive numbers. For any positive <em>a</em> and <em>b</em>:</p>
@@ -791,27 +1132,7 @@
                 <strong>Mathematical Invariant:</strong> For any positive <em>a</em> and <em>b</em>, the inequality <code>H ≤ G ≤ A</code> always holds. Equality occurs if and only if <em>a = b</em> (perfect balance).
             </div>
 
-            <h3>2. The Two Bundles: Exploration vs Efficiency</h3>
-
-            <p>The Silver Gauge computes Pythagorean means for <strong>two different pairs</strong> of values:</p>
-
-            <div class="pedagogy-box success">
-                <strong>📊 Exploration Bundle:</strong> Analyzes <code>(goal, info)</code><br>
-                • Measures balance between pursuing objectives vs reducing uncertainty<br>
-                • <code>k_explore = G/A</code> quantifies this balance in [0,1]<br>
-                • k ≈ 1.0 → Agent is equally motivated by goal and information<br>
-                • k ≈ 0.3 → Agent is specialist (one objective dominates)
-            </div>
-
-            <div class="pedagogy-box warning">
-                <strong>⚡ Efficiency Bundle:</strong> Analyzes <code>(goal + info, cost)</code><br>
-                • Measures favorability of benefits vs expenditure<br>
-                • <code>k_efficiency = G/A</code> quantifies return-on-investment in [0,1]<br>
-                • k ≈ 1.0 → Benefits and costs are comparable (balanced ROI)<br>
-                • k ≈ 0.3 → Poor efficiency (cost dominates or benefits dominate)
-            </div>
-
-            <h3>3. Why the Shape Coefficient k = G/A?</h3>
+            <h3>2. The Shape Coefficient k = G/A</h3>
 
             <p>The ratio <code>k = G/A</code> is a dimensionless measure of balance. Because G ≤ A (with equality when values are equal), we have:</p>
 
@@ -822,18 +1143,7 @@
                 k → 0.0 ⟺ extreme imbalance (one value → 0)
             </div>
 
-            <ul>
-                <li><strong>k = 1.0:</strong> Geometric mean equals arithmetic mean → values are equal → perfectly balanced</li>
-                <li><strong>k = 0.9:</strong> Very close to balanced (e.g., goal=7, info=3 → k ≈ 0.917)</li>
-                <li><strong>k = 0.7:</strong> Moderate imbalance (one value is 3-4× the other)</li>
-                <li><strong>k = 0.3:</strong> Extreme specialist (one value is 10-100× the other)</li>
-            </ul>
-
-            <div class="pedagogy-box">
-                <strong>Geometric Intuition:</strong> k measures how "circular" vs "elliptical" the decision is. Equal values form a circle (k=1), while extreme imbalance stretches into an ellipse (k→0).
-            </div>
-
-            <h3>4. Connection to Active Inference</h3>
+            <h3>3. Connection to Active Inference</h3>
 
             <p>The MacGyver agent uses Active Inference to score actions based on <strong>Expected Free Energy</strong>:</p>
 
@@ -841,201 +1151,33 @@
                 G = α·goal_value + β·info_gain - γ·cost
             </div>
 
-            <p>Where:</p>
-            <ul>
-                <li><strong>α, β, γ</strong> are learned weights (auto-tuned using Welford's algorithm)</li>
-                <li><strong>goal_value:</strong> Expected contribution toward the objective</li>
-                <li><strong>info_gain:</strong> Expected reduction in entropy (uncertainty)</li>
-                <li><strong>cost:</strong> Resource expenditure for the action</li>
-            </ul>
+            <p>The Pythagorean Mean Gauge <strong>does not replace</strong> this scoring. Instead, it <strong>annotates</strong> each decision with geometric structure for interpretability.</p>
 
-            <p>The Silver Gauge <strong>does not replace</strong> this scoring. Instead, it <strong>annotates</strong> each decision with geometric structure:</p>
+            <h3>4. V3 Enhancements</h3>
 
             <div class="pedagogy-box success">
-                <strong>Traditional Active Inference:</strong><br>
-                "This action scores 8.5" → Scalar output, opaque<br>
-                <br>
-                <strong>Active Inference + Silver Gauge:</strong><br>
-                "This action scores 8.5 with k_explore=0.92 (balanced) and k_efficiency=0.68 (moderate ROI)" → Interpretable shape
+                <strong>🆕 SVG Triangle Visualization:</strong><br>
+                Shows H, G, A as points in geometric space. When values are equal, all three points converge. When imbalanced, they spread along the number line.<br><br>
+
+                <strong>🆕 Decision Space Canvas:</strong><br>
+                Plots your exploration history in (Goal, Info) space with color-coded trails showing k_explore evolution over time.<br><br>
+
+                <strong>🆕 Interactive Tutorial:</strong><br>
+                First-time overlay and hover tooltips (?) throughout the interface explain each component.
             </div>
-
-            <h3>5. Real-World Cognitive Interpretation</h3>
-
-            <p>In the MacGyver MUD cognitive architecture, shape coefficients reveal decision patterns:</p>
-
-            <table class="comparison-table">
-                <thead>
-                    <tr>
-                        <th>k_explore Value</th>
-                        <th>Agent Behavior</th>
-                        <th>Critical State Connection</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>k ≈ 1.0</td>
-                        <td>Balanced generalist (equal weight to goal & info)</td>
-                        <td>Normal operation</td>
-                    </tr>
-                    <tr>
-                        <td>k ≈ 0.9</td>
-                        <td>Well-balanced explorer</td>
-                        <td>Healthy exploration mode</td>
-                    </tr>
-                    <tr>
-                        <td>k ≈ 0.6</td>
-                        <td>Specialist (favors one objective)</td>
-                        <td>May trigger NOVELTY protocol</td>
-                    </tr>
-                    <tr>
-                        <td>k ≈ 0.3</td>
-                        <td>Extreme specialist (one-dimensional)</td>
-                        <td>May trigger PANIC (if info-starved) or HUBRIS (if over-confident)</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <table class="comparison-table">
-                <thead>
-                    <tr>
-                        <th>k_efficiency Value</th>
-                        <th>Agent Behavior</th>
-                        <th>Critical State Connection</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>k ≈ 1.0</td>
-                        <td>Balanced ROI (benefits ≈ costs)</td>
-                        <td>Efficient operation</td>
-                    </tr>
-                    <tr>
-                        <td>k ≈ 0.6</td>
-                        <td>Moderate efficiency (acceptable trade-off)</td>
-                        <td>Normal operation under constraints</td>
-                    </tr>
-                    <tr>
-                        <td>k ≈ 0.3</td>
-                        <td>Poor efficiency (high cost or low benefit)</td>
-                        <td>May trigger SCARCITY protocol</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h3>6. Why This Matters for AI Safety & Interpretability</h3>
-
-            <div class="pedagogy-box">
-                <strong>Problem:</strong> Most AI systems optimize a black-box objective function. When behavior goes wrong, we can't diagnose <em>why</em>.<br>
-                <br>
-                <strong>Solution:</strong> Geometric annotations like the Silver Gauge provide <strong>introspectable structure</strong>. If an agent gets stuck in a loop, we can query Neo4j:<br>
-                <br>
-                <code>"Show me all decisions where k_explore < 0.4 and k_efficiency < 0.5"</code><br>
-                <br>
-                This reveals <strong>patterns</strong> (e.g., "agent was stuck in specialist mode with poor ROI") without changing core behavior.
-            </div>
-
-            <ul>
-                <li><strong>Transparency:</strong> Shape coefficients are human-interpretable (unlike raw neural network weights)</li>
-                <li><strong>Debugging:</strong> Can identify when agent is "stuck" (repeating low-k decisions)</li>
-                <li><strong>Safety:</strong> Can detect anomalies (sudden drop in k_efficiency may signal trap/deadlock)</li>
-                <li><strong>Meta-cognition:</strong> Agent can monitor its own k values and trigger critical state protocols</li>
-            </ul>
-
-            <h3>7. Mathematical Properties & Guarantees</h3>
-
-            <div class="pedagogy-box success">
-                <strong>Invariant 1:</strong> k ∈ [0, 1] always (bounded, well-defined)<br>
-                <strong>Invariant 2:</strong> k = 1 ⟺ perfect balance (iff a = b)<br>
-                <strong>Invariant 3:</strong> k is scale-invariant (k(10a, 10b) = k(a, b))<br>
-                <strong>Invariant 4:</strong> k is symmetric (k(a, b) = k(b, a))
-            </div>
-
-            <p>These properties make k a <strong>robust metric</strong> that doesn't depend on arbitrary scaling or units.</p>
-
-            <h3>8. How the MacGyver Agent Uses This</h3>
-
-            <p>The agent computes a Silver Gauge stamp for each decision and stores it in Neo4j as JSON:</p>
-
-            <div class="formula-box" style="text-align: left; font-size: 1rem;">
-{<br>
-&nbsp;&nbsp;"stamp_version": "silver_v1",<br>
-&nbsp;&nbsp;"goal_value": 7.2,<br>
-&nbsp;&nbsp;"info_gain": 3.1,<br>
-&nbsp;&nbsp;"cost": 2.0,<br>
-&nbsp;&nbsp;"k_explore": 0.873,<br>
-&nbsp;&nbsp;"k_efficiency": 0.912,<br>
-&nbsp;&nbsp;"interpretation": "Well-balanced explorer with good ROI"<br>
-}
-            </div>
-
-            <p>This enables:</p>
-            <ul>
-                <li><strong>Post-hoc analysis:</strong> Replay episodes and visualize decision shapes over time</li>
-                <li><strong>Episodic memory queries:</strong> "Find all high-k_explore decisions that led to success"</li>
-                <li><strong>Critical state detection:</strong> Trigger PANIC when k_explore drops below threshold</li>
-                <li><strong>Lyapunov stability monitoring:</strong> Track k variance as divergence signal</li>
-            </ul>
-
-            <h3>9. Comparison to Traditional Scoring</h3>
-
-            <table class="comparison-table">
-                <thead>
-                    <tr>
-                        <th>Traditional Scalar Scoring</th>
-                        <th>Geometric Silver Gauge</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Single number output</td>
-                        <td>Two shape coefficients + full mean breakdown</td>
-                    </tr>
-                    <tr>
-                        <td>Opaque (can't see trade-offs)</td>
-                        <td>Transparent (balance is explicit)</td>
-                    </tr>
-                    <tr>
-                        <td>Scale-dependent</td>
-                        <td>Scale-invariant (k is dimensionless)</td>
-                    </tr>
-                    <tr>
-                        <td>No geometric invariants</td>
-                        <td>H ≤ G ≤ A guaranteed</td>
-                    </tr>
-                    <tr>
-                        <td>Hard to debug anomalies</td>
-                        <td>Can query "low-k" decisions</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h3>10. Try It Yourself!</h3>
-
-            <p>Use the sliders above to experiment with different scenarios:</p>
-
-            <ol>
-                <li><strong>Set Goal=10, Info=1, Cost=2:</strong> Notice k_explore ≈ 0.57 (specialist) but k_efficiency ≈ 0.82 (good ROI)</li>
-                <li><strong>Set Goal=5, Info=5, Cost=9:</strong> Notice k_explore = 1.0 (balanced) but k_efficiency ≈ 0.74 (moderate ROI due to high cost)</li>
-                <li><strong>Set Goal=8, Info=7, Cost=0.5:</strong> Both coefficients high → "Balanced explorer with excellent efficiency"</li>
-                <li><strong>Click presets:</strong> See canonical scenarios from the MacGyver agent's critical state protocols</li>
-            </ol>
-
-            <div class="pedagogy-box warning">
-                <strong>Key Takeaway:</strong> The Silver Gauge doesn't change the agent's decisions—it <strong>annotates</strong> them with interpretable geometric structure. This is pure metrology: measuring what was already there, making it visible.
-            </div>
-        </div>
+        </details>
     </div>
 
     <footer>
-        <p><strong>MacGyver MUD</strong> — Production-Grade Meta-Cognitive Agent Architecture</p>
+        <p><strong>MacGyver MUD</strong> — Meta-Cognitive Agent Architecture</p>
         <p>
-            <a href="../../README.md">View Project</a> |
-            <a href="../../scoring_silver.py">Source Code</a> |
+            <a href="https://github.com/mrlecko/macgyver_mud">View Project</a> |
+            <a href="https://github.com/mrlecko/macgyver_mud/blob/main/scoring_silver.py">Source Code</a> |
             <a href="mailto:mrlecko@gmail.com">Contact</a>
         </p>
-        <p style="margin-top: 1rem; font-size: 0.9rem;">
-            Built with Pythagorean means, Active Inference, and a commitment to interpretable AI.
-        </p>
+        <!-- <p style="margin-top: 1rem; font-size: 0.9rem;">
+            V3: Now with SVG triangles, decision space plotting, and interactive tutorials.
+        </p> -->
     </footer>
 
     <script>
@@ -1128,8 +1270,179 @@
         let state = {
             goal: 5.0,
             info: 5.0,
-            cost: 2.0
+            cost: 2.0,
+            history: []
         };
+
+        // ====================================================================
+        // SVG TRIANGLE VISUALIZATION
+        // ====================================================================
+
+        function drawTriangle(svgId, H, G, A, maxValue) {
+            const svg = document.getElementById(svgId);
+            svg.innerHTML = ''; // Clear previous
+
+            const width = 400;
+            const height = 200;
+            const padding = 40;
+            const lineY = height / 2;
+
+            // Scale to fit
+            const scale = (width - 2 * padding) / maxValue;
+
+            // Draw baseline
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', padding);
+            line.setAttribute('y1', lineY);
+            line.setAttribute('x2', width - padding);
+            line.setAttribute('y2', lineY);
+            line.setAttribute('stroke', '#d1d5db');
+            line.setAttribute('stroke-width', '2');
+            svg.appendChild(line);
+
+            // Draw points
+            const points = [
+                { value: H, label: 'H', color: '#ef4444' },
+                { value: G, label: 'G', color: '#f59e0b' },
+                { value: A, label: 'A', color: '#10b981' }
+            ];
+
+            points.forEach(point => {
+                const x = padding + point.value * scale;
+
+                // Point circle
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', lineY);
+                circle.setAttribute('r', '8');
+                circle.setAttribute('fill', point.color);
+                circle.setAttribute('stroke', 'white');
+                circle.setAttribute('stroke-width', '2');
+                svg.appendChild(circle);
+
+                // Label
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x);
+                text.setAttribute('y', lineY - 20);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '14');
+                text.setAttribute('font-weight', 'bold');
+                text.setAttribute('fill', point.color);
+                text.textContent = `${point.label}: ${point.value.toFixed(2)}`;
+                svg.appendChild(text);
+            });
+
+            // Draw connecting lines showing spread
+            if (H < A) {
+                const connector = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                connector.setAttribute('x1', padding + H * scale);
+                connector.setAttribute('y1', lineY + 30);
+                connector.setAttribute('x2', padding + A * scale);
+                connector.setAttribute('y2', lineY + 30);
+                connector.setAttribute('stroke', '#6b7280');
+                connector.setAttribute('stroke-width', '2');
+                connector.setAttribute('stroke-dasharray', '4');
+                svg.appendChild(connector);
+
+                // Spread label
+                const spread = A - H;
+                const spreadText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                spreadText.setAttribute('x', padding + (H + A) * scale / 2);
+                spreadText.setAttribute('y', lineY + 50);
+                spreadText.setAttribute('text-anchor', 'middle');
+                spreadText.setAttribute('font-size', '12');
+                spreadText.setAttribute('fill', '#6b7280');
+                spreadText.textContent = `Spread: ${spread.toFixed(2)}`;
+                svg.appendChild(spreadText);
+            }
+        }
+
+        // ====================================================================
+        // CANVAS DECISION SPACE
+        // ====================================================================
+
+        const canvas = document.getElementById('decision-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function getColorForK(k) {
+            if (k < 0.5) return '#ef4444'; // Red - Specialist
+            if (k < 0.8) return '#f59e0b'; // Orange - Moderate
+            return '#10b981'; // Green - Balanced
+        }
+
+        function drawDecisionSpace() {
+            // Clear canvas
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+
+            // Vertical lines
+            for (let i = 0; i <= 10; i++) {
+                const x = (i / 10) * (canvas.width - 80) + 40;
+                ctx.beginPath();
+                ctx.moveTo(x, 20);
+                ctx.lineTo(x, canvas.height - 40);
+                ctx.stroke();
+            }
+
+            // Horizontal lines
+            for (let i = 0; i <= 10; i++) {
+                const y = canvas.height - 40 - (i / 10) * (canvas.height - 60);
+                ctx.beginPath();
+                ctx.moveTo(40, y);
+                ctx.lineTo(canvas.width - 40, y);
+                ctx.stroke();
+            }
+
+            // Axes
+            ctx.strokeStyle = '#1f2937';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(40, canvas.height - 40);
+            ctx.lineTo(canvas.width - 40, canvas.height - 40);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(40, 20);
+            ctx.lineTo(40, canvas.height - 40);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#1f2937';
+            ctx.font = '14px sans-serif';
+            ctx.fillText('Goal →', canvas.width / 2 - 20, canvas.height - 10);
+            ctx.save();
+            ctx.translate(15, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Info →', 0, 0);
+            ctx.restore();
+
+            // Draw history trail
+            state.history.forEach((point, index) => {
+                const x = 40 + (point.goal / 10) * (canvas.width - 80);
+                const y = canvas.height - 40 - (point.info / 10) * (canvas.height - 60);
+                const alpha = Math.max(0.3, index / state.history.length);
+
+                ctx.fillStyle = getColorForK(point.k) + Math.round(alpha * 255).toString(16).padStart(2, '0');
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            // Draw current position (larger)
+            const currentX = 40 + (state.goal / 10) * (canvas.width - 80);
+            const currentY = canvas.height - 40 - (state.info / 10) * (canvas.height - 60);
+
+            ctx.fillStyle = '#3b82f6';
+            ctx.beginPath();
+            ctx.arc(currentX, currentY, 10, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
 
         // ====================================================================
         // VISUALIZATION UPDATE
@@ -1150,11 +1463,29 @@
             document.getElementById('cost-display').textContent = c.toFixed(1);
 
             // Update exploration bundle
-            updateBundle('explore', explore, 10); // max scale = 10
+            updateBundle('explore', explore, 10);
+            drawTriangle('explore-triangle', explore.H, explore.G, explore.A, 10);
 
             // Update efficiency bundle
-            const maxEfficiency = Math.max(g + i, c) * 1.2; // dynamic scale
+            const maxEfficiency = Math.max(g + i, c) * 1.2;
             updateBundle('efficiency', efficiency, maxEfficiency);
+            drawTriangle('efficiency-triangle', efficiency.H, efficiency.G, efficiency.A, maxEfficiency);
+
+            // Add to history
+            state.history.push({
+                goal: g,
+                info: i,
+                k: explore.k_explore,
+                timestamp: Date.now()
+            });
+
+            // Keep last 50 points
+            if (state.history.length > 50) {
+                state.history.shift();
+            }
+
+            // Draw decision space
+            drawDecisionSpace();
 
             console.log(`State: goal=${g.toFixed(1)}, info=${i.toFixed(1)}, cost=${c.toFixed(1)}`);
             console.log(`Explore: k=${explore.k_explore.toFixed(3)}, Efficiency: k=${efficiency.k_efficiency.toFixed(3)}`);
@@ -1220,38 +1551,49 @@
         // ====================================================================
 
         function setPureExplorer() {
-            state = { goal: 1.0, info: 10.0, cost: 2.0 };
+            state.goal = 1.0;
+            state.info = 10.0;
+            state.cost = 2.0;
             syncSliders();
             update();
         }
 
         function setPureExploiter() {
-            state = { goal: 10.0, info: 1.0, cost: 2.0 };
+            state.goal = 10.0;
+            state.info = 1.0;
+            state.cost = 2.0;
             syncSliders();
             update();
         }
 
         function setBalanced() {
-            state = { goal: 7.0, info: 7.0, cost: 3.0 };
+            state.goal = 7.0;
+            state.info = 7.0;
+            state.cost = 3.0;
             syncSliders();
             update();
         }
 
         function setExpensiveWin() {
-            state = { goal: 9.0, info: 2.0, cost: 8.0 };
+            state.goal = 9.0;
+            state.info = 2.0;
+            state.cost = 8.0;
             syncSliders();
             update();
         }
 
         function setCheapExplore() {
-            state = { goal: 2.0, info: 3.0, cost: 0.5 };
+            state.goal = 2.0;
+            state.info = 3.0;
+            state.cost = 0.5;
             syncSliders();
             update();
         }
 
         function setPanicMode() {
-            // High uncertainty → maximize info-seeking (PANIC protocol)
-            state = { goal: 3.0, info: 10.0, cost: 1.0 };
+            state.goal = 3.0;
+            state.info = 10.0;
+            state.cost = 1.0;
             syncSliders();
             update();
         }
@@ -1260,6 +1602,36 @@
             document.getElementById('goal-slider').value = state.goal;
             document.getElementById('info-slider').value = state.info;
             document.getElementById('cost-slider').value = state.cost;
+        }
+
+        // ====================================================================
+        // TUTORIAL SYSTEM
+        // ====================================================================
+
+        function showTutorial() {
+            document.getElementById('tutorial-overlay').classList.add('active');
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorial-overlay').classList.remove('active');
+        }
+
+        function resetToDefault() {
+            state.goal = 5.0;
+            state.info = 5.0;
+            state.cost = 2.0;
+            state.history = [];
+            syncSliders();
+            update();
+            closeTutorial();
+        }
+
+        // Show tutorial on first visit
+        if (!localStorage.getItem('silver-gauge-visited')) {
+            setTimeout(() => {
+                showTutorial();
+                localStorage.setItem('silver-gauge-visited', 'true');
+            }, 1000);
         }
 
         // ====================================================================
