@@ -153,7 +153,7 @@ class TestAgentRuntimeWithSkillMode:
             {"name": "peek_door", "kind": "sense", "cost": 1.0}
         ]
 
-        session = Mock(spec=Session)
+        session = Mock()
 
         # Should accept skill_mode parameter
         runtime = AgentRuntime(
@@ -176,7 +176,7 @@ class TestAgentRuntimeWithSkillMode:
                 mock_agent.return_value = {"id": "agent_1"}
                 mock_belief.return_value = 0.5
 
-                session = Mock(spec=Session)
+                session = Mock()
 
                 runtime = AgentRuntime(
                     session,

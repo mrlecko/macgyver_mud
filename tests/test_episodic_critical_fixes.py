@@ -165,6 +165,9 @@ def test_counterfactuals_are_valid_with_labyrinth(neo4j_session, labyrinth):
 # CRITICAL FLAW 3: Offline Learning Doesn't Improve Performance
 # ============================================================================
 
+# Verify insights generated
+# (We can't easily check internal state, but we can check if skill stats updated)
+@pytest.mark.order(1)
 def test_offline_learning_improves_skill_selection(neo4j_session, clean_memory, labyrinth):
     """
     CRITICAL: Offline learning should actually affect future decisions.

@@ -36,6 +36,7 @@ def labyrinth(neo4j_session):
     lab.generate_linear_dungeon(num_rooms=10, seed=42)
     return lab
 
+@pytest.mark.order(1)
 def test_overfitting_trap_stress_test(episodic_memory, labyrinth, neo4j_session):
     """
     STRESS TEST: The Overfitting Trap
@@ -69,6 +70,7 @@ def test_overfitting_trap_stress_test(episodic_memory, labyrinth, neo4j_session)
     episodic_memory.store_counterfactuals('overfit_episode', all_counterfactuals[:50])  # Cap at 50
     
     retrieved = episodic_memory.get_episode('overfit_episode')
+    assert retrieved is not None, "Failed to retrieve episode 'overfit_episode'"
     num_cfs = len(retrieved['counterfactuals'])
     
     print(f"\n=== OVERFITTING TRAP TEST ===")

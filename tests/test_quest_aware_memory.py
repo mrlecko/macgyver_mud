@@ -74,6 +74,7 @@ class TestQuestAwareMemoryRetrieval:
         # Ideally, should NOT retrieve "take key" (different subgoal)
         # But we'll validate that "go east" has HIGHER confidence than "take key"
 
+    @pytest.mark.order(1)
     def test_retrieve_quest_specific_patterns(self, memory_retriever, neo4j_session):
         """
         Test: Retrieve memories from similar quests (procedural memory).
