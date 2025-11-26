@@ -26,17 +26,7 @@ config.EPISODIC_LEARNING_RATE = 0.5  # Increased from 0.1
 # Ensure agent_runtime sees the change
 agent_runtime.config.ENABLE_EPISODIC_MEMORY = True
 
-@pytest.fixture(scope="module")
-def neo4j_session():
-    """Provide a Neo4j session for testing."""
-    driver = GraphDatabase.driver(
-        config.NEO4J_URI,
-        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-    )
-    session = driver.session(database="neo4j")
-    yield session
-    session.close()
-    driver.close()
+# Use neo4j_session from conftest.py
 
 @pytest.fixture
 def clean_memory(neo4j_session):

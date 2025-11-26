@@ -139,6 +139,7 @@ class TestFilterSkillsByMode:
 class TestAgentRuntimeWithSkillMode:
     """Test AgentRuntime integration with skill modes"""
 
+    @pytest.mark.order(1)
     @patch('agent_runtime.get_skills')
     @patch('agent_runtime.get_agent')
     @patch('agent_runtime.get_initial_belief')
@@ -164,6 +165,7 @@ class TestAgentRuntimeWithSkillMode:
         assert hasattr(runtime, 'skill_mode')
         assert runtime.skill_mode == "crisp"
 
+    @pytest.mark.order(1)
     def test_agent_runtime_filters_skills_on_init(self):
         """AgentRuntime should store skill_mode for later filtering during episodes"""
         from agent_runtime import AgentRuntime

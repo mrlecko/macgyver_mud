@@ -18,23 +18,7 @@ from graph_model import (
 )
 
 
-@pytest.fixture(scope="module")
-def neo4j_driver():
-    """Create Neo4j driver for tests"""
-    driver = GraphDatabase.driver(
-        config.NEO4J_URI,
-        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-    )
-    yield driver
-    driver.close()
-
-
-@pytest.fixture(scope="module")
-def neo4j_session(neo4j_driver):
-    """Create Neo4j session for tests"""
-    with neo4j_driver.session(database="neo4j") as session:
-        yield session
-
+# Use neo4j_session from conftest.py
 
 @pytest.fixture(scope="function")
 def clean_memory(neo4j_session):

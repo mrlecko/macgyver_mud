@@ -133,6 +133,12 @@ class AgentRuntime:
             self.episodic_memory = None
             self.counterfactual_generator = None
             self.current_episode_path = []
+        
+        # Initialize tracking attributes (used by critical state controller)
+        self.steps_remaining = 100  # Default, will be set properly in reset()
+        self.reward_history = []
+        self.history = []
+        self.last_prediction_error = 0.0
             
         # Generalized Credit Assignment (Online Safety)
         self.credit_assignment = CreditAssignment()

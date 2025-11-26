@@ -1,13 +1,17 @@
 """
 Pytest configuration for MacGyver MUD tests.
 
-Ensures all tests use the correct Neo4j connection settings (port 17687)
-to match the Docker configuration and avoid conflicts with default Neo4j installations.
+Implements proper test isolation with session-scoped schema initialization
+and function-scoped selective cleanup for optimal performance.
 """
 import os
 import pytest
 from neo4j import GraphDatabase
 
+
+# =============================================================================
+# Session-Scoped Setup
+# =============================================================================
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_environment():
@@ -50,32 +54,145 @@ def verify_neo4j_connection():
         pytest.fail(f"Neo4j connection failed: {e}. Make sure Neo4j is running on port 17687 (run 'make neo4j-start')")
 
 
-def cleanup_neo4j(session):
-    """Wipe the entire database."""
-    session.run("MATCH (n) DETACH DELETE n")
+@pytest.fixture(scope="session")
+def neo4j_schema():
+    """
+    Initialize database schema ONCE per test session.
+    
+    This runs cypher_init.cypher to create all static data (Agent, Skills, etc.).
+    This data persists across all tests in the session.
+    """
+    import config
+    
+    driver = GraphDatabase.driver(
+        config.NEO4J_URI,
+        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
+    )
+    
+    with driver.session(database="neo4j") as session:
+        # First, wipe everything
+        session.run("MATCH (n) DETACH DELETE n")
+        
+        # Then initialize schema from cypher_init.cypher
+        init_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cypher_init.cypher")
+        with open(init_file, "r") as f:
+            cypher_script = f.read()
+        
+        # Split by semicolon to get individual statements
+        statements = cypher_script.split(";")
+        
+        for statement in statements:
+            if statement.strip():
+                session.run(statement)
+    
+    driver.close()
+    
+    yield
+    
+    # Session cleanup (optional - could wipe DB here)
+    pass
 
-def init_neo4j(session):
-    """Initialize database with schema and default data."""
-    # Read cypher_init.cypher
-    init_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cypher_init.cypher")
-    with open(init_file, "r") as f:
-        cypher_script = f.read()
+
+# =============================================================================
+# Test-Level Fixtures
+# =============================================================================
+
+@pytest.fixture(scope="function")
+def neo4j_session(neo4j_schema):
+    """
+    Provide a Neo4j session for each test.
     
-    # Split by semicolon to get individual statements
-    # (Simple split, assumes no semicolons in strings/comments which is true for this file)
-    statements = cypher_script.split(";")
+    Depends on neo4j_schema to ensure schema is initialized before tests run.
+    """
+    import config
     
-    for statement in statements:
-        if statement.strip():
-            session.run(statement)
+    driver = GraphDatabase.driver(
+        config.NEO4J_URI,
+        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
+    )
+    session = driver.session(database="neo4j")
+    
+    yield session
+    
+    session.close()
+    driver.close()
+
+
+# =============================================================================
+# Cleanup Fixtures
+# =============================================================================
+
+def reset_dynamic_data(session):
+    """
+    Clean only dynamic test data, preserving static schema.
+    
+    Deletes:
+    - Episode nodes (both :Episode and :TextWorldEpisode)
+    - Step nodes
+    - EpisodicMemory nodes
+    - Counterfactual nodes
+    - ActualPath nodes
+    - GeometricAnalysis nodes (created during tests)
+    
+    Resets:
+    - SkillStats counters to zero
+    - Belief.p_unlocked to 0.5
+    - MetaParams to default values
+    """
+    # Delete dynamic nodes in one query
+    session.run("""
+        MATCH (n)
+        WHERE n:Episode OR n:Step OR n:EpisodicMemory OR n:Counterfactual 
+           OR n:ActualPath OR n:GeometricAnalysis
+        DETACH DELETE n
+    """)
+    
+    # Reset SkillStats counters
+    session.run("""
+        MATCH (stats:SkillStats)
+        SET stats.total_uses = 0,
+            stats.successful_episodes = 0,
+            stats.failed_episodes = 0,
+            stats.avg_steps_when_successful = 0.0,
+            stats.avg_steps_when_failed = 0.0,
+            stats.uncertain_uses = 0,
+            stats.uncertain_successes = 0,
+            stats.confident_locked_uses = 0,
+            stats.confident_locked_successes = 0,
+            stats.confident_unlocked_uses = 0,
+            stats.confident_unlocked_successes = 0,
+            stats.counterfactual_adjusted = false,
+            stats.success_rate = null
+    """)
+    
+    # Reset Belief to default
+    session.run("""
+        MATCH (b:Belief)
+        SET b.p_unlocked = 0.5
+    """)
+    
+    # Reset MetaParams to defaults
+    session.run("""
+        MATCH (meta:MetaParams)
+        SET meta.alpha = 1.0,
+            meta.beta = 6.0,
+            meta.gamma = 0.3,
+            meta.alpha_history = [1.0],
+            meta.beta_history = [6.0],
+            meta.gamma_history = [0.3],
+            meta.episodes_completed = 0,
+            meta.avg_steps_last_10 = 0.0,
+            meta.success_rate_last_10 = 0.0
+    """)
+
 
 @pytest.fixture(scope="function", autouse=True)
-def reset_neo4j_state():
+def reset_neo4j_state(neo4j_schema):
     """
     Reset Neo4j state BEFORE each test to ensure isolation.
     
-    CRITICAL: Cleanup runs BEFORE the test (not after) to prevent
-    test pollution where previous test's data affects current test.
+    This is auto-used for all tests. It performs selective cleanup
+    instead of full database wipe, making tests much faster.
     """
     import config
     
@@ -86,14 +203,51 @@ def reset_neo4j_state():
             auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
         )
         with driver.session(database="neo4j") as session:
-            cleanup_neo4j(session)
-            init_neo4j(session)
+            reset_dynamic_data(session)
             
         driver.close()
     except Exception as e:
-        # Silently ignore cleanup errors (Neo4j might not be ready yet)
+        # Log but don't fail - some tests might not need Neo4j
         print(f"Warning: Neo4j reset failed: {e}")
         pass
     
     # Now run the test with clean state
+    yield
+
+
+# =============================================================================
+# Optional: Full Reset Fixture
+# =============================================================================
+
+@pytest.fixture(scope="function")
+def clean_slate():
+    """
+    Full database wipe and re-initialization.
+    
+    Available for tests that explicitly need completely fresh state.
+    Most tests should NOT use this - use the auto reset_neo4j_state instead.
+    """
+    import config
+    
+    driver = GraphDatabase.driver(
+        config.NEO4J_URI,
+        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
+    )
+    
+    with driver.session(database="neo4j") as session:
+        # Wipe everything
+        session.run("MATCH (n) DETACH DELETE n")
+        
+        # Re-run init script
+        init_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cypher_init.cypher")
+        with open(init_file, "r") as f:
+            cypher_script = f.read()
+        
+        statements = cypher_script.split(";")
+        for statement in statements:
+            if statement.strip():
+                session.run(statement)
+    
+    driver.close()
+    
     yield

@@ -9,17 +9,7 @@ from memory.episodic_replay import EpisodicMemory
 from memory.counterfactual_generator import CounterfactualGenerator
 from environments.graph_labyrinth import GraphLabyrinth
 
-@pytest.fixture(scope="module")
-def neo4j_session():
-    """Provide a Neo4j session for testing."""
-    driver = GraphDatabase.driver(
-        config.NEO4J_URI,
-        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-    )
-    session = driver.session(database="neo4j")
-    yield session
-    session.close()
-    driver.close()
+# Use neo4j_session from conftest.py
 
 @pytest.fixture
 def episodic_memory(neo4j_session):

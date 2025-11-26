@@ -18,17 +18,7 @@ from agent_runtime import AgentRuntime
 config.ENABLE_EPISODIC_MEMORY = True
 config.MAX_COUNTERFACTUALS_PER_EPISODE = 3
 
-@pytest.fixture(scope="module")
-def neo4j_session():
-    """Provide a Neo4j session for testing."""
-    driver = GraphDatabase.driver(
-        config.NEO4J_URI,
-        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-    )
-    session = driver.session(database="neo4j")
-    yield session
-    session.close()
-    driver.close()
+# Use neo4j_session from conftest.py
 
 def test_episodic_memory_disabled_by_default(neo4j_session):
     """Test that episodic memory is disabled when config flag is False."""

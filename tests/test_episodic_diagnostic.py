@@ -11,20 +11,7 @@ from neo4j import GraphDatabase
 config.ENABLE_EPISODIC_MEMORY = True
 config.EPISODIC_UPDATE_SKILL_PRIORS = True
 
-@pytest.fixture(scope="module")
-def neo4j_session():
-    """Provide a Neo4j session for testing."""
-    driver = GraphDatabase.driver(
-        config.NEO4J_URI,
-        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-    )
-    session = driver.session(database="neo4j")
-    # Clean up
-    session.run("MATCH (e:EpisodicMemory) DETACH DELETE e")
-    session.run("MATCH (p:EpisodicPath) DELETE p")
-    yield session
-    session.close()
-    driver.close()
+# Use neo4j_session from conftest.py
 
 def test_counterfactual_storage_retrieval(neo4j_session):
     """

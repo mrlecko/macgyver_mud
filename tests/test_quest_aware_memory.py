@@ -16,17 +16,6 @@ class TestQuestAwareMemoryRetrieval:
     """Test that memory retrieval uses quest/subgoal context."""
 
     @pytest.fixture
-    def neo4j_session(self):
-        driver = GraphDatabase.driver(
-            config.NEO4J_URI,
-            auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-        )
-        session = driver.session(database="neo4j")
-        yield session
-        session.close()
-        driver.close()
-
-    @pytest.fixture
     def memory_retriever(self, neo4j_session):
         from environments.domain4_textworld.memory_system import MemoryRetriever
         return MemoryRetriever(neo4j_session, verbose=False)
@@ -164,17 +153,6 @@ class TestQuestAwareMemoryStorage:
     """Test that memory storage includes quest/subgoal labels."""
 
     @pytest.fixture
-    def neo4j_session(self):
-        driver = GraphDatabase.driver(
-            config.NEO4J_URI,
-            auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-        )
-        session = driver.session(database="neo4j")
-        yield session
-        session.close()
-        driver.close()
-
-    @pytest.fixture
     def memory_retriever(self, neo4j_session):
         from environments.domain4_textworld.memory_system import MemoryRetriever
         return MemoryRetriever(neo4j_session, verbose=False)
@@ -243,17 +221,6 @@ class TestQuestAwareMemoryStorage:
 
 class TestMemoryBonusWithSubgoalContext:
     """Test that memory bonus calculation uses subgoal context."""
-
-    @pytest.fixture
-    def neo4j_session(self):
-        driver = GraphDatabase.driver(
-            config.NEO4J_URI,
-            auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-        )
-        session = driver.session(database="neo4j")
-        yield session
-        session.close()
-        driver.close()
 
     @pytest.fixture
     def agent(self, neo4j_session):
@@ -369,17 +336,6 @@ class TestMemoryBonusWithSubgoalContext:
 
 class TestBackwardCompatibility:
     """Test that memory system still works WITHOUT quest context (MacGyver mode)."""
-
-    @pytest.fixture
-    def neo4j_session(self):
-        driver = GraphDatabase.driver(
-            config.NEO4J_URI,
-            auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-        )
-        session = driver.session(database="neo4j")
-        yield session
-        session.close()
-        driver.close()
 
     @pytest.fixture
     def agent(self, neo4j_session):

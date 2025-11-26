@@ -417,10 +417,13 @@ class TextWorldCognitiveAgent:
             # Room reference exists but room data not yet populated
             return 0.0
 
-        context = self.beliefs['rooms'][current_room].get('description', '')
+        # Build context - description is optional (may be empty dict or missing description)
+        room_data = self.beliefs['rooms'][current_room]
+        context = room_data.get('description', '') if isinstance(room_data, dict) else ''
+        
+        # If no description, build minimal context with room name
         if not context:
-            # No context available for memory retrieval
-            return 0.0
+            context = f"Current Room: {current_room}"
 
         try:
             # NEW: Pass subgoal context to memory retrieval

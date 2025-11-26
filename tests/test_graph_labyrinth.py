@@ -7,17 +7,7 @@ from neo4j import GraphDatabase
 import config
 from environments.graph_labyrinth import GraphLabyrinth
 
-@pytest.fixture(scope="module")
-def neo4j_session():
-    """Provide a Neo4j session for testing."""
-    driver = GraphDatabase.driver(
-        config.NEO4J_URI,
-        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-    )
-    session = driver.session(database="neo4j")
-    yield session
-    session.close()
-    driver.close()
+# Use neo4j_session from conftest.py
 
 @pytest.fixture
 def labyrinth(neo4j_session):

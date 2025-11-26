@@ -14,18 +14,7 @@ from agent_runtime import AgentRuntime, AgentEscalationError
 from graph_model import get_agent
 from critical_state import CriticalState
 
-
-@pytest.fixture
-def neo4j_session():
-    """Provide a Neo4j session for tests."""
-    driver = GraphDatabase.driver(
-        config.NEO4J_URI,
-        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-    )
-    session = driver.session()
-    yield session
-    session.close()
-    driver.close()
+# Use neo4j_session from conftest.py
 
 
 class TestEpisodicProceduralDecisionFlow:
@@ -37,6 +26,7 @@ class TestEpisodicProceduralDecisionFlow:
           Next episode uses updated stats for decision making
     """
 
+    @pytest.mark.order(1)
     def test_episodic_learning_changes_skill_preferences(self, neo4j_session):
         """
         Verify that episodic memory insights propagate to procedural memory
@@ -449,6 +439,7 @@ class TestFullSystemIntegration:
             config.ENABLE_CRITICAL_STATE_PROTOCOLS = original_critical
             config.ENABLE_LYAPUNOV_MONITORING = original_lyapunov
 
+    @pytest.mark.order(1)
     def test_agent_handles_failure_gracefully_with_all_features(self, neo4j_session):
         """
         Verify agent handles failure scenarios without crashing when all features enabled.

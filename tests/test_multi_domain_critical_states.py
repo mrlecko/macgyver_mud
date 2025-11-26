@@ -243,18 +243,7 @@ def test_domain2_goal_labyrinth_no_false_alarm():
 # DOMAIN 3: Discrete Spatial Navigation (GraphLabyrinth)
 # ============================================================================
 
-@pytest.fixture
-def neo4j_session():
-    """Neo4j session for GraphLabyrinth tests."""
-    driver = GraphDatabase.driver(
-        config.NEO4J_URI,
-        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)
-    )
-    session = driver.session(database="neo4j")
-    yield session
-    session.close()
-    driver.close()
-
+# Use neo4j_session from conftest.py
 
 def test_domain3_graph_labyrinth_scarcity(neo4j_session):
     """
