@@ -41,7 +41,6 @@ logs/
 .env.local
 
 /docs/secret_docs/
-
+scratch/*
 /tw_games/*
 venv_*
-/scratch/*

@@ -148,14 +148,24 @@ def build_silver_stamp(skill_name: str, cost: float, p_unlocked: float) -> Dict[
     skill = {"name": skill_name, "cost": cost}
     details = score_skill_detailed(skill, p_unlocked)
 
-    goal = abs(details["goal_value"])      # magnitude of goal contribution
-    info = max(0.0, details["info_gain"]) # info is already >=0 in this demo
-    cost_val = max(0.0, details["cost"])
+    # Raw components
+    goal_raw = float(details["goal_value"])         # may be negative
+    info_raw = float(details["info_gain"])          # non-negative in this demo
+    cost_raw = float(details["cost"])               # non-negative
+    goal_sign = -1.0 if goal_raw < 0 else (1.0 if goal_raw > 0 else 0.0)
 
-    # Protect means with positive-domain clamp
-    g = _ensure_positive(goal)
-    i = _ensure_positive(info)
-    c = _ensure_positive(cost_val)
+    # Weighted (policy-aligned) components
+    wg_raw = float(details.get("weighted_goal", goal_raw))
+    wi_raw = float(details.get("weighted_info", info_raw))
+    wc_raw = float(details.get("weighted_cost", cost_raw))
+
+    # Protect means with positive-domain clamp (use magnitudes)
+    g = _ensure_positive(abs(goal_raw))
+    i = _ensure_positive(max(0.0, info_raw))
+    c = _ensure_positive(max(0.0, cost_raw))
+    wg = _ensure_positive(abs(wg_raw))
+    wi = _ensure_positive(max(0.0, wi_raw))
+    wc = _ensure_positive(max(0.0, wc_raw))
 
     # --- Exploration bundle: goal vs information ---
     hm_gi = harmonic_mean(g, i)
@@ -167,14 +177,26 @@ def build_silver_stamp(skill_name: str, cost: float, p_unlocked: float) -> Dict[
     # - Low when one dominates (very unbalanced)
     k_explore = gm_gi / am_gi if am_gi > 0 else 0.0
 
-    # --- Efficiency bundle: (goal+info) vs cost ---
-    g_plus_i = _ensure_positive(g + i)
-    hm_gc = harmonic_mean(g_plus_i, c)
-    gm_gc = geometric_mean(g_plus_i, c)
-    am_gc = arithmetic_mean(g_plus_i, c)
+    # --- Exploration bundle (weighted): |weighted_goal| vs weighted_info ---
+    hm_wg_wi = harmonic_mean(wg, wi)
+    gm_wg_wi = geometric_mean(wg, wi)
+    am_wg_wi = arithmetic_mean(wg, wi)
+    k_explore_balance = gm_wg_wi / am_wg_wi if am_wg_wi > 0 else 0.0
 
-    # Efficiency coefficient: high when goal+info comfortably beats cost
-    k_efficiency = gm_gc / am_gc if am_gc > 0 else 0.0
+    # --- Efficiency bundle (weighted): (value = wg+wi) vs wc ---
+    value = _ensure_positive(wg + wi)
+    hm_value_cost = harmonic_mean(value, wc)
+    gm_value_cost = geometric_mean(value, wc)
+    am_value_cost = arithmetic_mean(value, wc)
+
+    # Balance/tension (knife-edge): high when value and cost are comparable
+    k_eff_balance = gm_value_cost / am_value_cost if am_value_cost > 0 else 0.0
+
+    # ROI/advantage: high when value comfortably exceeds cost (monotone)
+    k_eff_roi = float(value / (value + wc)) if (value + wc) > 0 else 0.0
+
+    # Backwards-compatible alias
+    k_efficiency = k_eff_balance
 
     # Base entropy (uncertainty) at this belief, for reference
     H = entropy(p_unlocked)
@@ -183,31 +205,49 @@ def build_silver_stamp(skill_name: str, cost: float, p_unlocked: float) -> Dict[
     # a slightly rescaled "silver_score" which compresses the
     # exploration/efficiency shape into a single multiplier.
     base_score = details["total_score"]
-    shape_multiplier = 0.5 * (k_explore + k_efficiency)  # in [0, 1]
+    # Use exploration balance and ROI as preview multiplier
+    shape_multiplier = 0.5 * (k_explore_balance + k_eff_roi)  # in [0, 1]
     silver_score = base_score * (0.5 + 0.5 * shape_multiplier)
 
     return {
-        "stamp_version": "silver_v1",
+        "stamp_version": "silver_v2",
         "skill_name": skill_name,
         "p_unlocked": float(p_unlocked),
-        # Original components
-        "goal_value": float(details["goal_value"]),
-        "info_gain": float(details["info_gain"]),
-        "cost": float(details["cost"]),
+        # Entropy for reference
+        "entropy": float(H),
+        # Raw components (keep originals)
+        "goal_value": float(goal_raw),
+        "goal_sign": float(goal_sign),
+        "info_gain": float(info_raw),
+        "cost": float(cost_raw),
+        # Weighted components for analysis
+        "weighted_goal": float(wg_raw),
+        "weighted_info": float(wi_raw),
+        "weighted_cost": float(wc_raw),
         "base_score": float(base_score),
-        # Pythagorean means – exploration
+        # Pythagorean means – exploration (raw)
         "hm_goal_info": float(hm_gi),
         "gm_goal_info": float(gm_gi),
         "am_goal_info": float(am_gi),
-        # Pythagorean means – efficiency
-        "hm_goalinfo_cost": float(hm_gc),
-        "gm_goalinfo_cost": float(gm_gc),
-        "am_goalinfo_cost": float(am_gc),
+        # Pythagorean means – exploration (weighted)
+        "hm_wgoal_winfo": float(hm_wg_wi),
+        "gm_wgoal_winfo": float(gm_wg_wi),
+        "am_wgoal_winfo": float(am_wg_wi),
+        # Pythagorean means – efficiency (weighted)
+        "hm_value_cost": float(hm_value_cost),
+        "gm_value_cost": float(gm_value_cost),
+        "am_value_cost": float(am_value_cost),
+        # Backwards-compat: provide old efficiency mean keys based on raw (goal+info, cost)
+        # so existing tools/tests continue to work.
+        "hm_goalinfo_cost": float(harmonic_mean(_ensure_positive(g + i), c)),
+        "gm_goalinfo_cost": float(geometric_mean(_ensure_positive(g + i), c)),
+        "am_goalinfo_cost": float(arithmetic_mean(_ensure_positive(g + i), c)),
         # Dimensionless shape coefficients
         "k_explore": float(k_explore),
+        "k_explore_balance": float(k_explore_balance),
+        "k_eff_balance": float(k_eff_balance),
+        "k_eff_roi": float(k_eff_roi),
         "k_efficiency": float(k_efficiency),
-        # Entropy at this belief (for reference)
-        "entropy": float(H),
         # Softly rescaled score (does NOT affect behaviour unless you choose to)
         "silver_score": float(silver_score),
     }

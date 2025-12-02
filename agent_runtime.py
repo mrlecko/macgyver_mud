@@ -109,8 +109,8 @@ class AgentRuntime:
             self.beta = config.BETA
             self.gamma = config.GAMMA
 
-        # Initialize Credit Assignment
-        self.credit_assignment = CreditAssignment(session, self.agent_id)
+        # Initialize Credit Assignment (generalized, persistent failed path memory)
+        self.credit_assignment = CreditAssignment()
         
         # Initialize Critical State Monitor
         self.monitor = CriticalStateMonitor()
@@ -140,8 +140,7 @@ class AgentRuntime:
         self.history = []
         self.last_prediction_error = 0.0
             
-        # Generalized Credit Assignment (Online Safety)
-        self.credit_assignment = CreditAssignment()
+        # Credit Assignment already initialized above
         
     def _get_belief_category(self, p_unlocked: float) -> str:
         """
@@ -627,8 +626,6 @@ class AgentRuntime:
 
         # Create episode in graph
         episode_id = create_episode(self.session, self.agent_id, self.door_state)
-        self.current_episode_id = episode_id
-        
         self.current_episode_id = episode_id
         
         # FIX #1: Initialize path tracking for episodic memory
@@ -1128,4 +1125,3 @@ if __name__ == "__main__":
 
     driver.close()
     print("\n✓ Agent runtime works!")
-

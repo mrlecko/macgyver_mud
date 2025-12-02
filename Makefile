@@ -18,7 +18,7 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 install: ## Install Python dependencies
-	pip install -r requirements.txt
+	python3 -m pip install -r requirements.txt
 
 bootstrap: install neo4j-start test-full ## One-shot setup: Install, Start DB, and Test
 	@echo ""
@@ -308,10 +308,11 @@ demo-critical: ## Run the "Maximum Attack" demo (Critical State Protocols)
 	@echo "This demonstrates the agent escaping a local optimum where standard AI fails."
 	@python3 validation/comparative_stress_test.py
 
+
 test-full: ## Run the full test suite (Unit + Red Team)
 	@echo "==> Running Full Spectrum Test Suite..."
 	@export PYTHONPATH=$$PYTHONPATH:. && \
-	pytest tests/test_geometric_controller.py tests/test_critical_states.py && \
+	python3 -m pytest tests/test_geometric_controller.py tests/test_critical_states.py && \
 	python3 validation/geometric_trap_experiment.py && \
 	python3 validation/red_team_experiment.py && \
 	python3 validation/adaptive_red_team.py && \

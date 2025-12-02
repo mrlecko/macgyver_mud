@@ -830,7 +830,7 @@
                 <ol>
                     <li><strong>Adjust Sliders:</strong> Move Goal, Info, and Cost sliders to see effects</li>
                     <li><strong>Watch Triangles:</strong> See how H, G, A points move in the geometric space</li>
-                    <li><strong>Observe Gauges:</strong> Notice how k_explore and k_efficiency change</li>
+                    <li><strong>Observe Gauges:</strong> Notice how k_explore (balance) and k_eff_roi (ROI) change</li>
                     <li><strong>Try Presets:</strong> Click scenario buttons to see canonical examples</li>
                     <li><strong>Track History:</strong> The canvas shows a trail of your decisions</li>
                 </ol>
@@ -887,6 +887,22 @@
                 </div>
                 <input type="range" id="cost-slider" min="0" max="10" step="0.1" value="2">
                 <small>Action cost / resource expenditure (0-10)</small>
+            </div>
+
+            <!-- Weights / Policy Toggle -->
+            <div class="control-card weights">
+                <div class="control-label">
+                    <span>⚖️ Policy Weights (α, β, γ)</span>
+                    <label style="font-weight: normal; font-size: 0.95rem;">
+                        <input type="checkbox" id="use-weights" style="margin-right: 0.5rem;"> Use weights
+                    </label>
+                </div>
+                <div class="weights-row" style="display: flex; gap: 1rem; align-items: center;">
+                    <label>α <input type="number" id="alpha-input" value="1.0" min="0" step="0.1" style="width: 80px; margin-left: 0.25rem;"></label>
+                    <label>β <input type="number" id="beta-input" value="6.0" min="0" step="0.1" style="width: 80px; margin-left: 0.25rem;"></label>
+                    <label>γ <input type="number" id="gamma-input" value="0.3" min="0" step="0.1" style="width: 80px; margin-left: 0.25rem;"></label>
+                </div>
+                <small>When enabled, computations use α·Goal, β·Info, γ·Cost.</small>
             </div>
         </div>
 
@@ -1061,17 +1077,24 @@
                         </div>
                     </div>
                     <small style="color: #6b7280; font-style: italic;">Mathematical invariant: H ≤ G ≤ A (equality when benefit = cost)</small>
+                    <div class="highlight" style="margin-top: 1rem;">
+                        Clarification: We show two different notions here.
+                        <br>
+                        • Balance (GM/AM) reflects knife-edge symmetry between value and cost (k_eff_balance).
+                        <br>
+                        • ROI (value/(value+cost)) reflects true return on investment (k_eff_roi). The gauge below uses ROI.
+                    </div>
                 </div>
 
                 <div class="gauge-section">
-                    <h3>k_efficiency = G / A</h3>
+                    <h3>k_eff_roi = (Goal+Info) / (Goal+Info + Cost)</h3>
                     <div class="gauge-container">
                         <div class="gauge">
                             <div class="gauge-indicator" id="efficiency-gauge-indicator"></div>
                         </div>
                         <div class="gauge-labels">
                             <span>Poor ROI (0.0)</span>
-                            <span>Balanced (1.0)</span>
+                            <span>Excellent ROI (1.0)</span>
                         </div>
                     </div>
                 </div>
@@ -1079,7 +1102,8 @@
                 <div class="k-value-display">
                     <div class="k-label">Shape Coefficient</div>
                     <div class="k-number" id="efficiency-k-value">0.000</div>
-                    <div class="k-interpretation" id="efficiency-k-interp">Perfectly Balanced</div>
+                    <div class="k-interpretation" id="efficiency-k-balance" style="margin-bottom: 0.5rem;">Balance (GM/AM): 0.000</div>
+                    <div class="k-interpretation" id="efficiency-k-interp">Excellent ROI</div>
                 </div>
             </div>
         </div>
@@ -1236,13 +1260,17 @@
             const gm_gc = geometricMean(g_plus_i, c);
             const am_gc = arithmeticMean(g_plus_i, c);
 
-            const k_efficiency = am_gc > 0 ? (gm_gc / am_gc) : 0.0;
+            // Balance/tension between value and cost (knife-edge)
+            const k_eff_balance = am_gc > 0 ? (gm_gc / am_gc) : 0.0;
+            // True ROI: high when value comfortably exceeds cost (monotone)
+            const k_eff_roi = (g_plus_i + c) > 0 ? (g_plus_i / (g_plus_i + c)) : 0.0;
 
             return {
                 H: hm_gc,
                 G: gm_gc,
                 A: am_gc,
-                k_efficiency: k_efficiency
+                k_eff_roi: k_eff_roi,
+                k_eff_balance: k_eff_balance
             };
         }
 
@@ -1256,7 +1284,7 @@
         }
 
         function interpretKEfficiency(k) {
-            if (k > 0.95) return "Excellent ROI (Balanced)";
+            if (k > 0.95) return "Excellent ROI";
             if (k > 0.85) return "Good Return on Investment";
             if (k > 0.70) return "Moderate Efficiency";
             if (k > 0.50) return "Acceptable Trade-off";
@@ -1271,6 +1299,10 @@
             goal: 5.0,
             info: 5.0,
             cost: 2.0,
+            useWeights: false,
+            alpha: 1.0,
+            beta: 6.0,
+            gamma: 0.3,
             history: []
         };
 
@@ -1449,18 +1481,24 @@
         // ====================================================================
 
         function update() {
-            const g = state.goal;
-            const i = state.info;
-            const c = state.cost;
+            // Apply optional policy weights for computations
+            let g = state.goal;
+            let i = state.info;
+            let c = state.cost;
+            if (state.useWeights) {
+                g = g * state.alpha;
+                i = i * state.beta;
+                c = c * state.gamma;
+            }
 
             // Calculate both bundles
             const explore = calculateExploration(g, i);
             const efficiency = calculateEfficiency(g, i, c);
 
             // Update control displays
-            document.getElementById('goal-display').textContent = g.toFixed(1);
-            document.getElementById('info-display').textContent = i.toFixed(1);
-            document.getElementById('cost-display').textContent = c.toFixed(1);
+            document.getElementById('goal-display').textContent = state.goal.toFixed(1);
+            document.getElementById('info-display').textContent = state.info.toFixed(1);
+            document.getElementById('cost-display').textContent = state.cost.toFixed(1);
 
             // Update exploration bundle
             updateBundle('explore', explore, 10);
@@ -1488,12 +1526,12 @@
             drawDecisionSpace();
 
             console.log(`State: goal=${g.toFixed(1)}, info=${i.toFixed(1)}, cost=${c.toFixed(1)}`);
-            console.log(`Explore: k=${explore.k_explore.toFixed(3)}, Efficiency: k=${efficiency.k_efficiency.toFixed(3)}`);
+            console.log(`Explore: k=${explore.k_explore.toFixed(3)}, ROI: k=${efficiency.k_eff_roi.toFixed(3)}, Balance: ${efficiency.k_eff_balance.toFixed(3)}`);
         }
 
         function updateBundle(bundleName, data, maxScale) {
-            const { H, G, A, k_explore, k_efficiency } = data;
-            const k = k_explore !== undefined ? k_explore : k_efficiency;
+            const { H, G, A, k_explore, k_eff_roi, k_eff_balance } = data;
+            const k = bundleName === 'explore' ? k_explore : k_eff_roi;
 
             // Update mean bars
             updateMeanBar(bundleName, 'hm', H, maxScale);
@@ -1514,6 +1552,11 @@
             if (bundleName === 'explore') {
                 kInterpElem.textContent = interpretKExplore(k);
             } else {
+                // Efficiency: display ROI interpretation and show balance as a sublabel
+                const balanceElem = document.getElementById('efficiency-k-balance');
+                if (balanceElem && typeof k_eff_balance === 'number') {
+                    balanceElem.textContent = `Balance (GM/AM): ${k_eff_balance.toFixed(3)}`;
+                }
                 kInterpElem.textContent = interpretKEfficiency(k);
             }
         }
@@ -1543,6 +1586,27 @@
 
         document.getElementById('cost-slider').addEventListener('input', (e) => {
             state.cost = parseFloat(e.target.value);
+            update();
+        });
+
+        // Weights toggle and inputs
+        document.getElementById('use-weights').addEventListener('change', (e) => {
+            state.useWeights = !!e.target.checked;
+            update();
+        });
+        document.getElementById('alpha-input').addEventListener('input', (e) => {
+            const v = parseFloat(e.target.value);
+            if (!isNaN(v) && v >= 0) state.alpha = v;
+            update();
+        });
+        document.getElementById('beta-input').addEventListener('input', (e) => {
+            const v = parseFloat(e.target.value);
+            if (!isNaN(v) && v >= 0) state.beta = v;
+            update();
+        });
+        document.getElementById('gamma-input').addEventListener('input', (e) => {
+            const v = parseFloat(e.target.value);
+            if (!isNaN(v) && v >= 0) state.gamma = v;
             update();
         });
 

@@ -203,15 +203,20 @@ def score_skill_with_memory(skill: dict, p_unlocked: float,
     # Base theoretical score from active inference
     theoretical_score = score_skill(skill, p_unlocked)
 
-    # If no memory or insufficient data, return pure theory
+    # If no memory or insufficient data, return theory plus any epistemic bonus
     if not skill_stats or skill_stats["overall"]["uses"] == 0:
-        return theoretical_score, {
+        final_score = theoretical_score + epistemic_bonus
+        return final_score, {
             "theoretical_score": theoretical_score,
             "memory_bonus": 0.0,
             "confidence": 0.0,
-            "final_score": theoretical_score + epistemic_bonus,
+            "final_score": final_score,
             "epistemic_bonus": epistemic_bonus,
-            "reasoning": f"Theory: {theoretical_score:.2f} | No memory → Final: {theoretical_score + epistemic_bonus:.2f}"
+            "reasoning": (
+                f"Theory: {theoretical_score:.2f} | "
+                f"No memory | Explore: {epistemic_bonus:+.2f} | "
+                f"Final: {final_score:.2f}"
+            )
         }
 
     # Select appropriate stats based on context

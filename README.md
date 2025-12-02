@@ -64,9 +64,10 @@ Goes beyond scalar scores to show decision "shape":
 
 ```python
 # Standard approach: score = 7.3 (opaque)
-# This approach:
-k_explore = 0.85  # Agent is exploring (1.0) not exploiting (0.0)
-k_efficiency = 0.62  # Moderately efficient trade-off
+# This approach (silver_v2):
+k_explore = 0.85        # Balance of goal vs info (GM/AM)
+k_eff_roi = 0.62        # ROI: (value)/(value+cost)
+k_eff_balance = 0.78    # Knife-edge symmetry of value vs cost (GM/AM)
 ```
 
 **Use case:** Debugging agent behavior, explainable AI requirements, regulatory compliance
@@ -120,8 +121,9 @@ make bootstrap  # Installs deps, starts Neo4j, runs tests
 # See loop detection in action
 make demo-critical
 
-# Visualize decision geometry
+# Visualize decision geometry (SPA & plots)
 make visualize-silver
+# Open the interactive SPA at docs/demos/index.html (supports α,β,γ weights)
 
 # See counterfactual learning
 python3 validation/episodic_replay_demo.py
@@ -178,7 +180,7 @@ agent = AgentRuntime(config)
 **Key Components:**
 - `agent_runtime.py` - Main agent loop (Cortex + Brainstem)
 - `critical_state.py` - Meta-cognitive state detection (5 states)
-- `scoring_silver.py` - Geometric decision analysis
+- `scoring_silver.py` - Geometric decision analysis (silver_v2)
 - `memory/episodic_replay.py` - Counterfactual learning
 - `control/lyapunov.py` - Stability monitoring
 
@@ -194,9 +196,10 @@ agent = AgentRuntime(config)
 
 **Existing work:** Most Active Inference implementations output scalar Expected Free Energy
 
-**This work:** Decomposes into:
+**This work (silver_v2):** Decomposes into:
 - `k_explore = GM/AM` (exploration vs exploitation balance)
-- `k_efficiency = HM/AM` (benefit vs cost trade-off)
+- `k_eff_roi = value/(value+cost)` (true ROI; monotone “beats cost”)
+- `k_eff_balance = GM/AM(value, cost)` (knife‑edge balance/tension)
 
 **Result:** Transparent cognitive primitives for debugging and explainability
 
