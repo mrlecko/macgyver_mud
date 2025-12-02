@@ -23,6 +23,7 @@ from graph_model import create_episode, log_step, mark_episode_complete, get_ski
 import json
 from critical_state import CriticalStateMonitor, CriticalState, AgentState
 from scoring import score_skill_with_memory
+from memory.episodic_replay import EpisodicMemory
 
 MODEL_SCHEMA_VERSION = "1.1"
 EFE_PANIC_THRESHOLD = 5.0
@@ -197,6 +198,7 @@ class ActiveInferenceRuntime:
         self.agent_id: Optional[str] = None
         self.monitor = CriticalStateMonitor()
         self.current_critical_state = CriticalState.FLOW
+        self.episodic_memory = EpisodicMemory(session) if session is not None else None
         if self.session is not None:
             agent = get_agent(self.session, config.AGENT_NAME)
             if agent:
@@ -425,11 +427,13 @@ class ActiveInferenceRuntime:
 
         belief = initial_belief if initial_belief is not None else self.model.D.copy()
         episode_id = self.start_episode(door_state=door_state) if self.session else None
+        transitions: List[Tuple[int, str, int, int]] = []
+        true_state_idx = self._state_index(door_state)
 
         for step in range(max_steps):
             action, scored = self.select_action(belief, depth=policy_depth, max_policies=max_policies, beam_width=beam_width)
             action_idx = self._action_idx(action)
-            state_idx = self._state_index(door_state)
+            state_idx = true_state_idx
 
             obs_idx, observation = self._sample_observation(state_idx, action_idx)
             posterior = self.update_belief(belief, action, observation)
@@ -437,6 +441,7 @@ class ActiveInferenceRuntime:
             # Learning updates
             self.update_likelihoods(action, state_idx, obs_idx, learning_rate=1.0)
             self.update_preferences(obs_idx, learning_rate=0.5)
+            transitions.append((state_idx, action, obs_idx, state_idx))
 
             self.trace.append(
                 {
@@ -465,6 +470,21 @@ class ActiveInferenceRuntime:
 
         if episode_id is not None:
             self.complete_episode(episode_id, escaped=self.escaped, total_steps=len(self.trace))
+        # Automatic episodic replay: use trace to update A/B
+        if transitions:
+            self.update_from_episode(transitions, learning_rate=0.5)
+        # Store episodic memory (optional) with raw trace
+        if self.episodic_memory and episode_id is not None:
+            import json
+            path_data = {
+                "path_id": f"path-{episode_id}",
+                "path_data": json.dumps(self.trace),
+                "state_type": "belief",
+                "outcome": "success" if self.escaped else "failure",
+                "steps": len(self.trace),
+                "final_distance": 0 if self.escaped else len(self.trace),
+            }
+            self.episodic_memory.store_actual_path(str(episode_id), path_data)
         return episode_id
 
     def get_trace(self) -> List[Dict[str, Any]]:

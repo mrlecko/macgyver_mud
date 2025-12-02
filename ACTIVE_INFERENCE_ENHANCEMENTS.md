@@ -16,6 +16,7 @@ This document summarizes the Active Inference additions, behavior changes, and t
 - **Critical-state monitoring**: Active Inference runtime now updates `CriticalStateMonitor` each step (entropy-based) and exposes `current_critical_state`; unit tests cover panic/flow evaluation.
 - **Learning persistence**: Dirichlet concentrations for A/B and preference counts are persisted (schema version 1.1); updates occur per step.
 - **Memory influence**: SkillStats can bias prior action selection in the Active Inference path (procedural memory hook).
+- **Automatic episodic replay**: Episode traces are replayed into A/B updates post-run; `update_from_episode` supports bulk transition updates.
 
 ## Tests added
 - `tests/test_active_inference_runtime_learning.py`: Dirichlet update on A and locked/unlocked runs with stochastic sampling.
@@ -28,6 +29,9 @@ This document summarizes the Active Inference additions, behavior changes, and t
 - `tests/test_active_inference_critical_states.py`: Validates panic vs flow evaluation using entropy signals.
 - `tests/test_active_inference_persistence_dirichlet.py`: Ensures Dirichlet concentrations persist.
 - `tests/test_active_inference_memory.py`: Confirms SkillStats bias action selection in Active Inference.
+- `tests/test_active_inference_episode_learning.py`: Verifies episodic transitions update Dirichlet counts.
+- `tests/test_active_inference_multi_episode.py`: Checks multi-episode likelihood improvements.
+- `tests/test_active_inference_critical_protocols.py`: Validates free-energy-driven panic and entropy-driven flow.
 
 ## Current behavior vs heuristic baseline
 - Active Inference now escapes in both unlocked and locked cases (window fallback), selects an epistemic action first in the unlocked integration test, and can persist learned parameters.
@@ -37,7 +41,7 @@ This document summarizes the Active Inference additions, behavior changes, and t
 - Preferences/cost weights remain hand-tuned; persisted preferences help, but validating against graph changes would strengthen robustness.
 - Policy search still relies on brute force or simple beam; more advanced pruning/batching would help for larger spaces.
 - Persistence is JSON-with-version; no checkpointing/history yet.
-- Critical-state/Lyapunov and procedural/episodic memory are still not integrated with Active Inference; remains heuristic-only.
+- Critical-state is entropy/FE-only; Lyapunov and richer protocols are not integrated. Procedural/episodic memory influence is minimal (SkillStats bias; replay uses heuristic state inference).
 
 ## Red Team Assessment (current)
 - Learning is rudimentary: per-step Dirichlet/preference count updates, but no multi-episode convergence or checkpoints; preferences still mostly hand-shaped.
