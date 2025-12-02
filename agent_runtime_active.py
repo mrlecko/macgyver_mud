@@ -183,6 +183,7 @@ class ActiveInferenceRuntime:
         temperature: float = 1.0,
         session: Optional[Session] = None,
         stochastic: bool = False,
+        skill_priors: Optional[Dict[str, Dict[str, float]]] = None,
     ) -> None:
         self.model = model
         self.temperature = temperature
@@ -203,6 +204,8 @@ class ActiveInferenceRuntime:
             agent = get_agent(self.session, config.AGENT_NAME)
             if agent:
                 self.agent_id = agent["id"]
+        # Procedural memory priors (skill -> stats)
+        self.skill_priors = skill_priors or {}
 
     def _action_idx(self, action: str) -> int:
         return self.model.actions.index(action)
@@ -283,6 +286,24 @@ class ActiveInferenceRuntime:
         if max_policies is not None and len(scored) > max_policies:
             scored = scored[:max_policies]
         efes = np.array([s[1] for s in scored])
+        # Inject priors from procedural memory (lower EFE for high-success skills)
+        if self.skill_priors:
+            adjusted = []
+            prior_names = set(self.skill_priors.keys())
+            for (policy, efe) in scored:
+                first_action = policy[0]
+                stats = self.skill_priors.get(first_action)
+                if stats:
+                    success = stats.get("success_rate", 0.5)
+                    confidence = stats.get("confidence", 0.0)
+                    # Bias toward high-success, high-confidence actions
+                    efe -= 5.0 * success * max(confidence, 0.0)
+                else:
+                    # Mild penalty for actions without priors when priors exist
+                    efe += 0.5
+                adjusted.append((policy, efe))
+            scored = sorted(adjusted, key=lambda x: x[1])
+            efes = np.array([s[1] for s in scored])
         # Convert to action probabilities via softmax over -EFE (lower is better)
         policy_probs = _softmax(-efes / max(self.temperature, self.eps))
         best_policy_idx = int(np.argmax(policy_probs))
@@ -370,6 +391,8 @@ class ActiveInferenceRuntime:
         for state_idx, action_name, obs_idx, next_state_idx in transitions:
             self.update_likelihoods(action_name, state_idx, obs_idx, learning_rate)
             self.update_transitions(action_name, state_idx, next_state_idx, learning_rate)
+        # Refresh normalized distributions after updates
+        self.model._normalize()
 
     def update_critical_state(self, entropy_now: float, efe: float, steps_remaining: int) -> None:
         agent_state = AgentState(
