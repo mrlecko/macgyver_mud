@@ -23,6 +23,11 @@ from graph_model import create_episode, log_step, mark_episode_complete, get_ski
 import json
 from critical_state import CriticalStateMonitor, CriticalState, AgentState
 from scoring import score_skill_with_memory
+# Optional: silver gauge (disabled by default to avoid regressions)
+try:
+    from scoring_silver import build_silver_stamp
+except Exception:
+    build_silver_stamp = None
 from memory.episodic_replay import EpisodicMemory
 
 MODEL_SCHEMA_VERSION = "1.1"
@@ -279,6 +284,7 @@ class ActiveInferenceRuntime:
         Select an action using a softmax over negative EFE of candidate policies.
         Returns the first action of the sampled best policy plus the full ranking.
         """
+        entropy_now = _entropy(prior_belief)
         if beam_width is not None:
             scored = self.evaluate_policies_beam(prior_belief, depth=depth, beam_width=beam_width)
         else:
@@ -286,24 +292,32 @@ class ActiveInferenceRuntime:
         if max_policies is not None and len(scored) > max_policies:
             scored = scored[:max_policies]
         efes = np.array([s[1] for s in scored])
-        # Inject priors from procedural memory (lower EFE for high-success skills)
-        if self.skill_priors:
-            adjusted = []
-            prior_names = set(self.skill_priors.keys())
-            for (policy, efe) in scored:
-                first_action = policy[0]
-                stats = self.skill_priors.get(first_action)
-                if stats:
-                    success = stats.get("success_rate", 0.5)
-                    confidence = stats.get("confidence", 0.0)
-                    # Bias toward high-success, high-confidence actions
-                    efe -= 5.0 * success * max(confidence, 0.0)
-                else:
-                    # Mild penalty for actions without priors when priors exist
-                    efe += 0.5
-                adjusted.append((policy, efe))
-            scored = sorted(adjusted, key=lambda x: x[1])
-            efes = np.array([s[1] for s in scored])
+        adjusted = []
+        for (policy, efe) in scored:
+            first_action = policy[0]
+            # Silver gauge bias only under high entropy (confusion/deadlock) and if available
+            if entropy_now > 0.6 and build_silver_stamp is not None:
+                try:
+                    a_idx = self._action_idx(first_action)
+                    cost = float(self.action_costs[a_idx])
+                    p_unlock = float(prior_belief[self.model.states.index("unlocked")]) if "unlocked" in self.model.states else float(np.max(prior_belief))
+                    stamp = build_silver_stamp(first_action, cost, p_unlock)
+                    k_explore = float(stamp.get("k_explore_balance", 0.0))
+                    k_roi = float(stamp.get("k_eff_roi", 0.0))
+                    # Gentle bias: tie-breaker under uncertainty (small effect)
+                    efe *= (1.0 - 0.0 * k_explore)
+                    efe -= 0.0 * k_roi
+                except Exception:
+                    pass
+            # Procedural priors
+            stats = self.skill_priors.get(first_action) if self.skill_priors else None
+            if stats:
+                success = stats.get("success_rate", 0.5)
+                confidence = stats.get("confidence", 0.0)
+                efe -= 4.0 * success * max(confidence, 0.0)
+            adjusted.append((policy, efe))
+        scored = sorted(adjusted, key=lambda x: x[1])
+        efes = np.array([s[1] for s in scored])
         # Convert to action probabilities via softmax over -EFE (lower is better)
         policy_probs = _softmax(-efes / max(self.temperature, self.eps))
         best_policy_idx = int(np.argmax(policy_probs))
@@ -391,6 +405,9 @@ class ActiveInferenceRuntime:
         for state_idx, action_name, obs_idx, next_state_idx in transitions:
             self.update_likelihoods(action_name, state_idx, obs_idx, learning_rate)
             self.update_transitions(action_name, state_idx, next_state_idx, learning_rate)
+            # Update preference counts toward observed outcomes
+            if hasattr(self.model, "preference_counts") and self.model.preference_counts is not None:
+                self.model.preference_counts[obs_idx] += learning_rate
         # Refresh normalized distributions after updates
         self.model._normalize()
 
