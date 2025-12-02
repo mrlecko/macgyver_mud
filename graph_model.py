@@ -84,7 +84,7 @@ def update_belief(session: Session, agent_id: str, statevar_name: str, new_value
     """, agent_id=agent_id, statevar_name=statevar_name, new_value=new_value)
 
 
-def get_skills(session: Session, agent_id: str) -> List[Dict[str, Any]]:
+def get_skills(session: Session, agent_id: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Get all available skills for the agent.
 

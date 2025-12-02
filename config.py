@@ -177,6 +177,13 @@ SHOW_SCORES = False  # Show scoring details in verbose mode
 SHOW_GRAPH_STATS = True  # Show Neo4j stats after run
 
 # ============================================================================
+# Runtime Selection
+# ============================================================================
+
+# Agent runtime mode: "heuristic" (current bandit) or "active" (new Active Inference runtime)
+AGENT_RUNTIME_MODE = os.getenv("AGENT_RUNTIME_MODE", "heuristic")
+
+# ============================================================================
 # Validation
 # ============================================================================
 

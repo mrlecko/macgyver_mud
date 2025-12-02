@@ -39,6 +39,8 @@ def setup_test_environment():
 @pytest.fixture(scope="session")
 def verify_neo4j_connection():
     """Verify Neo4j is accessible before running tests."""
+    if os.environ.get("SKIP_NEO4J_TESTS") == "1":
+        pytest.skip("Skipping Neo4j availability check for unit-only tests")
     import config
     
     try:
@@ -62,6 +64,10 @@ def neo4j_schema():
     This runs cypher_init.cypher to create all static data (Agent, Skills, etc.).
     This data persists across all tests in the session.
     """
+    if os.environ.get("SKIP_NEO4J_TESTS") == "1":
+        # Unit-only runs can bypass the database entirely
+        yield
+        return
     import config
     
     driver = GraphDatabase.driver(
@@ -194,6 +200,9 @@ def reset_neo4j_state(neo4j_schema):
     This is auto-used for all tests. It performs selective cleanup
     instead of full database wipe, making tests much faster.
     """
+    if os.environ.get("SKIP_NEO4J_TESTS") == "1":
+        yield
+        return
     import config
     
     # Cleanup BEFORE test runs

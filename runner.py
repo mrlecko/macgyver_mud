@@ -10,9 +10,11 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich import box
+import numpy as np
 
 import config
 from agent_runtime import AgentRuntime
+from agent_runtime_active import ActiveInferenceRuntime, build_model_from_graph, load_model_from_graph, save_model_to_graph
 from graph_model import get_episode_stats
 
 
@@ -99,6 +101,13 @@ Examples:
         help="Skill selection mode: 'crisp' (base skills only), 'balanced' (multi-objective skills), or 'hybrid' (all skills)"
     )
 
+    parser.add_argument(
+        "--runtime",
+        choices=["heuristic", "active"],
+        default=config.AGENT_RUNTIME_MODE,
+        help="Choose the agent runtime: 'heuristic' (current bandit) or 'active' (Active Inference beta)"
+    )
+
     return parser.parse_args()
 
 
@@ -176,6 +185,37 @@ def print_trace(console: Console, runtime: AgentRuntime, verbose: bool = False):
         delta_str = f"{delta:+.2f}" if delta != 0 else "—"
 
         table.add_row(step_idx, skill, obs_display, belief_str, delta_str)
+
+    console.print(table)
+
+
+def print_trace_active(console: Console, trace: list):
+    """Print episode trace for Active Inference runtime."""
+    if not trace:
+        console.print("[yellow]No steps recorded[/yellow]")
+        return
+
+    table = Table(
+        title="Active Inference Episode Trace",
+        box=box.SIMPLE,
+        show_header=True,
+        header_style="bold cyan"
+    )
+    table.add_column("Step", justify="center", style="dim")
+    table.add_column("Action", style="cyan")
+    table.add_column("Observation", style="yellow")
+    table.add_column("p(unlocked)", justify="right")
+    table.add_column("EFE", justify="right")
+
+    for step in trace:
+        belief_str = f"{step['p_before']:.2f} → {step['p_after']:.2f}"
+        table.add_row(
+            str(step["step_index"]),
+            step["action"],
+            step["observation"],
+            belief_str,
+            f"{step.get('efe', 0.0):.3f}",
+        )
 
     console.print(table)
 
@@ -284,52 +324,83 @@ def main():
 
     try:
         with driver.session(database="neo4j") as session:
-            # Create agent runtime
-            if not args.quiet:
-                console.print("[dim]Initializing agent...[/dim]")
+            if args.runtime == "heuristic":
+                if not args.quiet:
+                    console.print("[dim]Initializing heuristic agent...[/dim]")
 
-            runtime = AgentRuntime(
-                session,
-                door_state=args.door_state,
-                initial_belief=args.initial_belief,
-                use_procedural_memory=args.use_memory,
-                adaptive_params=args.adaptive,
-                verbose_memory=args.verbose_memory,
-                skill_mode=args.skill_mode
-            )
+                runtime = AgentRuntime(
+                    session,
+                    door_state=args.door_state,
+                    initial_belief=args.initial_belief,
+                    use_procedural_memory=args.use_memory,
+                    adaptive_params=args.adaptive,
+                    verbose_memory=args.verbose_memory,
+                    skill_mode=args.skill_mode
+                )
 
-            # Run episode
-            if not args.quiet:
-                console.print("[dim]Running episode...[/dim]")
-                console.print()
+                if not args.quiet:
+                    console.print("[dim]Running episode...[/dim]")
+                    console.print()
 
-            episode_id = runtime.run_episode(max_steps=args.max_steps)
+                episode_id = runtime.run_episode(max_steps=args.max_steps)
 
-            # Print trace
-            if not args.quiet:
-                print_trace(console, runtime, verbose=args.verbose)
-                console.print()
+                if not args.quiet:
+                    print_trace(console, runtime, verbose=args.verbose)
+                    console.print()
 
-            # Print memory decision log if enabled
-            if args.verbose_memory and not args.quiet:
-                print_decision_log(console, runtime)
+                if args.verbose_memory and not args.quiet:
+                    print_decision_log(console, runtime)
 
-            # Print summary
-            if args.quiet:
-                # Quiet mode: just the result
-                if runtime.escaped:
-                    console.print("ESCAPED")
+                if args.quiet:
+                    console.print("ESCAPED" if runtime.escaped else "FAILED")
                 else:
-                    console.print("FAILED")
-            else:
-                print_summary(console, runtime, args.door_state)
+                    print_summary(console, runtime, args.door_state)
 
-            # Optional: show episode stats from graph
-            if args.verbose and not args.quiet:
-                console.print("\n[dim]Episode Stats from Graph:[/dim]")
-                stats = get_episode_stats(session, episode_id)
-                console.print(f"  Episode ID: {stats.get('id', 'N/A')}")
-                console.print(f"  Steps in Graph: {stats.get('step_count', 0)}")
+                if args.verbose and not args.quiet:
+                    console.print("\n[dim]Episode Stats from Graph:[/dim]")
+                    stats = get_episode_stats(session, episode_id)
+                    console.print(f"  Episode ID: {stats.get('id', 'N/A')}")
+                    console.print(f"  Steps in Graph: {stats.get('step_count', 0)}")
+
+            else:
+                if not args.quiet:
+                    console.print("[dim]Initializing Active Inference agent (beta)...[/dim]")
+
+                model = load_model_from_graph(session) or build_model_from_graph(session)
+                initial_belief_vec = np.array([1 - args.initial_belief, args.initial_belief], dtype=float)
+                runtime_ai = ActiveInferenceRuntime(model=model, temperature=1.0, session=session)
+
+                if not args.quiet:
+                    console.print("[dim]Running episode...[/dim]")
+                    console.print()
+
+                episode_id = runtime_ai.run_episode(
+                    door_state=args.door_state,
+                    max_steps=args.max_steps,
+                    initial_belief=initial_belief_vec,
+                    policy_depth=2,
+                )
+                # Persist any learned parameters
+                save_model_to_graph(session, runtime_ai.model)
+
+                if not args.quiet:
+                    print_trace_active(console, runtime_ai.get_trace())
+                    console.print()
+
+                if args.quiet:
+                    console.print("ESCAPED" if runtime_ai.escaped else "FAILED")
+                else:
+                    outcome = "[bold green]✓ ESCAPED[/bold green]" if runtime_ai.escaped else "[bold red]✗ FAILED[/bold red]"
+                    steps = len(runtime_ai.get_trace())
+                    final_belief = runtime_ai.get_trace()[-1]["p_after"] if runtime_ai.get_trace() else args.initial_belief
+                    summary_text = f"""
+{outcome}
+
+[bold]Summary (Active Inference):[/bold]
+  Steps Taken: {steps}
+  Final Belief: p(unlocked) = {final_belief:.2f}
+"""
+                    console.print(Panel(summary_text.strip(), box=box.ROUNDED, border_style="green" if runtime_ai.escaped else "yellow"))
 
     except Exception as e:
         console.print(f"[bold red]Error during execution:[/bold red] {e}", file=sys.stderr)
