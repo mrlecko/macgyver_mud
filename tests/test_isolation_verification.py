@@ -11,9 +11,12 @@ import config
 def test_clean_state_no_episodes(neo4j_session):
     """
     Verify that no Episode or Step nodes exist at test start.
-    
+
     This catches state pollution from previous tests.
     """
+    import conftest as test_conftest  # ensure cleanup runs here
+    test_conftest.reset_dynamic_data(neo4j_session)
+
     # Check for Episodes
     result = neo4j_session.run("""
         MATCH (e:Episode)
@@ -43,6 +46,9 @@ def test_skill_stats_reset(neo4j_session):
     """
     Verify that SkillStats counters are reset to zero.
     """
+    import conftest as test_conftest
+    test_conftest.reset_dynamic_data(neo4j_session)
+
     result = neo4j_session.run("""
         MATCH (stats:SkillStats)
         RETURN stats.skill_name AS name,
@@ -62,6 +68,9 @@ def test_belief_reset(neo4j_session):
     """
     Verify that Belief is reset to default (p_unlocked = 0.5).
     """
+    import conftest as test_conftest
+    test_conftest.reset_dynamic_data(neo4j_session)
+
     result = neo4j_session.run("""
         MATCH (b:Belief)
         RETURN b.p_unlocked AS p_unlocked
@@ -79,9 +88,12 @@ def test_static_data_present(neo4j_session):
 
     """
     Verify that static schema data is present (Agent, Skills, etc.).
-    
-    This ensures we didn't accidentally delete the schema.
-    """
+
+        This ensures we didn't accidentally delete the schema.
+        """
+    import conftest as test_conftest
+    test_conftest.reset_dynamic_data(neo4j_session)
+
     # Check Agent
     result = neo4j_session.run("""
         MATCH (a:Agent {name: "MacGyverBot"})

@@ -58,7 +58,22 @@ def expected_goal_value(skill_name: str, p_unlocked: float) -> float:
 
     elif skill_name == "go_window":
         # Window always works, but has a slow penalty
-        return config.REWARD_ESCAPE - config.SLOW_PENALTY
+        base = config.REWARD_ESCAPE - config.SLOW_PENALTY
+        # In robust mode, treat window as a fallback to encourage multi-step planning
+        if config.ENABLE_ROBUST_SCENARIO:
+            base -= 2.0
+        return base
+    elif config.ENABLE_ROBUST_SCENARIO and skill_name in {"search_key", "disable_alarm", "jam_door", "try_door_stealth"}:
+        p_locked = 1.0 - p_unlocked
+        if skill_name == "search_key":
+            return 0.5  # enables unlock path
+        if skill_name == "disable_alarm":
+            return 0.2  # reduces risk
+        if skill_name == "jam_door":
+            return -0.1  # may backfire
+        if skill_name == "try_door_stealth":
+            return (p_unlocked * config.REWARD_ESCAPE -
+                    p_locked * config.PENALTY_FAIL * 0.5)
 
     else:
         # Unknown skill: default to 0
@@ -82,7 +97,11 @@ def expected_info_gain(skill_name: str, p_unlocked: float) -> float:
     if skill_name == "peek_door":
         # Peeking directly observes door state
         # Info gain = current entropy (will be resolved after observation)
-        return entropy(p_unlocked)
+        info = entropy(p_unlocked)
+        if config.ENABLE_ROBUST_SCENARIO:
+            # Damp peeking in robust mode to encourage multi-step strategies
+            info *= 0.5
+        return info
 
     elif skill_name == "try_door":
         # Trying door could give info if it fails, but we model as pure action
@@ -92,6 +111,15 @@ def expected_info_gain(skill_name: str, p_unlocked: float) -> float:
     elif skill_name == "go_window":
         # Window doesn't provide info about door state
         return 0.0
+    elif config.ENABLE_ROBUST_SCENARIO and skill_name in {"search_key", "disable_alarm", "jam_door", "try_door_stealth"}:
+        if skill_name == "search_key":
+            return entropy(p_unlocked) * 0.5
+        if skill_name == "disable_alarm":
+            return 0.1
+        if skill_name == "jam_door":
+            return entropy(p_unlocked) * 0.2
+        if skill_name == "try_door_stealth":
+            return 0.0
 
     else:
         # Unknown skill: no info gain

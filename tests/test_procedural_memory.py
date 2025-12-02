@@ -23,42 +23,12 @@ from graph_model import (
 @pytest.fixture(scope="function")
 def clean_memory(neo4j_session):
     """Clean up episode data and reset skill stats before each test"""
-    # Clean episodes
-    neo4j_session.run("MATCH (s:Step) DETACH DELETE s")
-    neo4j_session.run("MATCH (e:Episode) DETACH DELETE e")
-
-    # Reset skill stats
-    neo4j_session.run("""
-        MATCH (sk:Skill)-[:HAS_STATS]->(stats:SkillStats)
-        SET stats.total_uses = 0,
-            stats.successful_episodes = 0,
-            stats.failed_episodes = 0,
-            stats.avg_steps_when_successful = 0.0,
-            stats.avg_steps_when_failed = 0.0,
-            stats.uncertain_uses = 0,
-            stats.uncertain_successes = 0,
-            stats.confident_locked_uses = 0,
-            stats.confident_locked_successes = 0,
-            stats.confident_unlocked_uses = 0,
-            stats.confident_unlocked_successes = 0
-    """)
-
-    # Reset meta params
-    neo4j_session.run("""
-        MATCH (a:Agent)-[:HAS_META_PARAMS]->(meta:MetaParams)
-        SET meta.alpha = 1.0,
-            meta.beta = 6.0,
-            meta.gamma = 0.3,
-            meta.episodes_completed = 0,
-            meta.avg_steps_last_10 = 0.0,
-            meta.success_rate_last_10 = 0.0
-    """)
+    import conftest as test_conftest
+    test_conftest.reset_dynamic_data(neo4j_session)
 
     yield
 
-    # Cleanup after test too
-    neo4j_session.run("MATCH (s:Step) DETACH DELETE s")
-    neo4j_session.run("MATCH (e:Episode) DETACH DELETE e")
+    test_conftest.reset_dynamic_data(neo4j_session)
 
 
 class TestSkillStats:

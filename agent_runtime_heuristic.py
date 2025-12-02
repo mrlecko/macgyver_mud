@@ -281,12 +281,9 @@ class AgentRuntime:
             mode_reason = f"State: {critical_state.name}"
             
             if critical_state == CriticalState.ESCALATION:
-                # Allow tests that expect escalation to still raise when configured
-                if getattr(config, "ALLOW_ESCALATION_HARD_STOP", True):
-                    raise AgentEscalationError(f"CRITICAL FAILURE: Agent entered ESCALATION state. Reason: Meta-Cognitive Failure or Terminal Scarcity.")
-                # Otherwise downgrade to PANIC fallback to avoid hard-stop in smoke runs
-                critical_state = CriticalState.PANIC
-                mode_reason += " (downgraded to PANIC fallback)"
+                # STOP_AND_ESCALATE PROTOCOL
+                # The agent is thrashing or dying. Halt immediately.
+                raise AgentEscalationError(f"CRITICAL FAILURE: Agent entered ESCALATION state. Reason: Meta-Cognitive Failure or Terminal Scarcity.")
 
             # ====================================================================
             # LYAPUNOV STABILITY CHECK (Dynamical Systems Safety)

@@ -19,6 +19,10 @@ This document summarizes the Active Inference additions, behavior changes, and t
 - **Automatic episodic replay**: Episode traces are replayed into A/B updates post-run; `update_from_episode` supports bulk transition updates.
 - **Robust parallel scenario**: Added a richer room-escape domain with alarms, keys, noisy sensing, and more actions to stress deeper planning and stochastic handling without touching the original scenario.
 - **Critical protocols (FE-aware)**: Free-energy thresholds can trigger panic; critical-state monitor runs each step.
+- **Robust heuristic path (opt-in)**: Added `AgentRuntimeRobust` wrapper to keep the classic heuristic runtime intact while supporting the robust scenario skills (search_key/disable_alarm/jam/stealth try) under the `ENABLE_ROBUST_SCENARIO` flag. Runner now auto-selects it when enabled.
+- **Gated seeding utilities**: `scripts/apply_robust_seed.py` can be imported via `apply_robust_seed_to_session` to add the robust skills/observations without touching the base seed; includes key-found/search-failed observations.
+- **Scoring tweaks for robust mode**: Peek information gain is damped and window reward reduced when the robust flag is on, nudging the heuristic towards multi-step plans and away from spamming peek/window.
+- **Benchmark harness**: `experiments/benchmark_robust.py` runs side-by-side episodes for heuristic (robust wrapper) and Active Inference on the robust room model to report escape rate and average steps.
 
 ## Tests added
 - `tests/test_active_inference_runtime_learning.py`: Dirichlet update on A and locked/unlocked runs with stochastic sampling.
@@ -36,16 +40,19 @@ This document summarizes the Active Inference additions, behavior changes, and t
 - `tests/test_active_inference_critical_protocols.py`: Validates free-energy-driven panic and entropy-driven flow.
 - `tests/test_active_inference_episode_replay_effect.py`: Ensures automatic replay updates likelihoods.
 - `tests/test_active_inference_robust_scenario.py`: Exercises the richer alarm/key/noisy scenario.
+- `tests/test_heuristic_robust_opt_in.py`: Verifies the heuristic runtime uses robust skills when opted in and that the benchmark helper reports metrics for both runtimes.
 
 ## Current behavior vs heuristic baseline
 - Active Inference now escapes in both unlocked and locked cases (window fallback), selects an epistemic action first in the unlocked integration test, and can persist learned parameters.
 - The heuristic runtime remains richer (procedural/episodic memory, silver scoring, critical-state hooks); Active Inference is now functional but still lean: fixed-depth policy search, hand-shaped preferences, no long-horizon planning or memory integration.
+- Robust scenario support is opt-in: the classic heuristic remains unchanged by default; enabling the flag swaps in the robust wrapper and robust scores. Active Inference continues to run on the robust generative model independently of the flag.
 
 ## Known limitations / next steps
 - Preferences/cost weights remain hand-tuned; persisted preferences help, but validating against graph changes would strengthen robustness.
 - Policy search still relies on brute force or simple beam; more advanced pruning/batching would help for larger spaces.
 - Persistence is JSON-with-version; no checkpointing/history yet.
 - Critical-state is entropy/FE-only; Lyapunov and richer protocols are not integrated. Procedural/episodic memory influence is minimal (SkillStats bias; replay uses heuristic state inference).
+- Robust heuristic wrapper is intentionally simple (deterministic key search, coarse belief bumps); it covers the alarm/key/jam domain but is not tuned for optimality.
 
 ## Red Team Assessment (current)
 - Learning is rudimentary: per-step Dirichlet/preference count updates, but no multi-episode convergence or checkpoints; preferences still mostly hand-shaped.

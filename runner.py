@@ -14,6 +14,7 @@ import numpy as np
 
 import config
 from agent_runtime import AgentRuntime
+from agent_runtime_robust import AgentRuntimeRobust
 from agent_runtime_active import ActiveInferenceRuntime, build_model_from_graph, load_model_from_graph, save_model_to_graph
 from graph_model import get_episode_stats
 
@@ -328,7 +329,8 @@ def main():
                 if not args.quiet:
                     console.print("[dim]Initializing heuristic agent...[/dim]")
 
-                runtime = AgentRuntime(
+                runtime_cls = AgentRuntimeRobust if config.ENABLE_ROBUST_SCENARIO else AgentRuntime
+                runtime = runtime_cls(
                     session,
                     door_state=args.door_state,
                     initial_belief=args.initial_belief,

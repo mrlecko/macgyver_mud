@@ -183,6 +183,12 @@ SHOW_GRAPH_STATS = True  # Show Neo4j stats after run
 # Agent runtime mode: "heuristic" (current bandit) or "active" (new Active Inference runtime)
 AGENT_RUNTIME_MODE = os.getenv("AGENT_RUNTIME_MODE", "heuristic")
 
+# Robust scenario flag: if true, include extended skills/observations (alarm/key/jam)
+ENABLE_ROBUST_SCENARIO = os.getenv("ENABLE_ROBUST_SCENARIO", "false").lower() == "true"
+
+# Allow hard-stop escalation (tests may override)
+ALLOW_ESCALATION_HARD_STOP = os.getenv("ALLOW_ESCALATION_HARD_STOP", "true").lower() == "true"
+
 # ============================================================================
 # Validation
 # ============================================================================

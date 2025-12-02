@@ -156,6 +156,7 @@ def reset_dynamic_data(session):
     - Counterfactual nodes
     - ActualPath nodes
     - GeometricAnalysis nodes (created during tests)
+    - Robust opt-in skills/observations (to keep base schema clean)
     
     Resets:
     - SkillStats counters to zero
@@ -168,6 +169,18 @@ def reset_dynamic_data(session):
         WHERE n:Episode OR n:Step OR n:EpisodicMemory OR n:Counterfactual 
            OR n:ActualPath OR n:GeometricAnalysis
         DETACH DELETE n
+    """)
+
+    # Remove robust opt-in skills/observations so baseline tests see only core schema
+    session.run("""
+        MATCH (s:Skill)
+        WHERE s.name IN ['search_key','disable_alarm','jam_door','try_door_stealth','sense','open_door']
+        DETACH DELETE s
+    """)
+    session.run("""
+        MATCH (o:Observation)
+        WHERE o.name IN ['obs_alarm_disabled','obs_alarm_triggered','obs_key_found','obs_search_failed']
+        DETACH DELETE o
     """)
     
     # Reset SkillStats counters
@@ -206,6 +219,13 @@ def reset_dynamic_data(session):
             meta.episodes_completed = 0,
             meta.avg_steps_last_10 = 0.0,
             meta.success_rate_last_10 = 0.0
+    """)
+
+    # Ensure all skills have a cost to avoid scoring warnings
+    session.run("""
+        MATCH (s:Skill)
+        WHERE s.cost IS NULL
+        SET s.cost = 1.0
     """)
 
 
