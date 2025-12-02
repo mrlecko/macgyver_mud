@@ -12,6 +12,10 @@ This document summarizes the Active Inference additions, behavior changes, and t
 - **Schema versioning & domain fallback**: Persisted models carry a schema version; builder falls back to persisted states when `StateVar.domain` is missing.
 - **Runner integration**: `runner.py` now attempts to load a persisted model before building from graph, and saves the model after an Active Inference run.
 - **Escape handling**: Window/door escape detection; locked-case can attempt window fallback.
+- **Parallel richer scenarios**: Added noisy sensing + jam action and a two-step key path as parallel fixtures to exercise deeper planning and stochastic handling without breaking the original room-escape tests.
+- **Critical-state monitoring**: Active Inference runtime now updates `CriticalStateMonitor` each step (entropy-based) and exposes `current_critical_state`; unit tests cover panic/flow evaluation.
+- **Learning persistence**: Dirichlet concentrations for A/B and preference counts are persisted (schema version 1.1); updates occur per step.
+- **Memory influence**: SkillStats can bias prior action selection in the Active Inference path (procedural memory hook).
 
 ## Tests added
 - `tests/test_active_inference_runtime_learning.py`: Dirichlet update on A and locked/unlocked runs with stochastic sampling.
@@ -20,6 +24,10 @@ This document summarizes the Active Inference additions, behavior changes, and t
 - `tests/test_active_inference_policy.py`: Confirms policy limiting works at higher depths.
 - `tests/test_active_inference_policy_beam.py`: Validates beam search pruning reduces policy count.
 - `tests/test_active_inference_preferences.py`: Confirms preferences/states persist round-trip and domain fallback uses persisted states.
+- `tests/test_active_inference_scenarios.py`: Covers noisy sensing + jam/window path and a two-step key scenario (requires deeper planning/beam).
+- `tests/test_active_inference_critical_states.py`: Validates panic vs flow evaluation using entropy signals.
+- `tests/test_active_inference_persistence_dirichlet.py`: Ensures Dirichlet concentrations persist.
+- `tests/test_active_inference_memory.py`: Confirms SkillStats bias action selection in Active Inference.
 
 ## Current behavior vs heuristic baseline
 - Active Inference now escapes in both unlocked and locked cases (window fallback), selects an epistemic action first in the unlocked integration test, and can persist learned parameters.
@@ -30,3 +38,10 @@ This document summarizes the Active Inference additions, behavior changes, and t
 - Policy search still relies on brute force or simple beam; more advanced pruning/batching would help for larger spaces.
 - Persistence is JSON-with-version; no checkpointing/history yet.
 - Critical-state/Lyapunov and procedural/episodic memory are still not integrated with Active Inference; remains heuristic-only.
+
+## Red Team Assessment (current)
+- Learning is rudimentary: per-step Dirichlet/preference count updates, but no multi-episode convergence or checkpoints; preferences still mostly hand-shaped.
+- Policy search is basic (cap/beam), no advanced pruning or performance guards beyond caps.
+- Critical-state signals are entropy-only; no Lyapunov or action-bias protocols under panic/scarcity.
+- Memory integration is minimal (SkillStats bias); episodic memory is not wired into A/B/C.
+- Behavior is still tuned to toy scenarios; robustness to graph changes or larger action/state spaces is unproven.

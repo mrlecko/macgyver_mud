@@ -8,6 +8,20 @@ import os
 import pytest
 from neo4j import GraphDatabase
 
+# Import scenario fixtures explicitly so they register as fixtures
+try:
+    from tests.conftest_scenarios import noisy_room_model, two_step_key_model  # type: ignore  # noqa: F401
+except ImportError:
+    # Fallback for running via python -m pytest from repo root
+    import importlib.util
+    import pathlib
+    _spec = importlib.util.spec_from_file_location("tests.conftest_scenarios", pathlib.Path(__file__).parent / "conftest_scenarios.py")
+    module = importlib.util.module_from_spec(_spec)
+    assert _spec and _spec.loader
+    _spec.loader.exec_module(module)  # type: ignore
+    noisy_room_model = module.noisy_room_model  # type: ignore
+    two_step_key_model = module.two_step_key_model  # type: ignore
+
 
 # =============================================================================
 # Session-Scoped Setup
@@ -34,6 +48,7 @@ def setup_test_environment():
     
     # Cleanup after all tests
     pass
+
 
 
 @pytest.fixture(scope="session")

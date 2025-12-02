@@ -21,8 +21,11 @@ from neo4j import Session
 import config
 from graph_model import create_episode, log_step, mark_episode_complete, get_skills, get_agent
 import json
+from critical_state import CriticalStateMonitor, CriticalState, AgentState
+from scoring import score_skill_with_memory
 
-MODEL_SCHEMA_VERSION = "1.0"
+MODEL_SCHEMA_VERSION = "1.1"
+EFE_PANIC_THRESHOLD = 5.0
 
 
 def _softmax(x: np.ndarray) -> np.ndarray:
@@ -66,6 +69,7 @@ class GenerativeModel:
     dirichlet_A: Optional[np.ndarray] = None  # concentration parameters for A
     dirichlet_B: Optional[np.ndarray] = None  # concentration parameters for B
     action_kinds: Optional[List[str]] = None
+    preference_counts: Optional[np.ndarray] = None  # counts for C learning
 
     def __post_init__(self) -> None:
         self._normalize()
@@ -78,6 +82,8 @@ class GenerativeModel:
             self.dirichlet_A = np.ones_like(self.A)
         if self.dirichlet_B is None:
             self.dirichlet_B = np.ones_like(self.B)
+        if self.preference_counts is None:
+            self.preference_counts = np.ones_like(self.C)
 
     def _normalize(self) -> None:
         """Ensure A/B are normalized and derive preference distribution."""
@@ -189,6 +195,8 @@ class ActiveInferenceRuntime:
         self.trace: List[Dict[str, Any]] = []
         self.escaped: bool = False
         self.agent_id: Optional[str] = None
+        self.monitor = CriticalStateMonitor()
+        self.current_critical_state = CriticalState.FLOW
         if self.session is not None:
             agent = get_agent(self.session, config.AGENT_NAME)
             if agent:
@@ -228,7 +236,7 @@ class ActiveInferenceRuntime:
         posterior = posterior / np.sum(posterior)
         return posterior
 
-    def evaluate_policies(self, prior_belief: np.ndarray, depth: int = 2) -> List[Tuple[Tuple[str, ...], float]]:
+    def evaluate_policies(self, prior_belief: np.ndarray, depth: int = 2, max_nodes: Optional[int] = None) -> List[Tuple[Tuple[str, ...], float]]:
         """
         Enumerate fixed-length policies and score them via Expected Free Energy.
 
@@ -236,6 +244,8 @@ class ActiveInferenceRuntime:
             List of (policy, efe) sorted by ascending efe.
         """
         policies = list(product(self.model.actions, repeat=depth))
+        if max_nodes is not None and len(policies) > max_nodes:
+            policies = policies[:max_nodes]
         scored: List[Tuple[Tuple[str, ...], float]] = []
         for policy in policies:
             efe = self._expected_free_energy(prior_belief, policy)
@@ -259,7 +269,7 @@ class ActiveInferenceRuntime:
             beam = candidates[:beam_width]
         return beam
 
-    def select_action(self, prior_belief: np.ndarray, depth: int = 2, max_policies: Optional[int] = None, beam_width: Optional[int] = None) -> Tuple[str, List[Tuple[Tuple[str, ...], float]]]:
+    def select_action(self, prior_belief: np.ndarray, depth: int = 2, max_policies: Optional[int] = None, beam_width: Optional[int] = None, max_nodes: Optional[int] = None) -> Tuple[str, List[Tuple[Tuple[str, ...], float]]]:
         """
         Select an action using a softmax over negative EFE of candidate policies.
         Returns the first action of the sampled best policy plus the full ranking.
@@ -267,7 +277,7 @@ class ActiveInferenceRuntime:
         if beam_width is not None:
             scored = self.evaluate_policies_beam(prior_belief, depth=depth, beam_width=beam_width)
         else:
-            scored = self.evaluate_policies(prior_belief, depth=depth)
+            scored = self.evaluate_policies(prior_belief, depth=depth, max_nodes=max_nodes)
         if max_policies is not None and len(scored) > max_policies:
             scored = scored[:max_policies]
         efes = np.array([s[1] for s in scored])
@@ -345,6 +355,35 @@ class ActiveInferenceRuntime:
         counts = self.model.dirichlet_B[:, prev_state_idx, a_idx]
         self.model.B[:, prev_state_idx, a_idx] = counts / np.sum(counts)
 
+    def update_preferences(self, obs_idx: int, learning_rate: float = 1.0) -> None:
+        """Update preference counts for observed outcome."""
+        self.model.preference_counts[obs_idx] += learning_rate
+        self.model.C = np.log(self.model.preference_counts + self.eps)
+
+    def update_from_episode(self, transitions: List[Tuple[int, str, int, int]], learning_rate: float = 1.0) -> None:
+        """
+        Apply episodic updates to A/B using a list of transitions.
+        Each transition: (state_idx, action_name, obs_idx, next_state_idx)
+        """
+        for state_idx, action_name, obs_idx, next_state_idx in transitions:
+            self.update_likelihoods(action_name, state_idx, obs_idx, learning_rate)
+            self.update_transitions(action_name, state_idx, next_state_idx, learning_rate)
+
+    def update_critical_state(self, entropy_now: float, efe: float, steps_remaining: int) -> None:
+        agent_state = AgentState(
+            entropy=entropy_now,
+            history=[],
+            steps=steps_remaining,
+            dist=1.0,
+            rewards=[],
+            error=0.0,
+        )
+        # Free-energy driven panic/escalation
+        if efe > EFE_PANIC_THRESHOLD:
+            self.current_critical_state = CriticalState.PANIC
+        else:
+            self.current_critical_state = self.monitor.evaluate(agent_state)
+
     # --- Episode Execution (toy locked-room environment) ---
 
     def _state_index(self, door_state: str) -> int:
@@ -373,6 +412,7 @@ class ActiveInferenceRuntime:
         initial_belief: Optional[np.ndarray] = None,
         policy_depth: int = 2,
         max_policies: Optional[int] = None,
+        beam_width: Optional[int] = None,
     ) -> Optional[str]:
         """
         Run a toy locked-room episode using the generative model and a ground-truth state.
@@ -387,13 +427,16 @@ class ActiveInferenceRuntime:
         episode_id = self.start_episode(door_state=door_state) if self.session else None
 
         for step in range(max_steps):
-            action, scored = self.select_action(belief, depth=policy_depth, max_policies=max_policies)
+            action, scored = self.select_action(belief, depth=policy_depth, max_policies=max_policies, beam_width=beam_width)
             action_idx = self._action_idx(action)
             state_idx = self._state_index(door_state)
 
             obs_idx, observation = self._sample_observation(state_idx, action_idx)
             posterior = self.update_belief(belief, action, observation)
             efe = scored[0][1] if scored else 0.0
+            # Learning updates
+            self.update_likelihoods(action, state_idx, obs_idx, learning_rate=1.0)
+            self.update_preferences(obs_idx, learning_rate=0.5)
 
             self.trace.append(
                 {
@@ -409,6 +452,9 @@ class ActiveInferenceRuntime:
                 self.log_decision(episode_id, step, action, belief, posterior, efe, observation)
 
             belief = posterior
+            # Critical-state update based on entropy and EFE
+            entropy_now = _entropy(belief)
+            self.update_critical_state(entropy_now, efe, max_steps - step)
 
             if ("escape" in observation) or ("opened" in observation) or ("open_success" in observation) or ("obs_door_opened" in observation):
                 self.escaped = True
@@ -604,6 +650,8 @@ def save_model_to_graph(session: Session, model: GenerativeModel) -> None:
             g.C = $C_json,
             g.D = $D_json,
             g.action_costs = $action_costs_json,
+            g.dirichlet_A = $dirichlet_A_json,
+            g.dirichlet_B = $dirichlet_B_json,
             g.version = $version
         """,
         name=config.AGENT_NAME,
@@ -615,6 +663,8 @@ def save_model_to_graph(session: Session, model: GenerativeModel) -> None:
         C_json=json.dumps(model.C.tolist()),
         D_json=json.dumps(model.D.tolist()),
         action_costs_json=json.dumps(list(model.action_costs or [])),
+        dirichlet_A_json=json.dumps(model.dirichlet_A.tolist() if model.dirichlet_A is not None else []),
+        dirichlet_B_json=json.dumps(model.dirichlet_B.tolist() if model.dirichlet_B is not None else []),
         version=MODEL_SCHEMA_VERSION,
     )
 
@@ -626,7 +676,8 @@ def load_model_from_graph(session: Session) -> Optional[GenerativeModel]:
         MATCH (g:GenerativeModel {name: $name})
         RETURN g.states AS states, g.observations AS observations,
                g.actions AS actions, g.A AS A, g.B AS B, g.C AS C, g.D AS D,
-               g.action_costs AS action_costs, g.version AS version
+               g.action_costs AS action_costs, g.dirichlet_A AS dirichlet_A,
+               g.dirichlet_B AS dirichlet_B, g.version AS version
         """,
         name=config.AGENT_NAME,
     ).single()
@@ -643,4 +694,6 @@ def load_model_from_graph(session: Session) -> Optional[GenerativeModel]:
     C = np.array(json.loads(record["C"]), dtype=float)
     D = np.array(json.loads(record["D"]), dtype=float)
     action_costs = json.loads(record["action_costs"]) if record.get("action_costs") else [1.0 for _ in actions]
-    return GenerativeModel(states, observations, actions, A, B, C, D, action_costs=action_costs)
+    dirichlet_A = np.array(json.loads(record["dirichlet_A"]), dtype=float) if record.get("dirichlet_A") else np.ones_like(A)
+    dirichlet_B = np.array(json.loads(record["dirichlet_B"]), dtype=float) if record.get("dirichlet_B") else np.ones_like(B)
+    return GenerativeModel(states, observations, actions, A, B, C, D, action_costs=action_costs, dirichlet_A=dirichlet_A, dirichlet_B=dirichlet_B)
