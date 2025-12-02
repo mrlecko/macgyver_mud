@@ -1,8 +1,8 @@
-# MacGyver MUD: Production-Ready Cognitive Agent Architecture
+# MacGyver MUD: Active Inference Agent Roadmap
 
-> **A comprehensive AI agent framework with meta-cognitive monitoring, stability guarantees, and counterfactual learning**
+> **A cognitive agent prototype with meta-cognitive monitoring and counterfactual learning**
 >
-> **183/184 tests passing (99.5%)** | **Open source** | **Production-ready**
+> **183/184 tests passing (99.5%)** | **Open source** | **Roadmap in progress (Active Inference)**
 
 [![Tests](https://img.shields.io/badge/tests-183%2F184%20passing-brightgreen)]() [![Coverage](https://img.shields.io/badge/coverage-99.5%25-brightgreen)]() [![Python](https://img.shields.io/badge/python-3.11%2B-blue)]() [![License](https://img.shields.io/badge/license-MIT-blue)]()
 
@@ -10,16 +10,20 @@
 
 ## 🚀 What This Is
 
-A **cognitive agent architecture** that combines Active Inference, episodic memory, and stability monitoring to create robust, self-aware AI agents.
+A **cognitive agent prototype** combining heuristic decision making (silver bandit), episodic memory, and stability monitoring. The system is mid-migration to a principled Active Inference stack.
 
-**Key capabilities:**
-- **Loop detection & breaking** - Agents detect when stuck in repetitive behaviors and force strategy changes
-- **Confusion awareness** - High entropy triggers safe-mode protocols instead of confident failure
-- **Offline learning** - Counterfactual reasoning enables learning without new environment interaction
-- **Geometric decision analysis** - Transparent "shape" of decisions (exploration vs exploitation) using Pythagorean means
-- **Formal stability guarantees** - Lyapunov monitoring with circuit breaker escalation
+**Current status:**
+- Action selection still uses a heuristic/utility bandit with geometric scoring.
+- Active Inference features (generative model A/B/C/D, Bayesian belief updates, EFE policy scoring) are planned, not yet shipped.
+- Safety/critical-state logic is being reworked to align with the new generative model.
 
-**Tech Stack:** Python 3.11, Neo4j, pytest, Docker, Active Inference, Control Theory
+**Roadmap highlights (from NEXT_STEPS.md):**
+- Formalize the generative model with A/B/C/D matrices and tests.
+- Implement belief updates and depth-2/3 policy evaluation via Expected Free Energy.
+- Recast epistemic value as information gain; remove heuristic boosts.
+- Harden safety/critical-state protocols with principled signals instead of hard blocks.
+
+**Tech Stack:** Python 3.11, Neo4j, pytest, Docker, Active Inference (planned), Control Theory
 
 ---
 
@@ -47,7 +51,7 @@ This architecture solves those problems with:
 ## 🎯 Technical Highlights
 
 ### 1. Meta-Cognitive State Machine
-Detects and responds to 5 critical states:
+Detects and responds to 5 critical states (currently heuristic; slated for principled signals):
 
 ```python
 # Example: Automatic loop detection
@@ -60,7 +64,7 @@ if agent.entropy > 0.45:  # High uncertainty
 ```
 
 ### 2. Geometric Decision Transparency
-Goes beyond scalar scores to show decision "shape":
+Current heuristic scoring goes beyond scalar scores to show decision "shape":
 
 ```python
 # Standard approach: score = 7.3 (opaque)
@@ -100,7 +104,7 @@ Tested across 4 different problem types:
 |--------|-------|---------|
 | **Test Coverage** | 183/184 (99.5%) | Unit + Integration + Stress tests |
 | **Integration Tests** | 10/10 passing | Multi-system boundary validation |
-| **Development Time** | 6 days | Concept → production-ready |
+| **Development Time** | 6 days | Concept → current prototype |
 | **Documentation** | 20+ files | Architecture, API, tutorials |
 | **Code Quality** | A- (90/100) | Professional-grade, no debug prints |
 | **Multi-Domain** | 4 environments | Discrete, continuous, spatial, NLP |
@@ -156,10 +160,10 @@ agent = AgentRuntime(config)
 
 ```
 ┌─────────────────────────────────────┐
-│ DECISION ENGINE (Active Inference)  │
-│ • Expected Free Energy optimization │
-│ • Multi-objective scoring           │
-│ • Bayesian belief updates           │
+│ DECISION ENGINE (In Transition)     │
+│ • Current: heuristic silver scoring │
+│ • Upcoming: generative model + EFE  │
+│ • Upcoming: Bayesian belief updates │
 └───────────────┬─────────────────────┘
                 │
 ┌───────────────▼─────────────────────┐
@@ -177,12 +181,16 @@ agent = AgentRuntime(config)
 └─────────────────────────────────────┘
 ```
 
-**Key Components:**
-- `agent_runtime.py` - Main agent loop (Cortex + Brainstem)
-- `critical_state.py` - Meta-cognitive state detection (5 states)
-- `scoring_silver.py` - Geometric decision analysis (silver_v2)
+**Key Components (current):**
+- `agent_runtime.py` - Main agent loop (heuristic path)
+- `critical_state.py` - Meta-cognitive state detection (heuristic thresholds)
+- `scoring_silver.py` - Geometric decision analysis (silver bandit)
 - `memory/episodic_replay.py` - Counterfactual learning
-- `control/lyapunov.py` - Stability monitoring
+- `control/lyapunov.py` - Stability monitoring (heuristic boosts; slated for principled rework)
+
+**In progress (see NEXT_STEPS.md):**
+- Generative model (A/B/C/D), Bayesian inference, policy evaluation via EFE
+- Principled safety signals and credit assignment tied to the generative model
 
 ---
 
@@ -208,18 +216,18 @@ agent = AgentRuntime(config)
 
 **Existing work:** Error handling, confidence thresholds
 
-**This work:** 5-state protocol system with deterministic responses, validated across multiple domains
+**This work:** 5-state protocol system with deterministic responses; currently heuristic and scheduled for principled updates
 
-**Result:** Testable robustness claims (falsifiable)
+**Result:** Observable robustness behaviors (falsifiable), with planned re-derivation from the generative model
 
 ### 3. Integrated Cognitive Architecture
-**Innovation:** Validated integration of Active Inference + Episodic Memory + Lyapunov Stability
+**Innovation:** Integration of heuristic decisioning, episodic memory, and stability checks
 
 **Existing work:** These exist separately in research literature
 
-**This work:** 10 integration tests proving subsystems work together in production
+**This work:** 10 integration tests covering subsystem interactions; Active Inference integration is upcoming per roadmap
 
-**Result:** Reference implementation for multi-system cognitive architectures
+**Result:** Foundation for a multi-system cognitive architecture
 
 ---
 
@@ -251,15 +259,16 @@ agent = AgentRuntime(config)
 
 ### Quick Links
 - **[5-Minute Quick Start](QUICK_START_5MIN.md)** - Get running immediately
-- **[API Documentation](docs/)** - Complete API reference
-- **[Architecture Guide](docs/design/)** - System design documents
+- **[Agent Quickstart](AGENT_QUICKSTART.md)** - High-level usage overview
 - **[Integration Tests](tests/test_integration.py)** - Multi-system validation
 
 ### Technical Deep Dives
-- **[Critical State Protocols](docs/design/CRITICAL_STATE_PROTOCOLS.md)** - Meta-cognitive reflexes
-- **[Episodic Memory](docs/brain/EPISODIC_MEMORY_INTEGRATION_SUMMARY.md)** - Counterfactual learning
-- **[Lyapunov Monitoring](docs/brain/LYAPUNOV_ASSESSMENT_AND_RED_TEAM.md)** - Stability analysis
-- **[Decision "Shapes"](scoring_silver.py)** - Geometric decision analysis
+- **[Pythagorean Means Explained](docs/design/PYTHAGOREAN_MEANS_EXPLAINED.md)** - Geometric decision analysis
+- **[Geometric Lens (Complete)](docs/design/GEOMETRIC_LENS_COMPLETE.md)** - Scoring deep dive
+- **[The Panic Protocol](docs/design/THE_PANIC_PROTOCOL.md)** - Current meta-cognitive reflex design
+- **[Generalization Approach](docs/design/GENERALIZATION_APPROACH.md)** - Validation ideas
+- **[Notebook Design](docs/design/NOTEBOOK_DESIGN.md)** - Experiment notebook structure
+- **[Bicameral Mind Analysis](docs/analysis/BICAMERAL_MIND_DEEP_ANALYSIS.md)** - Conceptual framing
 
 ---
 
@@ -299,7 +308,7 @@ If you use this work, please cite:
 - **Docker** (containerization, reproducible environments)
 
 ### AI/ML Techniques
-- **Active Inference** (Expected Free Energy, Bayesian inference)
+- **Active Inference** (planned: generative model, Bayesian inference, EFE policy search)
 - **Reinforcement Learning** (episodic memory, counterfactuals)
 - **Control Theory** (Lyapunov stability, circuit breakers)
 - **Graph Theory** (shortest paths, spatial reasoning)
@@ -409,8 +418,7 @@ MIT License - Use freely, cite generously, contribute openly.
 ### Demo Pages
 - [Pythagorean Mean Decision Geometry Visualizer](https://mrlecko.github.io/macgyver_mud/) - Interactive decision analysis
 
-### Demo Videos
-- [Loop Detection Demo](docs/demos/honey_pot_escape.gif) - Watch agent detect and escape deadlock
+### Demo Scripts
 - [Episodic Learning](validation/episodic_replay_demo.py) - Counterfactual reasoning in action
 
 ### Key Demos
