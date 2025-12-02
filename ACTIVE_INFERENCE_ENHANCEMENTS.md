@@ -17,6 +17,8 @@ This document summarizes the Active Inference additions, behavior changes, and t
 - **Learning persistence**: Dirichlet concentrations for A/B and preference counts are persisted (schema version 1.1); updates occur per step.
 - **Memory influence**: SkillStats can bias prior action selection in the Active Inference path (procedural memory hook).
 - **Automatic episodic replay**: Episode traces are replayed into A/B updates post-run; `update_from_episode` supports bulk transition updates.
+- **Robust parallel scenario**: Added a richer room-escape domain with alarms, keys, noisy sensing, and more actions to stress deeper planning and stochastic handling without touching the original scenario.
+- **Critical protocols (FE-aware)**: Free-energy thresholds can trigger panic; critical-state monitor runs each step.
 
 ## Tests added
 - `tests/test_active_inference_runtime_learning.py`: Dirichlet update on A and locked/unlocked runs with stochastic sampling.
@@ -32,6 +34,8 @@ This document summarizes the Active Inference additions, behavior changes, and t
 - `tests/test_active_inference_episode_learning.py`: Verifies episodic transitions update Dirichlet counts.
 - `tests/test_active_inference_multi_episode.py`: Checks multi-episode likelihood improvements.
 - `tests/test_active_inference_critical_protocols.py`: Validates free-energy-driven panic and entropy-driven flow.
+- `tests/test_active_inference_episode_replay_effect.py`: Ensures automatic replay updates likelihoods.
+- `tests/test_active_inference_robust_scenario.py`: Exercises the richer alarm/key/noisy scenario.
 
 ## Current behavior vs heuristic baseline
 - Active Inference now escapes in both unlocked and locked cases (window fallback), selects an epistemic action first in the unlocked integration test, and can persist learned parameters.

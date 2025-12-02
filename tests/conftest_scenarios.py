@@ -112,3 +112,95 @@ def two_step_key_model():
     costs = [0.8, 1.0, 1.5]
     kinds = ["sense", "act", "act"]
     return GenerativeModel(states, observations, actions, A, B, C, D, action_costs=costs, action_kinds=kinds)
+
+
+@pytest.fixture
+def robust_room_model():
+    """
+    Robust room escape with alarm, key search, and noisy sensing.
+    States: locked, key_found, unlocked, alarmed
+    Observations: locked_signal, unlocked_signal, key_found_obs, opened, stuck, alarm_triggered
+    Actions: sense, search_key, disable_alarm, try_door, go_window, jam_door
+    """
+    states = ["locked", "key_found", "unlocked", "alarmed"]
+    observations = ["locked_signal", "unlocked_signal", "key_found_obs", "opened", "stuck", "alarm_triggered"]
+    actions = ["sense", "search_key", "disable_alarm", "try_door", "go_window", "jam_door"]
+    A = np.zeros((len(observations), len(states), len(actions)))
+
+    # sense: noisy on lock state
+    A[observations.index("locked_signal"), states.index("locked"), actions.index("sense")] = 0.7
+    A[observations.index("unlocked_signal"), states.index("locked"), actions.index("sense")] = 0.3
+    A[observations.index("locked_signal"), states.index("unlocked"), actions.index("sense")] = 0.2
+    A[observations.index("unlocked_signal"), states.index("unlocked"), actions.index("sense")] = 0.8
+    A[observations.index("alarm_triggered"), states.index("alarmed"), actions.index("sense")] = 1.0
+    A[observations.index("locked_signal"), states.index("key_found"), actions.index("sense")] = 0.5
+    A[observations.index("unlocked_signal"), states.index("key_found"), actions.index("sense")] = 0.5
+
+    # search_key
+    A[observations.index("key_found_obs"), states.index("locked"), actions.index("search_key")] = 0.6
+    A[observations.index("stuck"), states.index("locked"), actions.index("search_key")] = 0.4
+    A[observations.index("key_found_obs"), states.index("key_found"), actions.index("search_key")] = 0.7
+    A[observations.index("stuck"), states.index("key_found"), actions.index("search_key")] = 0.3
+    A[observations.index("stuck"), states.index("unlocked"), actions.index("search_key")] = 1.0
+    A[observations.index("alarm_triggered"), states.index("alarmed"), actions.index("search_key")] = 1.0
+
+    # disable_alarm
+    A[observations.index("alarm_triggered"), states.index("alarmed"), actions.index("disable_alarm")] = 0.6
+    A[observations.index("stuck"), states.index("alarmed"), actions.index("disable_alarm")] = 0.4
+    A[observations.index("stuck"), :, actions.index("disable_alarm")] += 0.1  # mild noise
+
+    # try_door
+    A[observations.index("opened"), states.index("unlocked"), actions.index("try_door")] = 0.9
+    A[observations.index("stuck"), states.index("unlocked"), actions.index("try_door")] = 0.1
+    A[observations.index("opened"), states.index("locked"), actions.index("try_door")] = 0.05
+    A[observations.index("stuck"), states.index("locked"), actions.index("try_door")] = 0.95
+    A[observations.index("alarm_triggered"), states.index("alarmed"), actions.index("try_door")] = 0.8
+    A[observations.index("stuck"), states.index("alarmed"), actions.index("try_door")] = 0.2
+
+    # go_window
+    A[observations.index("opened"), :, actions.index("go_window")] = 1.0
+
+    # jam_door
+    A[observations.index("locked_signal"), :, actions.index("jam_door")] = 0.5
+    A[observations.index("stuck"), :, actions.index("jam_door")] = 0.5
+
+    B = np.zeros((len(states), len(states), len(actions)))
+    # sense/try/go_window static except alarmed remains alarmed
+    for act in ("sense", "try_door", "go_window"):
+        a_idx = actions.index(act)
+        for s_idx in range(len(states)):
+            B[s_idx, s_idx, a_idx] = 1.0
+    # search_key transitions
+    B[states.index("key_found"), states.index("locked"), actions.index("search_key")] = 0.6
+    B[states.index("locked"), states.index("locked"), actions.index("search_key")] = 0.4
+    B[states.index("unlocked"), states.index("key_found"), actions.index("search_key")] = 0.5
+    B[states.index("key_found"), states.index("key_found"), actions.index("search_key")] = 0.5
+    for s in ("unlocked", "alarmed"):
+        B[states.index(s), states.index(s), actions.index("search_key")] = 1.0
+    # disable_alarm transitions
+    B[states.index("locked"), states.index("alarmed"), actions.index("disable_alarm")] = 0.7
+    B[states.index("alarmed"), states.index("alarmed"), actions.index("disable_alarm")] = 0.3
+    for s in ("locked", "key_found", "unlocked"):
+        B[states.index(s), states.index(s), actions.index("disable_alarm")] = 1.0 if s != "alarmed" else 0.0
+    # jam_door transitions (toggle-ish)
+    j_idx = actions.index("jam_door")
+    B[states.index("locked"), states.index("locked"), j_idx] = 0.6
+    B[states.index("unlocked"), states.index("locked"), j_idx] = 0.4
+    B[states.index("locked"), states.index("unlocked"), j_idx] = 0.4
+    B[states.index("unlocked"), states.index("unlocked"), j_idx] = 0.6
+    B[states.index("alarmed"), states.index("alarmed"), j_idx] = 1.0
+    B[states.index("key_found"), states.index("key_found"), j_idx] = 1.0
+
+    C = np.array([0.1, 0.1, 0.5, 3.0, -0.5, -1.0])  # prefer opened most, dislike alarm/stuck
+    D = np.array([0.6, 0.1, 0.1, 0.2])
+    costs = [0.5, 1.0, 1.2, 1.0, 2.0, 1.0]
+    kinds = ["sense", "sense", "act", "act", "act", "act"]
+    # Ensure no zero slices in A/B
+    for a_idx in range(len(actions)):
+        for s_idx in range(len(states)):
+            if np.isclose(A[:, s_idx, a_idx].sum(), 0.0):
+                A[0, s_idx, a_idx] = 1.0
+            if np.isclose(B[:, s_idx, a_idx].sum(), 0.0):
+                B[s_idx, s_idx, a_idx] = 1.0
+
+    return GenerativeModel(states, observations, actions, A, B, C, D, action_costs=costs, action_kinds=kinds)

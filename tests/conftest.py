@@ -11,6 +11,7 @@ from neo4j import GraphDatabase
 # Import scenario fixtures explicitly so they register as fixtures
 try:
     from tests.conftest_scenarios import noisy_room_model, two_step_key_model  # type: ignore  # noqa: F401
+    from tests.conftest_scenarios import robust_room_model  # type: ignore  # noqa: F401
 except ImportError:
     # Fallback for running via python -m pytest from repo root
     import importlib.util
@@ -21,6 +22,7 @@ except ImportError:
     _spec.loader.exec_module(module)  # type: ignore
     noisy_room_model = module.noisy_room_model  # type: ignore
     two_step_key_model = module.two_step_key_model  # type: ignore
+    robust_room_model = module.robust_room_model  # type: ignore
 
 
 # =============================================================================
