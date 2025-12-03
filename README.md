@@ -1,29 +1,32 @@
-# MacGyver MUD: Active Inference Agent Roadmap
+# MacGyver MUD: Parallel Heuristic + Active Inference Agents
 
-> **A cognitive agent prototype with meta-cognitive monitoring and counterfactual learning**
+> **A cognitive agent prototype with meta-cognitive monitoring, counterfactual memory, and a parallel Active Inference runtime**
 >
-> **183/184 tests passing (99.5%)** | **Open source** | **Roadmap in progress (Active Inference)**
+> **Tests:** 390/392 passing (2 skipped; Neo4j/TextWorld opt-outs) | **Open source** | **Roadmap active**
 
-[![Tests](https://img.shields.io/badge/tests-183%2F184%20passing-brightgreen)]() [![Coverage](https://img.shields.io/badge/coverage-99.5%25-brightgreen)]() [![Python](https://img.shields.io/badge/python-3.11%2B-blue)]() [![License](https://img.shields.io/badge/license-MIT-blue)]()
+[![Tests](https://img.shields.io/badge/tests-390%2F392%20passing-brightgreen)]() [![Python](https://img.shields.io/badge/python-3.11%2B-blue)]() [![License](https://img.shields.io/badge/license-MIT-blue)]()
 
 ---
 
 ## 🚀 What This Is
 
-A **cognitive agent prototype** combining heuristic decision making (silver bandit), episodic memory, and stability monitoring. The system is mid-migration to a principled Active Inference stack.
+A **cognitive agent prototype** with two parallel control paths:
+- **Heuristic runtime** (silver/geometric scoring) remains the production-stable baseline.
+- **Active Inference runtime** is operational: generative model (A/B/C/D), Bayesian belief updates, Expected Free Energy policy search, episodic replay, critical-state signals, and optional Neo4j logging/build.
 
-**Current status:**
-- Action selection still uses a heuristic/utility bandit with geometric scoring.
-- Active Inference features (generative model A/B/C/D, Bayesian belief updates, EFE policy scoring) are planned, not yet shipped.
-- Safety/critical-state logic is being reworked to align with the new generative model.
+**Current status (by path):**
+- This is still a research prototype; not production ready.
+- Heuristic path: unchanged, deterministic, passes original + robust scenarios.
+- Active Inference: escapes simple, robust, and complex security scenarios (fixtures + Neo4j builds). Silver bias is disabled by default; procedural priors and episodic learning are on.
+- Neo4j: seeds and builds the complex skill/observation graph via `ENABLE_ROBUST_SCENARIO=true python scripts/apply_robust_seed.py`; logs episodes/steps for either runtime.
 
 **Roadmap highlights (from NEXT_STEPS.md):**
-- Formalize the generative model with A/B/C/D matrices and tests.
-- Implement belief updates and depth-2/3 policy evaluation via Expected Free Energy.
-- Recast epistemic value as information gain; remove heuristic boosts.
-- Harden safety/critical-state protocols with principled signals instead of hard blocks.
+- Persist richer generative parameters (A/B/C/D) in Neo4j instead of inline defaults.
+- Tune Active Inference hyperparameters per scenario and benchmark vs heuristic.
+- Gate critical protocols and silver bias behind flags; enable only when safe.
+- Grow scenario complexity (robust + complex security) without breaking baselines.
 
-**Tech Stack:** Python 3.11, Neo4j, pytest, Docker, Active Inference (planned), Control Theory
+**Tech Stack:** Python 3.11, Neo4j, pytest, Docker, Active Inference, Control Theory
 
 ---
 
@@ -43,15 +46,16 @@ This architecture solves those problems with:
 | **Overconfidence errors** | PANIC protocol → safe-mode fallback | ✅ Tested |
 | **Resource exhaustion** | SCARCITY detection → efficiency mode | ✅ Tested |
 | **System thrashing** | ESCALATION → circuit breaker | ✅ Tested |
-| **Opaque decisions** | Geometric analysis → transparent reasoning | ✅ Tested |
+| **Opaque decisions** | Geometric analysis → transparent reasoning | ✅ Tested (heuristic) |
 | **Sample inefficiency** | Counterfactual learning → offline improvement | ✅ Tested |
+| **Principled planning** | Active Inference (EFE) policies | ✅ Prototype |
 
 ---
 
 ## 🎯 Technical Highlights
 
 ### 1. Meta-Cognitive State Machine
-Detects and responds to 5 critical states (currently heuristic; slated for principled signals):
+Detects and responds to 5 critical states (heuristic path; Active Inference uses entropy/EFE to drive the same monitor):
 
 ```python
 # Example: Automatic loop detection
@@ -64,7 +68,7 @@ if agent.entropy > 0.45:  # High uncertainty
 ```
 
 ### 2. Geometric Decision Transparency
-Current heuristic scoring goes beyond scalar scores to show decision "shape":
+Heuristic scoring goes beyond scalar scores to show decision "shape" (silver). Active Inference uses EFE; silver bias is opt-in and off by default.
 
 ```python
 # Standard approach: score = 7.3 (opaque)
@@ -183,14 +187,22 @@ agent = AgentRuntime(config)
 
 **Key Components (current):**
 - `agent_runtime.py` - Main agent loop (heuristic path)
+- `agent_runtime_heuristic.py` / `agent_runtime_robust.py` - Baseline + robust variants
+- `agent_runtime_active.py` - Active Inference runtime with EFE, episodic replay, critical-state monitor
 - `critical_state.py` - Meta-cognitive state detection (heuristic thresholds)
 - `scoring_silver.py` - Geometric decision analysis (silver bandit)
 - `memory/episodic_replay.py` - Counterfactual learning
 - `control/lyapunov.py` - Stability monitoring (heuristic boosts; slated for principled rework)
 
+**Scenarios (opt-in):**
+- **Original room escape** (peek/try/window) — heuristic baseline, Active Inference parity.
+- **Robust scenario** (search_key, disable_alarm, jam_door, etc.) — both paths supported.
+- **Complex security scenario** (key/code/guard/alarm/jam) — Active Inference fixture + Neo4j build.
+
 **In progress (see NEXT_STEPS.md):**
-- Generative model (A/B/C/D), Bayesian inference, policy evaluation via EFE
-- Principled safety signals and credit assignment tied to the generative model
+- Persisting generative parameters in Neo4j; reducing inline defaults.
+- Principled safety signals and credit assignment tied to the generative model.
+- Benchmarking/tuning Active Inference vs heuristic across robust/complex scenarios.
 
 ---
 
@@ -221,11 +233,11 @@ agent = AgentRuntime(config)
 **Result:** Observable robustness behaviors (falsifiable), with planned re-derivation from the generative model
 
 ### 3. Integrated Cognitive Architecture
-**Innovation:** Integration of heuristic decisioning, episodic memory, and stability checks
+**Innovation:** Integration of heuristic decisioning and Active Inference with episodic memory and stability checks
 
 **Existing work:** These exist separately in research literature
 
-**This work:** 10 integration tests covering subsystem interactions; Active Inference integration is upcoming per roadmap
+**This work:** 10+ integration tests covering subsystem interactions; Active Inference integration is live and gated per scenario
 
 **Result:** Foundation for a multi-system cognitive architecture
 
@@ -262,13 +274,12 @@ agent = AgentRuntime(config)
 - **[Agent Quickstart](AGENT_QUICKSTART.md)** - High-level usage overview
 - **[Integration Tests](tests/test_integration.py)** - Multi-system validation
 
-### Technical Deep Dives
+### Technical Deep Dives (still valid)
 - **[Pythagorean Means Explained](docs/design/PYTHAGOREAN_MEANS_EXPLAINED.md)** - Geometric decision analysis
 - **[Geometric Lens (Complete)](docs/design/GEOMETRIC_LENS_COMPLETE.md)** - Scoring deep dive
 - **[The Panic Protocol](docs/design/THE_PANIC_PROTOCOL.md)** - Current meta-cognitive reflex design
 - **[Generalization Approach](docs/design/GENERALIZATION_APPROACH.md)** - Validation ideas
 - **[Notebook Design](docs/design/NOTEBOOK_DESIGN.md)** - Experiment notebook structure
-- **[Bicameral Mind Analysis](docs/analysis/BICAMERAL_MIND_DEEP_ANALYSIS.md)** - Conceptual framing
 
 ---
 
@@ -308,13 +319,13 @@ If you use this work, please cite:
 - **Docker** (containerization, reproducible environments)
 
 ### AI/ML Techniques
-- **Active Inference** (planned: generative model, Bayesian inference, EFE policy search)
+- **Active Inference** (generative model, Bayesian inference, EFE policy search)
 - **Reinforcement Learning** (episodic memory, counterfactuals)
 - **Control Theory** (Lyapunov stability, circuit breakers)
 - **Graph Theory** (shortest paths, spatial reasoning)
 
 ### Software Engineering
-- **Test-Driven Development** (183 tests, integration coverage)
+- **Test-Driven Development** (390+ tests, integration coverage)
 - **CI/CD** (automated testing, reproducible builds)
 - **Documentation** (comprehensive, tutorial-style)
 - **Code Quality** (linting, type checking, professional standards)
@@ -364,7 +375,7 @@ ok
 - **Senior Software Engineer** - Complex systems, AI integration, high-quality engineering
 
 **What I Bring:**
-- ✅ **Rapid execution** - 6 days → production architecture with 183 tests
+- ✅ **Rapid execution** - Weeks of incremental work with 390+ passing tests
 - ✅ **System design** - Multi-component integration, validated boundaries
 - ✅ **AI expertise** - Active Inference, RL, control theory, graph databases
 - ✅ **Modern tooling** - AI-augmented development, 10x velocity
@@ -391,7 +402,7 @@ ok
 ## 🏆 Project Stats
 
 - **Lines of Code:** 5000+ (Python)
-- **Test Coverage:** 183/184 tests (99.5%)
+- **Test Coverage:** 390/392 tests (full suite; 2 skipped)
 - **Documentation:** 20+ files, 10,000+ words
 - **Commits:** 100+ (incremental development)
 - **Quality Grade:** A- (90/100)

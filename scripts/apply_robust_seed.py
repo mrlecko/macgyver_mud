@@ -19,12 +19,24 @@ MERGE (:Skill {name: 'search_key', kind: 'sense', cost: 1.0, description: 'Searc
 MERGE (:Skill {name: 'disable_alarm', kind: 'act', cost: 1.2, description: 'Disable alarm system'})
 MERGE (:Skill {name: 'jam_door', kind: 'act', cost: 1.0, description: 'Jam door mechanism'})
 MERGE (:Skill {name: 'try_door_stealth', kind: 'act', cost: 1.0, description: 'Try door quietly'})
+// Complex security skills
+MERGE (:Skill {name: 'search_code', kind: 'sense', cost: 1.0, description: 'Search for door code'})
+MERGE (:Skill {name: 'distract_guard', kind: 'sense', cost: 1.2, description: 'Distract the guard to lower alarm risk'})
+MERGE (:Skill {name: 'disable_alarm', kind: 'act', cost: 1.5, description: 'Disable alarm system'})
+MERGE (:Skill {name: 'jam_door', kind: 'act', cost: 1.0, description: 'Jam door mechanism'})
+MERGE (:Skill {name: 'pick_lock', kind: 'act', cost: 1.5, description: 'Pick the lock after code/tool'})
 
 // Robust observations
 MERGE (:Observation {name: 'obs_alarm_disabled', description: 'Alarm disabled'})
 MERGE (:Observation {name: 'obs_alarm_triggered', description: 'Alarm triggered'})
 MERGE (:Observation {name: 'obs_key_found', description: 'Key located'})
 MERGE (:Observation {name: 'obs_search_failed', description: 'Search did not find a key'})
+// Complex observations
+MERGE (:Observation {name: 'obs_code_found', description: 'Code located'})
+MERGE (:Observation {name: 'obs_guard_distracted', description: 'Guard is distracted'})
+MERGE (:Observation {name: 'obs_jam_feedback', description: 'Feedback from jamming the door'})
+MERGE (:Observation {name: 'obs_noise_signal', description: 'Noisy ambiguous signal'})
+MERGE (:Observation {name: 'obs_quiet_signal', description: 'Quiet / safe signal'})
 """
 
 

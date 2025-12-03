@@ -174,12 +174,12 @@ def reset_dynamic_data(session):
     # Remove robust opt-in skills/observations so baseline tests see only core schema
     session.run("""
         MATCH (s:Skill)
-        WHERE s.name IN ['search_key','disable_alarm','jam_door','try_door_stealth','sense','open_door']
+        WHERE s.name IN ['search_key','disable_alarm','jam_door','try_door_stealth','sense','open_door','search_code','distract_guard','pick_lock']
         DETACH DELETE s
     """)
     session.run("""
         MATCH (o:Observation)
-        WHERE o.name IN ['obs_alarm_disabled','obs_alarm_triggered','obs_key_found','obs_search_failed']
+        WHERE o.name IN ['obs_alarm_disabled','obs_alarm_triggered','obs_key_found','obs_search_failed','obs_code_found','obs_guard_distracted','obs_jam_feedback','obs_noise_signal','obs_quiet_signal']
         DETACH DELETE o
     """)
     

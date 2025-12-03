@@ -447,6 +447,17 @@ class ActiveInferenceRuntime:
             obs_idx = int(np.argmax(obs_dist))
         return obs_idx, self.model.observations[obs_idx]
 
+    def _sample_state_transition(self, state_idx: int, action_idx: int) -> int:
+        """
+        Sample the next hidden state using B.
+
+        Keeps deterministic argmax when stochastic=False to retain test stability.
+        """
+        trans_dist = self.model.B[:, state_idx, action_idx]
+        if self.stochastic:
+            return int(np.random.choice(len(trans_dist), p=trans_dist))
+        return int(np.argmax(trans_dist))
+
     def run_episode(
         self,
         door_state: str,
@@ -473,15 +484,15 @@ class ActiveInferenceRuntime:
         for step in range(max_steps):
             action, scored = self.select_action(belief, depth=policy_depth, max_policies=max_policies, beam_width=beam_width)
             action_idx = self._action_idx(action)
-            state_idx = true_state_idx
 
-            obs_idx, observation = self._sample_observation(state_idx, action_idx)
+            next_state_idx = self._sample_state_transition(true_state_idx, action_idx)
+            obs_idx, observation = self._sample_observation(next_state_idx, action_idx)
             posterior = self.update_belief(belief, action, observation)
             efe = scored[0][1] if scored else 0.0
             # Learning updates
-            self.update_likelihoods(action, state_idx, obs_idx, learning_rate=1.0)
+            self.update_likelihoods(action, true_state_idx, obs_idx, learning_rate=1.0)
             self.update_preferences(obs_idx, learning_rate=0.5)
-            transitions.append((state_idx, action, obs_idx, state_idx))
+            transitions.append((true_state_idx, action, obs_idx, next_state_idx))
 
             self.trace.append(
                 {
@@ -497,6 +508,7 @@ class ActiveInferenceRuntime:
                 self.log_decision(episode_id, step, action, belief, posterior, efe, observation)
 
             belief = posterior
+            true_state_idx = next_state_idx
             # Critical-state update based on entropy and EFE
             entropy_now = _entropy(belief)
             self.update_critical_state(entropy_now, efe, max_steps - step)
@@ -581,6 +593,184 @@ def build_model_from_graph(session: Session) -> GenerativeModel:
     """
     try:
         skills = get_skills(session, agent_id=None)  # agent_id unused in query
+        skill_names = {s["name"] for s in skills}
+
+        # Detect complex scenario if the richer skills exist
+        complex_skill_set = {
+            "search_key",
+            "search_code",
+            "distract_guard",
+            "disable_alarm",
+            "jam_door",
+            "pick_lock",
+            "try_door",
+            "go_window",
+        }
+        has_complex = complex_skill_set.issubset(skill_names)
+
+        if has_complex:
+            # Complex security model from graph (fallback to fixture logic)
+            actions = [s["name"] for s in skills if s["name"] in complex_skill_set]
+            action_kinds = [s.get("kind", "") for s in skills if s["name"] in complex_skill_set]
+            cost_overrides = {
+                "search_key": 1.0,
+                "search_code": 1.2,
+                "distract_guard": 1.2,
+                "disable_alarm": 1.5,
+                "jam_door": 1.0,
+                "pick_lock": 1.8,
+                "try_door": 2.0,
+                "go_window": 3.0,
+            }
+            action_costs = [
+                float(cost_overrides.get(s["name"], s.get("cost", 1.0))) if s.get("cost") is not None else cost_overrides.get(s["name"], 1.0)
+                for s in skills
+                if s["name"] in complex_skill_set
+            ]
+
+            obs_records = session.run("MATCH (o:Observation) RETURN o.name AS name ORDER BY o.name")
+            observations_raw = [r["name"] for r in obs_records]
+            preferred_obs = {
+                "obs_key_found",
+                "obs_code_found",
+                "obs_alarm_triggered",
+                "obs_guard_distracted",
+                "obs_door_opened",
+                "obs_door_stuck",
+                "obs_jam_feedback",
+                "obs_noise_signal",
+                "obs_quiet_signal",
+            }
+            observations = [o for o in observations_raw if o in preferred_obs] or observations_raw
+            states = ["locked", "key_found", "code_found", "jammed", "unlocked", "alarmed", "guard_distracted"]
+
+            if not actions or not observations:
+                return build_door_model_defaults()
+
+            A = np.zeros((len(observations), len(states), len(actions)))
+            B = np.full((len(states), len(states), len(actions)), 1e-3)
+
+            def oi(name: str) -> int:
+                return observations.index(name) if name in observations else 0
+
+            def ai(name: str) -> int:
+                return actions.index(name)
+
+            # search_key
+            if "search_key" in actions:
+                idx = ai("search_key")
+                A[oi("obs_key_found"), states.index("locked"), idx] = 0.6
+                A[oi("obs_noise_signal"), states.index("locked"), idx] = 0.4
+                A[oi("obs_key_found"), states.index("key_found"), idx] = 0.5
+                A[oi("obs_noise_signal"), states.index("key_found"), idx] = 0.5
+                B[states.index("key_found"), states.index("locked"), idx] = 0.6
+                B[states.index("locked"), states.index("locked"), idx] = 0.4
+
+            # search_code
+            if "search_code" in actions:
+                idx = ai("search_code")
+                A[oi("obs_code_found"), states.index("key_found"), idx] = 0.6
+                A[oi("obs_code_found"), states.index("code_found"), idx] = 0.5
+                A[oi("obs_noise_signal"), :, idx] += 0.1
+                B[states.index("code_found"), states.index("key_found"), idx] = 0.6
+                B[states.index("key_found"), states.index("key_found"), idx] = 0.4
+
+            # distract_guard
+            if "distract_guard" in actions:
+                idx = ai("distract_guard")
+                A[oi("obs_guard_distracted"), states.index("guard_distracted"), idx] = 0.8
+                A[oi("obs_noise_signal"), :, idx] += 0.2
+                B[states.index("guard_distracted"), states.index("locked"), idx] = 0.5
+                B[states.index("guard_distracted"), states.index("alarmed"), idx] = 0.3
+
+            # disable_alarm
+            if "disable_alarm" in actions:
+                idx = ai("disable_alarm")
+                A[oi("obs_alarm_triggered"), states.index("alarmed"), idx] = 0.5
+                A[oi("obs_quiet_signal"), states.index("alarmed"), idx] = 0.5
+                A[oi("obs_quiet_signal"), :, idx] += 0.1
+                B[states.index("locked"), states.index("alarmed"), idx] = 0.7
+                B[states.index("alarmed"), states.index("alarmed"), idx] = 0.3
+
+            # jam_door
+            if "jam_door" in actions:
+                idx = ai("jam_door")
+                A[oi("obs_jam_feedback"), :, idx] = 1.0
+                B[states.index("jammed"), states.index("locked"), idx] = 0.5
+                B[states.index("locked"), states.index("locked"), idx] = 0.5
+
+            # pick_lock (strict dependency: only helps after code_found)
+            if "pick_lock" in actions:
+                idx = ai("pick_lock")
+                A[:, :, idx] = 0.0
+                A[oi("obs_door_opened"), states.index("code_found"), idx] = 0.6
+                A[oi("obs_door_stuck"), states.index("code_found"), idx] = 0.4
+                A[oi("obs_alarm_triggered"), states.index("locked"), idx] = 0.5
+                A[oi("obs_door_stuck"), states.index("locked"), idx] = 0.5
+                B[states.index("unlocked"), states.index("code_found"), idx] = 0.7
+                B[states.index("alarmed"), states.index("locked"), idx] = 0.6
+                B[states.index("locked"), states.index("locked"), idx] = 0.4
+
+            # try_door (strict: only good when unlocked)
+            if "try_door" in actions:
+                idx = ai("try_door")
+                A[:, :, idx] = 0.0
+                A[oi("obs_door_opened"), states.index("unlocked"), idx] = 0.8
+                A[oi("obs_door_stuck"), states.index("unlocked"), idx] = 0.2
+                A[oi("obs_alarm_triggered"), states.index("locked"), idx] = 0.6
+                A[oi("obs_door_stuck"), states.index("locked"), idx] = 0.4
+                B[:, :, idx] = 1e-3
+                B[states.index("unlocked"), states.index("unlocked"), idx] = 1.0
+                B[states.index("alarmed"), states.index("locked"), idx] = 0.7
+                B[states.index("locked"), states.index("locked"), idx] = 0.3
+
+            # go_window (less reliable)
+            if "go_window" in actions:
+                idx = ai("go_window")
+                A[:, :, idx] = 0.0
+                A[oi("obs_door_opened"), :, idx] = 0.5
+                A[oi("obs_door_stuck"), :, idx] = 0.5
+                # Allow window escape to change state with modest probability
+                for s_idx in range(len(states)):
+                    B[states.index("unlocked"), s_idx, idx] = 0.4
+                    B[s_idx, s_idx, idx] = 0.6
+
+            # Fill any zero slices
+            for a_idx in range(len(actions)):
+                for s_idx in range(len(states)):
+                    if np.isclose(A[:, s_idx, a_idx].sum(), 0.0):
+                        A[oi("obs_noise_signal"), s_idx, a_idx] = 1.0
+                    if np.isclose(B[:, s_idx, a_idx].sum(), 0.0):
+                        B[s_idx, s_idx, a_idx] = 1.0
+
+            C = np.array([0.0 for _ in observations], dtype=float)
+            if "obs_door_opened" in observations:
+                C[oi("obs_door_opened")] = 3.0
+            if "obs_key_found" in observations:
+                C[oi("obs_key_found")] = 1.5
+            if "obs_code_found" in observations:
+                C[oi("obs_code_found")] = 1.0
+            if "obs_alarm_triggered" in observations:
+                C[oi("obs_alarm_triggered")] = -3.0
+            if "obs_noise_signal" in observations:
+                C[oi("obs_noise_signal")] = -1.0
+            if "obs_guard_distracted" in observations:
+                C[oi("obs_guard_distracted")] = 0.2
+            D = np.ones(len(states)) / len(states)
+
+            return GenerativeModel(
+                states=states,
+                observations=observations,
+                actions=actions,
+                A=A,
+                B=B,
+                C=C,
+                D=D,
+                action_costs=action_costs,
+                action_kinds=action_kinds,
+            )
+
+        # Otherwise fall back to simple locked-room build
         preferred_names = {"peek_door", "try_door", "go_window"}
         filtered_skills = [s for s in skills if s["name"] in preferred_names]
         skills_to_use = filtered_skills if filtered_skills else skills
